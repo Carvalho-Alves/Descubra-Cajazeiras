@@ -6,7 +6,7 @@ dotenv.config();
 // Recupera variáveis de ambiente de forma segura
 const {
   MONGODB_URI,
-  MONGODB_DB_NAME // O Mongoose geralmente inclui o nome do DB na URI, mas é bom ter para clareza
+  MONGODB_DB_NAME
 } = process.env;
 
 if (!MONGODB_URI) {
