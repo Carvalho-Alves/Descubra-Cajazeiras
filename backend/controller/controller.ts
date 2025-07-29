@@ -1,12 +1,23 @@
 // Your controller code here
 import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
 
-export async function login(req: Request, res: Response) {
-    // login logic
+export const login = async(req: Request, res: Response): Promise <void> => {
+    const {email, senha} = req.body;
+
+    if (!email || !senha){
+        res.status(400).json({message:"Email ou Senha não encontrados no banco de dados!"})
+        return;
+    };
+    try {
+        
+    } catch (e) {
+        
+    }
 }
 
 export async function cadastrar(req: Request, res: Response) {
-    // cadastro logic
+    const {email, senha} = req.body;
 }
 
 export async function findUsers(req:Request, res: Response) {

@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/Carvalho-Alves/Descubra-Cajazeiras#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
@@ -29,6 +30,7 @@
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^6.1.1",
