@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 
-export const login = async(req: Request, res: Response): Promise <void> => {
+export const loginUser = async(req: Request, res: Response): Promise <void> => {
     const {email, senha} = req.body;
 
     if (!email || !senha){
@@ -16,7 +16,7 @@ export const login = async(req: Request, res: Response): Promise <void> => {
     }
 }
 
-export async function cadastrar(req: Request, res: Response) {
+export async function createUser(req: Request, res: Response) {
     const {email, senha} = req.body;
 }
 
