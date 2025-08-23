@@ -18,9 +18,25 @@ import authRoutes from './routes/authRoutes';
 const app = express();
 
 app.use(cors());
-app.use(helmet());
+
+// Configuração do Helmet para permitir CDNs e estilos em linha
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+    "script-src": ["'self'", "cdn.jsdelivr.net", "unpkg.com", "cdnjs.cloudflare.com"],
+    "style-src": ["'self'", "cdn.jsdelivr.net", "unpkg.com", "cdnjs.cloudflare.com", "'unsafe-inline'"],
+  },
+}));
+
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Define o caminho para a pasta frontend, que contém os arquivos estáticos.
+const frontendPath = path.resolve(__dirname, '..', 'frontend');
+
+// Serve todos os arquivos estáticos da pasta frontend, como CSS, JS e outras páginas HTML.
+// Este middleware DEVE VIR ANTES de qualquer rota de API ou de fallback.
+app.use(express.static(frontendPath));
 
 // Rota de Health Check
 app.get('/health', (_req, res) => res.json({ status: 'UP' }));
@@ -33,8 +49,15 @@ if (fs.existsSync(openapiPath)) {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 }
 
-// Usando as rotas da aplicação
+// Usando as rotas da aplicação (para a API)
 app.use('/auth', authRoutes);
+
+// Servindo a página inicial para a rota raiz (/).
+// Esta rota deve vir DEPOIS de todos os middlewares e rotas de API para não interferir.
+// O 'express.static' já cuida de todos os outros arquivos.
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 // Middleware de tratamento de erros (deve ser o último)
 app.use(erroHandler);
@@ -42,7 +65,7 @@ app.use(erroHandler);
 let server: Server;
 
 const startServer = async () => {
-  
+  try {
     await connectMongo();
     await getNeo4jDriver().verifyAuthentication();
     console.log('✅ Conexão com Neo4j estabelecida com sucesso!');
@@ -50,19 +73,28 @@ const startServer = async () => {
     server = app.listen(env.PORT, () => {
       console.log(`🚀 Servidor rodando na porta ${env.PORT}`);
     });
-  };
+  } catch (error) {
+    console.error('❌ Erro ao iniciar o servidor:', error);
+    process.exit(1);
+  }
+};
 
 const gracefulShutdown = async () => {
   console.log('\n🔌 Recebido sinal para desligar. Fechando conexões...');
   
-    server.close(async () => {
-      console.log('✅ Servidor HTTP fechado.');
+  server.close(async () => {
+    console.log('✅ Servidor HTTP fechado.');
+    try {
       await disconnectMongo();
       await closeNeo4j();
       console.log('👋 Aplicação encerrada com sucesso!');
       process.exit(0);
-    });
-  };
+    } catch (error) {
+      console.error('❌ Erro ao fechar as conexões:', error);
+      process.exit(1);
+    }
+  });
+};
 
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
