@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info:
+  title: Descubra Cajazeiras API
+  version: "1.0.0"
+servers:
+  - url: http://localhost:3333
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: ok
+  /auth/login:
+    post:
+      summary: Autentica usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                senha: { type: string }
+      responses:
+        "200":
+          description: tokens
