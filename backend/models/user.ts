@@ -10,6 +10,7 @@ export interface IUser {
   role: 'USER' | 'ADMIN';
   createdAt: Date;
   updatedAt: Date;
+  foto?: string; 
 
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -28,6 +29,7 @@ const UserSchema = new Schema<IUser>(
     },
     senha: { type: String, required: true, select: false },
     role: { type: String, enum: ['USER', 'ADMIN'], default: 'USER' },
+    foto: { type: String, required: false },
   },
   { timestamps: true }
 );

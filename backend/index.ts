@@ -14,7 +14,6 @@ import { erroHandler } from './middleware/error';
 
 // Importando as rotas da aplicação
 import authRoutes from './routes/authRoutes';
-import fotosRoutes from './routes/fotosRoutes';
 
 const app = express();
 
@@ -36,7 +35,6 @@ if (fs.existsSync(openapiPath)) {
 
 // Usando as rotas da aplicação
 app.use('/auth', authRoutes);
-app.use('/fotos', fotosRoutes);
 
 // Middleware de tratamento de erros (deve ser o último)
 app.use(erroHandler);

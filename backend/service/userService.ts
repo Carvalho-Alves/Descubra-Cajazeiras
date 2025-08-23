@@ -29,32 +29,32 @@ const driver = neo4j.driver(
 type CreateUserInput = z.infer<typeof registerSchema>;
 
 export const createUserService = async (
-  input: CreateUserInput
+  input: CreateUserInput
 ): Promise<HydratedDocument<IUser>> => {
-  const session = driver.session();
-  try {
-    const { nome, email, senha } = input;
+  const session = driver.session();
+  try {
+    const { nome, email, senha, foto } = input;
 
-    const existingMongoUser = await User.findOne({ email });
-    if (existingMongoUser) {
-      const error: any = new Error('Um usuário com este e-mail já existe.');
-      error.statusCode = 409;
-      throw error;
-    }
+    const existingMongoUser = await User.findOne({ email });
+    if (existingMongoUser) {
+      const error: any = new Error('Um usuário com este e-mail já existe.');
+      error.statusCode = 409;
+      throw error;
+    }
 
-    const newUser = new User({ nome, email, senha });
-    await newUser.save();
+    const newUser = new User({ nome, email, senha, foto });
+    await newUser.save();
 
-    // Cria nó no Neo4j
-    await session.run(
-      `CREATE (u:User {userId: $userId, email: $email, nome: $nome})`,
-      { userId: newUser._id.toString(), email: newUser.email, nome: newUser.nome }
-    );
+    // Cria o nó no Neo4j
+    await session.run(
+      `CREATE (u:User {userId: $userId, email: $email, nome: $nome, foto: $foto})`,
+      { userId: newUser._id.toString(), email: newUser.email, nome: newUser.nome, foto: newUser.foto || '' }
+    );
 
-    return newUser;
-  } finally {
+    return newUser;
+  } finally {
     await session.close();
-  }
+ }
 };
 
 // --- SERVIÇO DE LOGIN ---
