@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { findUser as findUserService } from '../service/userService';
+import { findUserService as findUserService } from '../service/userService';
 
 export const findUser = async (req: Request, res: Response, next: NextFunction) => {
   
