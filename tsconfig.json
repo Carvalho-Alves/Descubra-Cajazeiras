@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2022",                       /* Define a versão do ECMAScript de saída. */
+    "module": "esnext",                     /* Define o sistema de módulos (Node.js usa CommonJS). */
+    "outDir": "./dist",                       /* Onde os arquivos JavaScript compilados serão colocados. */
+    "rootDir": "./backend",                       /* Onde seus arquivos TypeScript (.ts) estão localizados. */
+    "strict": true,                           /* Habilita todas as opções de verificação de tipo rigorosas para segurança máxima. */
+    "esModuleInterop": true,                  /* Permite importações de módulos CommonJS usando a sintaxe de importação ES6. */
+    "skipLibCheck": true,                     /* Pula a verificação de tipo de arquivos de declaração (.d.ts) para acelerar a compilação. */
+    "forceConsistentCasingInFileNames": true, /* Garante que as referências a arquivos tenham o mesmo uso de maiúsculas/minúsculas. */
+    "moduleResolution": "bundler"                /* Estratégia de resolução de módulos, importante para Node.js. */
+  },
+  "include": ["backend/**/*.ts"],                 /* Inclui todos os arquivos .ts dentro da pasta 'src' para compilação. */
+  "exclude": ["node_modules"]                 /* Exclui a pasta 'node_modules' da compilação. */
+}

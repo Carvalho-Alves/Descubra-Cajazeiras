@@ -1,0 +1,64 @@
+{
+  "name": "descubra-cajazeiras",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx tsx watch backend/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "gen:swagger": "node scripts/build-swagger.cjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Carvalho-Alves/Descubra-Cajazeiras.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Carvalho-Alves/Descubra-Cajazeiras/issues"
+  },
+  "homepage": "https://github.com/Carvalho-Alves/Descubra-Cajazeiras#readme",
+  "dependencies": {
+    "@nestjs/swagger": "^11.2.0",
+    "@types/mongoose": "^5.11.96",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.17.1",
+    "morgan": "^1.10.1",
+    "neo4j-driver": "^5.28.1",
+    "pg": "^8.16.3",
+    "sequelize": "^6.37.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.8.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.3",
+    "@types/helmet": "^0.0.48",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^24.1.0",
+    "@types/pg": "^8.15.4",
+    "@types/sequelize": "^4.28.20",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/yaml": "^1.9.6",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
