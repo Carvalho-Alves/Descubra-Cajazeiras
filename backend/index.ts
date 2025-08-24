@@ -15,6 +15,7 @@ import { erroHandler } from './middleware/error';
 // Importando as rotas da aplicação
 import authRoutes from './routes/authRoutes';
 import servicoRoutes from './routes/servicoRoutes';
+import eventoRoutes from './routes/eventoRoutes';
 
 const app = express();
 
@@ -52,6 +53,7 @@ if (fs.existsSync(openapiPath)) {
 // Usando as rotas da aplicação (para a API)
 app.use('/auth', authRoutes);
 app.use('/servicos', servicoRoutes);
+app.use('/api', eventoRoutes);
 
 // Servindo a página inicial para a rota raiz (/).
 app.get('/', (_req, res) => {
