@@ -18,7 +18,7 @@ export function ensureAuth(req: Request, res: Response, next: NextFunction) {
   
     const secret = (env as any).JWT_ACCESS_SECRET || (env as any).JWT_SECRET || 'dev-secret';
     const payload = jwt.verify(token, secret) as any;
-    req.userId = payload.sub;
+    req.userId = payload.sub || payload.id;
     req.userEmail = payload.email;
     return next();
   }
