@@ -6,6 +6,7 @@ export const createServicoController = async (req: Request, res: Response, next:
   try {
     const validated = createServicoSchema.parse(req.body);
     const usuarioId = req.userId!;
+     console.log('ID do Usuário no Controller:', usuarioId)
     const servico = await createServico({ ...validated, usuarioId });
     return res.status(201).json(servico);
   } catch (error) {

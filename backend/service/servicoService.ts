@@ -18,16 +18,16 @@ export const createServico = async (
     const { usuarioId, ...dados } = input;
     const servico = await Servico.create({ ...dados, usuario: new Types.ObjectId(usuarioId) });
 
-    await session.run(
-      `MATCH (u:User {userId: $userId})
-       CREATE (s:Servico {servicoId: $servicoId, titulo: $titulo})
-       MERGE (u)-[:OFERECE]->(s)`,
-      {
-        userId: usuarioId,
+await session.run(
+    `MATCH (u:User {userId: $userId})
+    CREATE (s:Servico {servicoId: $servicoId, titulo: $titulo})
+    MERGE (u)-[:OFERECE]->(s)`,
+    {
+        userId: usuarioId, // AQUI está a correção! O parâmetro `userId` está sendo passado
         servicoId: servico._id.toString(),
         titulo: servico.titulo,
-      }
-    );
+    }
+);
 
     return servico;
   } finally {

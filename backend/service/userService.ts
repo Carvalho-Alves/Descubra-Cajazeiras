@@ -27,6 +27,7 @@ const driver = neo4j.driver(
 
 // --- SERVIÇO DE REGISTRO ---
 type CreateUserInput = z.infer<typeof registerSchema>;
+type LoginUserInput = z.infer<typeof loginSchema>;
 
 export const createUserService = async (
   input: CreateUserInput
@@ -57,12 +58,9 @@ export const createUserService = async (
  }
 };
 
-// --- SERVIÇO DE LOGIN ---
-type LoginUserInput = z.infer<typeof loginSchema>;
-
 export const loginUserService = async (
   input: LoginUserInput
-): Promise<{ id: Types.ObjectId; nome: string; email: string; token: string }> => {
+): Promise<HydratedDocument<IUser>> => {
   const { email, senha } = input;
 
   const user = await User.findOne({ email }).select('+senha');
@@ -79,18 +77,7 @@ export const loginUserService = async (
     throw error;
   }
 
-  const token = jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET || 'seu_segredo_padrao_para_desenvolvimento',
-    { expiresIn: '8h' }
-  );
-
-  return {
-    id: user._id,
-    nome: user.nome,
-    email: user.email,
-    token,
-  };
+  return user;
 };
 
 // --- SERVIÇO DE ATUALIZAÇÃO ---

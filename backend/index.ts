@@ -36,7 +36,6 @@ app.use(morgan('dev'));
 const frontendPath = path.resolve(__dirname, '..', 'frontend');
 
 // Serve todos os arquivos estáticos da pasta frontend, como CSS, JS e outras páginas HTML.
-// Este middleware DEVE VIR ANTES de qualquer rota de API ou de fallback.
 app.use(express.static(frontendPath));
 
 // Rota de Health Check
@@ -55,8 +54,6 @@ app.use('/auth', authRoutes);
 app.use('/servicos', servicoRoutes);
 
 // Servindo a página inicial para a rota raiz (/).
-// Esta rota deve vir DEPOIS de todos os middlewares e rotas de API para não interferir.
-// O 'express.static' já cuida de todos os outros arquivos.
 app.get('/', (_req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });

@@ -7,7 +7,7 @@ const router = Router();
 
 router.use(ensureAuth);
 
-router.post('/', asyncHandler(createServicoController));
+router.post('/create', asyncHandler(createServicoController));
 router.get('/', asyncHandler(listServicosController));
 router.get('/:id', asyncHandler(getServicoController));
 router.put('/:id', asyncHandler(updateServicoController));

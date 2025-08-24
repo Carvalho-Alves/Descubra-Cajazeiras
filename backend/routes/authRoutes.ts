@@ -18,6 +18,4 @@ router.post('/register', upload.single('foto'), asyncHandler(registerController)
 router.put('/:id', upload.single('foto'), asyncHandler(editUser));
 router.delete('/:id', asyncHandler(deleteUser));
 
-
-
 export default router;
