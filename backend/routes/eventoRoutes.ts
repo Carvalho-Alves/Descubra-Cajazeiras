@@ -4,7 +4,7 @@ import eventoController from '../controller/eventoController';
 const router = Router();
 
 
-router.post('/eventos', eventoController.create);
+router.post('/eventos', eventoController.create); 
 
 router.get('/eventos', eventoController.findAll);
 
