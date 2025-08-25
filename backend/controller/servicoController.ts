@@ -12,7 +12,7 @@ export const create = async (req: Request, res: Response) => {
     const servicoData = req.body;
 
     // 3. Chame a função createServico, passando os dois argumentos esperados.
-    const servico = createServico(servicoData, usuarioId);
+    const servico = await servicoService.createServico(servicoData, usuarioId);
 
     // 4. Envie uma resposta de sucesso.
     res.status(201).json({
@@ -93,6 +93,4 @@ export const remove = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
-function createServico(_servicoData: any, _usuarioId: string | undefined) {
-  throw new Error('Function not implemented.');
-}
+

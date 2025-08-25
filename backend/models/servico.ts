@@ -83,8 +83,11 @@ const ServicoTuristicoSchema = new Schema<IServico>(
   }
 );
 
-// Sugestão de consistência no nome da exportação
+// Exportações para compatibilidade
 export const ServicoTuristico = model<IServico>(
   "ServicoTuristico",
   ServicoTuristicoSchema
 );
+
+// Export padrão para uso no service
+export const Servico = ServicoTuristico;

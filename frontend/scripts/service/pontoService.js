@@ -56,11 +56,18 @@ class PontoService {
      */
     async criarServico(servicoData) {
         try {
+            const token = this.getAuthToken();
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch(this.servicosUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify(servicoData)
             });
             if (!response.ok) {
@@ -111,11 +118,18 @@ class PontoService {
      */
     async atualizarServico(id, servicoData) {
         try {
+            const token = this.getAuthToken();
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch(`${this.servicosUrl}/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify(servicoData)
             });
             if (!response.ok) {
@@ -166,8 +180,16 @@ class PontoService {
      */
     async deletarServico(id) {
         try {
+            const token = this.getAuthToken();
+            const headers = {};
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch(`${this.servicosUrl}/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: headers
             });
             if (!response.ok) {
                 const errorData = await response.json();
@@ -318,7 +340,17 @@ class PontoService {
      */
     logoutUsuario() {
         localStorage.removeItem('usuarioAutenticado');
+        localStorage.removeItem('authToken');
+        console.log('Logout realizado');
         window.location.href = 'index.html'; // Redireciona para a página principal
+    }
+
+    /**
+     * Obtém o token de autenticação.
+     * @returns {string|null} O token se estiver logado, ou null.
+     */
+    getAuthToken() {
+        return localStorage.getItem('authToken');
     }
 
 }

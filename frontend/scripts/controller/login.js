@@ -14,9 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const resultado = await pontoService.loginUsuario(email, senha);
             
-            // Salva os dados do usuário no localStorage
+            // Salva os dados do usuário e token no localStorage
             localStorage.setItem('usuarioAutenticado', JSON.stringify(resultado));
+            
+            // Salva o token separadamente para uso em requisições
+            if (resultado.token) {
+                localStorage.setItem('authToken', resultado.token);
+            }
 
+            console.log('Login realizado com sucesso:', resultado);
             alert('Login realizado com sucesso! Redirecionando...');
             window.location.href = 'index.html';
         } catch (error) {

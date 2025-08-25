@@ -32,38 +32,65 @@ document.addEventListener('DOMContentLoaded', () => {
     // Marcador da localização do usuário
     let userLocationMarker = null;
 
-    // --- 4. LÓGICA DE AUTENTICAÇÃO E RENDERIZAÇÃO DA UI ---
+    // --- 4. INICIALIZAÇÃO DO CRUD DE SERVIÇOS ---
+    // Inicializa o gerenciador de CRUD após o DOM estar carregado
+    setTimeout(() => {
+        if (typeof ServicoCrudManager !== 'undefined') {
+            window.servicoCrud = new ServicoCrudManager(map, pontoService);
+            console.log('✅ CRUD de Serviços inicializado');
+        }
+    }, 100);
+
+    // --- 5. LÓGICA DE AUTENTICAÇÃO E RENDERIZAÇÃO DA UI ---
     
     function renderizarAreaUsuario() {
-        // Para testar a visão de admin, mude esta linha para 'true'
-        const usuarioLogado = false; 
+        // Verifica se há um usuário logado no localStorage
+        const dadosUsuario = pontoService.getUsuarioAutenticado();
+        const token = localStorage.getItem('authToken');
+        
+        // Verifica se o usuário está realmente logado (tem dados E token válido)
+        const usuarioLogado = dadosUsuario !== null && token !== null;
 
         if (usuarioLogado) {
             // --- UI para Usuário Logado (Admin) ---
-            const nomeAdmin = "Admin"; 
+            const nomeUsuario = dadosUsuario.user?.nome || dadosUsuario.nome || "Usuário"; 
             usuarioArea.innerHTML = `
                 <div class="dropdown">
                     <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-2"></i> ${nomeAdmin}
+                        <i class="fas fa-user-circle me-2"></i> ${nomeUsuario}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item text-danger" href="#" id="btnSair">Sair</a></li>
+                        <li><a class="dropdown-item" href="#" id="btnPerfil">
+                            <i class="fas fa-user me-2"></i>Perfil
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" id="btnSair">
+                            <i class="fas fa-sign-out-alt me-2"></i>Sair
+                        </a></li>
                     </ul>
                 </div>
             `;
             btnNovoPonto.style.display = 'inline-block';
             btnDashboard.style.display = 'inline-block';
 
-            document.getElementById('btnSair').addEventListener('click', () => {
-                alert('Fazendo logout...');
-                window.location.reload();
+            document.getElementById('btnSair').addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('Deseja realmente sair?')) {
+                    pontoService.logoutUsuario();
+                }
+            });
+
+            document.getElementById('btnPerfil').addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Funcionalidade de perfil em desenvolvimento');
             });
 
         } else {
             // --- UI para Usuário Deslogado (Turista) ---
             usuarioArea.innerHTML = `
-                <a href="telaLogin.html" class="btn btn-primary me-2">Login</a>
-                <a href="telaCadastro.html" class="btn btn-primary">Cadastro</a>
+                <a href="auth.html" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                </a>
             `;
             // Esconde os botões de admin
             btnNovoPonto.style.display = 'none';
@@ -238,8 +265,40 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
 
-    // --- 7. INICIALIZAÇÃO DA PÁGINA ---
+    // --- 7. FUNÇÃO PARA ATUALIZAR UI APÓS LOGIN ---
+    function atualizarUIAposLogin() {
+        renderizarAreaUsuario();
+        console.log('UI atualizada após login');
+    }
+
+    // Expor função globalmente para uso após login
+    window.atualizarUIAposLogin = atualizarUIAposLogin;
+
+    // --- 8. FUNÇÃO PARA LIMPAR DADOS INVÁLIDOS ---
+    function verificarDadosAutenticacao() {
+        const dadosUsuario = localStorage.getItem('usuarioAutenticado');
+        const token = localStorage.getItem('authToken');
+        
+        // Se tem dados mas não tem token, limpa tudo
+        if (dadosUsuario && !token) {
+            console.log('Dados de autenticação inconsistentes, limpando...');
+            localStorage.removeItem('usuarioAutenticado');
+            localStorage.removeItem('authToken');
+        }
+        
+        // Se tem token mas não tem dados do usuário, limpa tudo
+        if (token && !dadosUsuario) {
+            console.log('Token sem dados de usuário, limpando...');
+            localStorage.removeItem('usuarioAutenticado');
+            localStorage.removeItem('authToken');
+        }
+    }
+
+    // --- 9. INICIALIZAÇÃO DA PÁGINA ---
     function init() {
+        // Verifica consistência dos dados de autenticação
+        verificarDadosAutenticacao();
+        
         // Configura a UI de login/logout e os botões de admin
         renderizarAreaUsuario();
 
@@ -248,7 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btnVerEventos.addEventListener('click', carregarEventos);
         btnCentralizarLocalizacao.addEventListener('click', centralizarNaMinhaLocalizacao);
         btnNovoPonto.addEventListener('click', () => { 
-            window.location.href = 'ponto.html'; 
+            // Usa o modal implementado no CRUD em vez de redirecionar
+            if (window.servicoCrud) {
+                window.servicoCrud.abrirModalCriacao();
+            } else {
+                // Fallback caso o CRUD não esteja carregado
+                console.warn('CRUD não inicializado, redirecionando...');
+                window.location.href = 'ponto.html'; 
+            }
         });
         
         // Carrega os dados iniciais

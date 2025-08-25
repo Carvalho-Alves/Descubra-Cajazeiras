@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Descubra+ Cajazeiras</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles/index.css">
@@ -13,9 +15,10 @@
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
         img-src 'self' data: https://*.tile.openstreetmap.org;
-        script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net;
         style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
         font-src 'self' https://cdnjs.cloudflare.com;
+        connect-src 'self' https://nominatim.openstreetmap.org;
     ">
 </head>
 <body>
@@ -59,6 +62,31 @@
                                         <i class="fas fa-sync-alt"></i>
                                     </button>
                                 </div>
+                                
+                                <!-- Filtros por Tipo -->
+                                <div class="mb-3">
+                                    <div class="btn-group w-100" role="group" id="filtrosTipo">
+                                        <input type="radio" class="btn-check" name="filtroTipo" id="filtroTodos" value="" checked>
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroTodos">
+                                            <i class="fas fa-list me-1"></i>Todos
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="filtroTipo" id="filtroHospedagem" value="Hospedagem">
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroHospedagem">
+                                            <i class="fas fa-bed me-1"></i>Hospedagem
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="filtroTipo" id="filtroAlimentacao" value="Alimentação/Lazer">
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroAlimentacao">
+                                            <i class="fas fa-utensils me-1"></i>Alimentação
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="filtroTipo" id="filtroPontoTuristico" value="Ponto Turístico">
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroPontoTuristico">
+                                            <i class="fas fa-landmark me-1"></i>Turístico
+                                        </label>
+                                    </div>
+                                </div>
                                 <div class="input-group input-group-sm">
                                     <input type="text" class="form-control" id="inputBusca" placeholder="Buscar pontos...">
                                     <button class="btn btn-outline-secondary" type="button" id="btnBuscar">
@@ -96,8 +124,23 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="card-body p-0">
+                            <div class="card-body p-0 position-relative">
                                 <div id="mapa" style="height: 600px; width: 100%;"></div>
+                                
+                                <!-- Botão flutuante para criar serviço -->
+                                <div class="position-absolute top-0 end-0 m-3">
+                                    <button class="btn btn-primary btn-sm shadow" id="btnAdicionarNoMapa" title="Adicionar novo serviço">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Dica de uso -->
+                                <div class="position-absolute bottom-0 start-0 m-2">
+                                    <small class="badge bg-info text-dark">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Use o botão + ou Ctrl+Click para criar serviço
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -148,33 +191,53 @@
     </div>
 
     <div class="modal fade" id="modalPonto" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <form id="formPonto">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modalTitle">Novo Ponto</h5>
+                        <h5 class="modal-title" id="modalTitle">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            <span id="tituloModal">Novo Serviço Turístico</span>
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div id="alertContainer"></div>
-                        <div class="mb-3">
-                            <label for="inputNome" class="form-label">Nome *</label>
-                            <input type="text" class="form-control" id="inputNome" required>
+                        
+                        <!-- Informações Básicas -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="inputNome" class="form-label">Nome do Estabelecimento *</label>
+                                    <input type="text" class="form-control" id="inputNome" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="inputTipoServico" class="form-label">Tipo de Serviço *</label>
+                                    <select class="form-select" id="inputTipoServico" required>
+                                        <option value="">Selecione...</option>
+                                        <option value="Hospedagem">🏨 Hospedagem</option>
+                                        <option value="Alimentação/Lazer">🍽️ Alimentação/Lazer</option>
+                                        <option value="Ponto Turístico">🏛️ Ponto Turístico</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="inputTipo" class="form-label">Tipo *</label>
-                            <select class="form-select" id="inputTipo" required>
-                                <option value="Roupas e Acessórios">Roupas e Acessórios</option>
-                                <option value="Casa e Decoração">Casa e Decoração</option>
-                                <option value="Cultura">Cultura</option>
-                                <option value="Alimentos">Alimentos</option>
-                                <option value="Outros">Outros</option>
-                            </select>
-                        </div>
+
                         <div class="mb-3">
                             <label for="inputDescricao" class="form-label">Descrição</label>
-                            <textarea class="form-control" id="inputDescricao" rows="3"></textarea>
+                            <textarea class="form-control" id="inputDescricao" rows="3" placeholder="Descreva o estabelecimento, seus diferenciais e atrações..."></textarea>
                         </div>
+
+                        <!-- Campos Dinâmicos por Tipo -->
+                        <div id="camposDinamicos"></div>
+
+                        <!-- Localização -->
+                        <h6 class="mt-4 mb-3">
+                            <i class="fas fa-map-marker-alt me-2"></i>Localização
+                        </h6>
+                        
                         <div class="mb-3">
                             <label for="inputEndereco" class="form-label">Endereço</label>
                             <div class="input-group">
@@ -185,21 +248,52 @@
                             </div>
                             <div class="dropdown-menu" id="resultadosBusca"></div>
                         </div>
+                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="inputLatitude" class="form-label">Latitude *</label>
-                                <input type="text" class="form-control" id="inputLatitude" required>
+                                <input type="number" step="any" class="form-control" id="inputLatitude" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="inputLongitude" class="form-label">Longitude *</label>
-                                <input type="text" class="form-control" id="inputLongitude" required>
+                                <input type="number" step="any" class="form-control" id="inputLongitude" required>
                             </div>
                         </div>
-                        <div id="miniMapa"></div>
+                        
+                        <!-- Mini Mapa -->
+                        <div id="miniMapa" style="height: 200px; border-radius: 8px;"></div>
+                        <small class="text-muted">Clique no mapa para ajustar a localização</small>
+
+                        <!-- Contato -->
+                        <h6 class="mt-4 mb-3">
+                            <i class="fas fa-phone me-2"></i>Contato (Opcional)
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="inputTelefone" class="form-label">Telefone</label>
+                                    <input type="tel" class="form-control" id="inputTelefone" placeholder="(83) 9 9999-9999">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="inputInstagram" class="form-label">Instagram</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">@</span>
+                                        <input type="text" class="form-control" id="inputInstagram" placeholder="usuario_instagram">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" id="inputServicoId">
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <button type="submit" class="btn btn-primary">Salvar Ponto</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            <span id="btnTexto">Salvar Serviço</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -382,12 +476,14 @@
     </div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script type="module" src="./scripts/models/Ponto.js"></script>
     <script type="module" src="./scripts/service/pontoService.js"></script>
     <script type="module" src="./scripts/controller/pontoModel.js"></script>
+    <script src="./scripts/servicoCrud.js"></script>
     <script type="module" src="./scripts/index.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
