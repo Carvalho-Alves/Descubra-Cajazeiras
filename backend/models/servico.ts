@@ -1,35 +1,59 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export interface IServico extends Document {
+// Interface atualizada para refletir a estrutura de dados correta
+export interface IServicoTuristico extends Document {
   _id: Types.ObjectId;
-  titulo: string;
+  nome: string;
   descricao?: string;
+  tipo_servico: 'Hospedagem' | 'Alimentação/Lazer' | 'Ponto Turístico';
   categoria?: string;
-  preco?: number;
-  contato?: string;
-  usuario: Schema.Types.ObjectId; // Referência ao usuário dono do serviço
+  contato: {
+    telefone?: string;
+    instagram?: string;
+  };
+  localizacao: {
+    latitude?: number;
+    longitude?: number;
+  };
+  imagens?: string[];
+  usuario: Types.ObjectId; // Referência ao usuário que cadastrou
   createdAt: Date;
   updatedAt: Date;
 }
 
-const ServicoSchema = new Schema<IServico>({
-  titulo: {
+const ServicoTuristicoSchema = new Schema<IServicoTuristico>({
+  nome: {
     type: String,
-    required: true,
+    required: [true, 'O nome do serviço é obrigatório.'],
     trim: true
   },
   descricao: {
-    type: String
+    type: String,
+    trim: true
+  },
+  tipo_servico: {
+    type: String,
+    required: [true, 'O tipo de serviço é obrigatório.'],
+    // 'enum' garante que apenas os valores do formulário serão aceitos
+    enum: ['Hospedagem', 'Alimentação/Lazer', 'Ponto Turístico']
   },
   categoria: {
-    type: String
+    type: String,
+    trim: true
   },
-  preco: {
-    type: Number,
-    min: 0
-  },
+  // Objeto aninhado para organizar as informações de contato
   contato: {
-    type: String
+    telefone: { type: String, trim: true },
+    instagram: { type: String, trim: true }
+  },
+  // Objeto aninhado para organizar as coordenadas
+  localizacao: {
+    latitude: { type: Number },
+    longitude: { type: Number }
+  },
+  // Campo para armazenar um array com as URLs das imagens
+  imagens: {
+    type: [String]
   },
   usuario: {
     type: Schema.Types.ObjectId,
@@ -39,9 +63,7 @@ const ServicoSchema = new Schema<IServico>({
   }
 }, {
   timestamps: true,
-  collection: 'servicos'
+  collection: 'servicos_turisticos'
 });
 
-export const Servico = model<IServico>('Servico', ServicoSchema);
-
-
+export const ServicoTuristico = model<IServicoTuristico>('ServicoTuristico', ServicoTuristicoSchema);
