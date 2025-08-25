@@ -123,11 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
         listaEventosContainer.innerHTML = '';
         nenhumEventoDiv.style.display = 'none';
         try {
-            const response = await fetch('/api/eventos'); // A API precisa ter essa rota
-            if (!response.ok) throw new Error('Falha ao buscar dados.');
-            const eventos = await response.json();
-            renderizarListaEventos(eventos);
-            eventosCarregados = true;
+        const response = await fetch('http://localhost:3333/api/servicos');
+        if (!response.ok) throw new Error('Falha na resposta da rede.');
+        todosOsServicos = await response.json();
+        renderizarListaServicos(todosOsServicos);
+        adicionarMarcadoresServicos(todosOsServicos);
         } catch (error) {
             console.error(error);
             listaEventosContainer.innerHTML = `<div class="alert alert-danger m-2">Erro ao carregar eventos.</div>`;
