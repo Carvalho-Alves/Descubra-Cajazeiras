@@ -387,3 +387,46 @@ h2 {
 .area-usuario button {
     margin-left: 10px;
 }
+
+/* Geolocalização */
+.user-location-marker {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-location-marker i {
+    color: #007bff;
+    font-size: 24px;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Botão de geolocalização */
+#btnCentralizarLocalizacao:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--dark-color);
+}
+
+#btnCentralizarLocalizacao:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDashboard = document.getElementById('btnDashboard');
     const btnVerEventos = document.getElementById('btnVerEventos');
     const btnAtualizarLista = document.getElementById('btnAtualizarLista');
+    const btnCentralizarLocalizacao = document.getElementById('btnCentralizarLocalizacao');
     
     // Elementos da lista de serviços
     const listaServicosContainer = document.getElementById('listaPontos');
@@ -27,6 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. INICIALIZAÇÃO DO MAPA ---
     const map = L.map('mapa').setView([-6.8897, -38.5583], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Marcador da localização do usuário
+    let userLocationMarker = null;
 
     // --- 4. LÓGICA DE AUTENTICAÇÃO E RENDERIZAÇÃO DA UI ---
     
@@ -142,7 +146,99 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 6. INICIALIZAÇÃO DA PÁGINA ---
+    // --- 6. FUNÇÃO DE GEOLOCALIZAÇÃO ---
+    function centralizarNaMinhaLocalizacao() {
+        // Verifica se o navegador suporta geolocalização
+        if (!navigator.geolocation) {
+            alert('Geolocalização não é suportada por este navegador.');
+            return;
+        }
+
+        // Mostra loading no botão
+        const btnIcon = btnCentralizarLocalizacao.querySelector('i');
+        const btnText = btnCentralizarLocalizacao.querySelector('span');
+        const originalIcon = btnIcon.className;
+        
+        btnIcon.className = 'fas fa-spinner fa-spin';
+        if (btnText) btnText.textContent = 'Localizando...';
+        btnCentralizarLocalizacao.disabled = true;
+
+        // Opções de geolocalização
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000 // Cache por 1 minuto
+        };
+
+        // Obtém a localização atual
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                // Remove marcador anterior se existir
+                if (userLocationMarker) {
+                    map.removeLayer(userLocationMarker);
+                }
+
+                // Cria um marcador personalizado para a localização do usuário
+                const userIcon = L.divIcon({
+                    className: 'user-location-marker',
+                    html: '<i class="fas fa-user-circle"></i>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+
+                // Adiciona o marcador no mapa
+                userLocationMarker = L.marker([lat, lng], { icon: userIcon })
+                    .addTo(map)
+                    .bindPopup(`
+                        <div class="popup-content">
+                            <h6><i class="fas fa-user-circle me-1"></i>Sua Localização</h6>
+                            <p><small><i class="fas fa-crosshairs me-1"></i>Precisão: ${Math.round(accuracy)}m</small></p>
+                        </div>
+                    `);
+
+                // Centraliza o mapa na localização do usuário
+                map.setView([lat, lng], 16);
+
+                // Restaura o botão
+                btnIcon.className = originalIcon;
+                if (btnText) btnText.textContent = 'Minha Localização';
+                btnCentralizarLocalizacao.disabled = false;
+
+                // Mostra mensagem de sucesso
+                console.log(`Localização encontrada: ${lat}, ${lng} (±${Math.round(accuracy)}m)`);
+            },
+            function(error) {
+                // Restaura o botão em caso de erro
+                btnIcon.className = originalIcon;
+                if (btnText) btnText.textContent = 'Minha Localização';
+                btnCentralizarLocalizacao.disabled = false;
+
+                // Trata diferentes tipos de erro
+                let mensagemErro = 'Erro ao obter localização.';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        mensagemErro = 'Permissão de localização negada. Permita o acesso à localização nas configurações do navegador.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        mensagemErro = 'Informações de localização não disponíveis.';
+                        break;
+                    case error.TIMEOUT:
+                        mensagemErro = 'Tempo limite excedido ao tentar obter localização.';
+                        break;
+                }
+                
+                alert(mensagemErro);
+                console.error('Erro de geolocalização:', error);
+            },
+            options
+        );
+    }
+
+    // --- 7. INICIALIZAÇÃO DA PÁGINA ---
     function init() {
         // Configura a UI de login/logout e os botões de admin
         renderizarAreaUsuario();
@@ -150,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Configura os eventos dos botões
         btnAtualizarLista.addEventListener('click', carregarServicos);
         btnVerEventos.addEventListener('click', carregarEventos);
+        btnCentralizarLocalizacao.addEventListener('click', centralizarNaMinhaLocalizacao);
         btnNovoPonto.addEventListener('click', () => { 
             window.location.href = 'ponto.html'; 
         });
