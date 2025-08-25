@@ -81,7 +81,7 @@ export const loginUserService = async (
 };
 
 // --- SERVIÇO DE ATUALIZAÇÃO ---
-export const updateUserService = async (id: string, input: UpdateUserInput) => {
+export const updateUserService = async (id: string, updateData: Partial<IUser>): Promise<IUser | null> => {
   const session = driver.session();
   try {
     const user = await User.findById(id);
@@ -95,13 +95,13 @@ export const updateUserService = async (id: string, input: UpdateUserInput) => {
     await session.run(
       `MATCH (u:User {userId: $userId}) 
        SET u.nome = $nome, u.email = $email`,
-      { userId: id, nome: input.nome, email: input.email }
+      { userId: id, nome: updateData.nome, email: updateData.email }
     );
 
     // Atualiza no MongoDB
-    if (input.nome) user.nome = input.nome;
-    if (input.email) user.email = input.email;
-    if (input.role) user.role = input.role;
+    if (updateData.nome) user.nome = updateData.nome;
+    if (updateData.email) user.email = updateData.email;
+    if (updateData.role) user.role = updateData.role;
 
     await user.save();
 
