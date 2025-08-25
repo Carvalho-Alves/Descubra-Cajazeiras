@@ -1,104 +1,196 @@
+// Espera a página HTML ser completamente carregada para executar o script
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. SELEÇÃO DOS ELEMENTOS DO HTML ---
-    const listaServicosContainer = document.getElementById('listaServicos'); // Lembre-se de ajustar para listaServicos
-    const loadingSpinner = document.getElementById('loadingServicos'); // Lembre-se de ajustar para loadingServicos
-    const nenhumPontoDiv = document.getElementById('nenhumServico'); // Lembre-se de ajustar para nenhumServico
-    const btnNovoPonto = document.getElementById('btnNovoPonto');
+    // --- 1. SELEÇÃO DE ELEMENTOS DO HTML ---
+    // A gente pega uma referência a todos os elementos que vamos manipular
+    const usuarioArea = document.getElementById('usuario-area');
+    const btnNovo = document.getElementById('btnNovo');
+    const listaServicosContainer = document.getElementById('listaServicos');
+    const loadingServicosSpinner = document.getElementById('loadingServicos');
+    const nenhumServicoDiv = document.getElementById('nenhumServico');
     const btnAtualizarLista = document.getElementById('btnAtualizarLista');
     const inputBusca = document.getElementById('inputBusca');
     const btnBuscar = document.getElementById('btnBuscar');
     const btnLimparBusca = document.getElementById('btnLimparBusca');
-    const usuarioArea = document.getElementById('usuario-area');
+    const btnVerEventos = document.getElementById('btnVerEventos');
+    const listaEventosContainer = document.getElementById('listaEventos');
+    const loadingEventosSpinner = document.getElementById('loadingEventos');
+    const nenhumEventoDiv = document.getElementById('nenhumEvento');
 
     // --- 2. ESTADO DA APLICAÇÃO ---
-    let todosOsPontos = [];
-    let marcadoresNoMapa = [];
+    let todosOsServicos = [];
+    let eventosCarregados = false; // Flag para não buscar os eventos toda hora
 
-    // --- 3. INICIALIZAÇÃO DO MAPA LEAFLET ---
+    // --- 3. INICIALIZAÇÃO DO MAPA ---
     const map = L.map('mapa').setView([-6.8897, -38.5583], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // --- 4. FUNÇÕES DE RENDERIZAÇÃO E UI ---
-
+    // --- 4. LÓGICA DE AUTENTICAÇÃO E UI ---
+    
     /**
-     * Renderiza os botões de Login/Cadastro ou o menu de Admin.
-     * ESTA É A FUNÇÃO CORRIGIDA.
+     * Decide o que mostrar no canto superior direito e gerencia os botões de admin.
      */
     function renderizarAreaUsuario() {
-        // Para testar, mude esta linha para 'true'
-        const usuarioLogado = false; 
+        // Para testar, mude esta linha para 'true' para ver a interface de admin
+        const usuarioLogado = false;
 
         if (usuarioLogado) {
             // Se ESTÁ logado (Admin)
             usuarioArea.innerHTML = `
                 <div class="dropdown">
                     <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-2"></i> Administrador
+                        <i class="fas fa-user-circle me-2"></i> Admin
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#" id="btnSair">Sair</a></li>
+                        <li><a class="dropdown-item text-danger" href="#" id="btnSair">Sair</a></li>
                     </ul>
                 </div>
             `;
-            // Mostra o botão que estava escondido por padrão
-            btnNovoPonto.style.display = 'inline-block';
-
+            btnNovo.style.display = 'inline-block'; // Mostra o botão "+ Novo"
             document.getElementById('btnSair').addEventListener('click', () => {
-                alert('Saindo...');
-                // Aqui entraria a lógica de logout (limpar token, etc)
+                alert('Fazendo logout...');
+                // localStorage.removeItem('authToken'); // Se usar token
                 window.location.reload();
             });
-
         } else {
             // Se NÃO está logado (Turista)
             usuarioArea.innerHTML = `
-                <button class="btn btn-light me-2" id="btnLogin">Login</button>
+                <button class="btn btn-outline-light me-2" id="btnLogin">Login</button>
                 <button class="btn btn-primary" id="btnCadastro">Cadastro</button>
             `;
-            // Garante que o botão "+ Novo" continue escondido
-            btnNovo.style.display = 'none';
+            btnNovo.style.display = 'none'; // Garante que o botão "+ Novo" está escondido
 
-            // Adiciona os eventos DEPOIS de criar os botões, garantindo que funcionem
             document.getElementById('btnLogin').addEventListener('click', () => {
-                window.location.href = '/login.html';
+                window.location.href = 'telaLogin.html';
             });
             document.getElementById('btnCadastro').addEventListener('click', () => {
-                window.location.href = '/cadastro.html';
+                window.location.href = 'telaCadastro.html';
             });
         }
     }
-    
-    // --- O RESTO DO SEU CÓDIGO ---
-    // Coloque aqui as suas outras funções que estavam vazias
-    // (carregarPontos, renderizarLista, handleBusca, etc.)
-    // Exemplo:
-    async function carregarPontos() {
-        console.log("Buscando pontos...");
-        // Sua lógica de fetch aqui
-    }
-    function handleBusca() {
-        console.log("Buscando...");
+
+    // --- 5. FUNÇÕES DE SERVIÇOS (Página Principal) ---
+
+    async function carregarServicos() {
+        loadingServicosSpinner.style.display = 'block';
+        listaServicosContainer.innerHTML = '';
+        nenhumServicoDiv.style.display = 'none';
+        try {
+            const response = await fetch('/api/servicos'); // A API precisa ter essa rota
+            if (!response.ok) throw new Error('Falha ao buscar dados.');
+            todosOsServicos = await response.json();
+            renderizarListaServicos(todosOsServicos);
+            adicionarMarcadoresServicos(todosOsServicos);
+        } catch (error) {
+            console.error(error);
+            listaServicosContainer.innerHTML = `<div class="alert alert-danger m-2">Erro ao carregar serviços.</div>`;
+        } finally {
+            loadingServicosSpinner.style.display = 'none';
+        }
     }
 
-
-    // --- 5. INICIALIZAÇÃO DOS EVENT LISTENERS ---
-    function inicializarEventos() {
-        btnNovoPonto.addEventListener('click', () => {
-            window.location.href = 'ponto.html';
+    function renderizarListaServicos(servicos) {
+        listaServicosContainer.innerHTML = '';
+        nenhumServicoDiv.style.display = servicos.length === 0 ? 'block' : 'none';
+        servicos.forEach(servico => {
+            const item = document.createElement('a');
+            item.className = 'list-group-item list-group-item-action';
+            item.href = `ponto.html?id=${servico._id}&tipo=servico`;
+            item.innerHTML = `
+                <h5 class="mb-1">${servico.nome || servico.titulo}</h5>
+                <p class="mb-1 text-muted">${servico.tipo_servico}</p>
+                <small>${servico.descricao.substring(0, 70)}...</small>
+            `;
+            listaServicosContainer.appendChild(item);
         });
-        btnAtualizarLista.addEventListener('click', carregarPontos);
-        btnBuscar.addEventListener('click', handleBusca);
     }
 
-    // --- 6. EXECUÇÃO INICIAL ---
+    function adicionarMarcadoresServicos(servicos) {
+        map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+        servicos.forEach(servico => {
+            if (servico.localizacao?.latitude && servico.localizacao?.longitude) {
+                const marker = L.marker([servico.localizacao.latitude, servico.localizacao.longitude]).addTo(map);
+                marker.bindPopup(`<b>${servico.nome || servico.titulo}</b><br><a href="ponto.html?id=${servico._id}&tipo=servico">Ver detalhes</a>`);
+            }
+        });
+    }
+
+    // --- 6. FUNÇÕES DE EVENTOS (Modal) ---
+
+    async function carregarEventos() {
+        if (eventosCarregados) return;
+        loadingEventosSpinner.style.display = 'block';
+        listaEventosContainer.innerHTML = '';
+        nenhumEventoDiv.style.display = 'none';
+        try {
+            const response = await fetch('/api/eventos'); // A API precisa ter essa rota
+            if (!response.ok) throw new Error('Falha ao buscar dados.');
+            const eventos = await response.json();
+            renderizarListaEventos(eventos);
+            eventosCarregados = true;
+        } catch (error) {
+            console.error(error);
+            listaEventosContainer.innerHTML = `<div class="alert alert-danger m-2">Erro ao carregar eventos.</div>`;
+        } finally {
+            loadingEventosSpinner.style.display = 'none';
+        }
+    }
+
+    function renderizarListaEventos(eventos) {
+        nenhumEventoDiv.style.display = eventos.length === 0 ? 'block' : 'none';
+        eventos.forEach(evento => {
+            const dataEvento = new Date(evento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+            const item = document.createElement('div');
+            item.className = 'list-group-item';
+            item.innerHTML = `
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">${evento.nome}</h5>
+                    <small class="text-muted">${dataEvento}</small>
+                </div>
+                <p class="mb-1">${evento.descricao}</p>
+                <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i> ${evento.local || 'Local a definir'}</small>
+            `;
+            listaEventosContainer.appendChild(item);
+        });
+    }
+
+    // --- 7. FUNÇÕES DE BUSCA ---
+
+    function handleBusca() {
+        const termo = inputBusca.value.toLowerCase().trim();
+        btnLimparBusca.style.display = termo ? 'block' : 'none';
+        const servicosFiltrados = todosOsServicos.filter(s => 
+            (s.nome || s.titulo).toLowerCase().includes(termo) ||
+            s.descricao.toLowerCase().includes(termo) ||
+            s.tipo_servico.toLowerCase().includes(termo)
+        );
+        renderizarListaServicos(servicosFiltrados);
+        adicionarMarcadoresServicos(servicosFiltrados);
+    }
+
+    function limparBusca() {
+        inputBusca.value = '';
+        btnLimparBusca.style.display = 'none';
+        renderizarListaServicos(todosOsServicos);
+        adicionarMarcadoresServicos(todosOsServicos);
+    }
+
+    // --- 8. INICIALIZAÇÃO DA PÁGINA ---
     function init() {
-        renderizarAreaUsuario(); // <-- Esta função agora cuida de TUDO
-        inicializarEventos();
-        carregarPontos();
+        // Configura a UI de login/logout
+        renderizarAreaUsuario();
+
+        // Configura os botões e inputs
+        btnAtualizarLista.addEventListener('click', carregarServicos);
+        btnVerEventos.addEventListener('click', carregarEventos);
+        btnNovo.addEventListener('click', () => { window.location.href = 'ponto.html'; });
+        btnBuscar.addEventListener('click', handleBusca);
+        btnLimparBusca.addEventListener('click', limparBusca);
+        inputBusca.addEventListener('keyup', handleBusca);
+
+        // Carrega os dados iniciais da página
+        carregarServicos();
     }
 
-    init(); // Inicia a aplicação
+    init(); // Roda a aplicação
 });
