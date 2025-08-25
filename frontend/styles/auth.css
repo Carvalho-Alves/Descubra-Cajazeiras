@@ -1,0 +1,17 @@
+/* Estilo para centralizar o formulário na página */
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f0f8ff; /* Usando a variável --light-color do seu index.css */
+}
+
+/* Define a largura do card de autenticação */
+.auth-card {
+  width: 100%;
+  max-width: 450px;
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border-radius: 0.75rem;
+}
