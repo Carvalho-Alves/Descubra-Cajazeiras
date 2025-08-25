@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -28,6 +28,9 @@
         <nav class="menu-centro">
             <button class="btn btn-outline-light me-2" id="btnDashboard" data-bs-toggle="modal" data-bs-target="#modalDashboard">
                 <i class="fas fa-chart-bar me-1"></i> Dashboard
+            </button>
+            <button class="btn btn-outline-light me-2" id="btnConhecaProjeto" data-bs-toggle="modal" data-bs-target="#modalSobreProjeto">
+                <i class="fas fa-info-circle me-1"></i> Conheça o Projeto
             </button>
             <button class="btn btn-outline-light me-2" id="btnVerEventos" data-bs-toggle="modal" data-bs-target="#modalEventos">
                 <i class="fas fa-calendar-alt me-1"></i> Eventos
@@ -98,6 +101,47 @@
             </div>
         </section>
     </main>
+
+    <div class="modal fade" id="modalSobreProjeto" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Conheça o Projeto Descubra+ Cajazeiras
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="lead">O sistema <strong>Descubra+ Cajazeiras</strong> é uma aplicação web que visa divulgar, organizar e facilitar o acesso aos atrativos turísticos, históricos e estabelecimentos da cidade de Cajazeiras–PB, conhecida como "A Terra que ensinou a Paraíba a ler". A proposta é centralizar todas as informações que um turista precisa em uma única plataforma, oferecendo recursos como o cadastro e gerenciamento de pontos turísticos, hotéis, restaurantes e eventos, geolocalização dos locais em mapa, sistema de avaliação com notas e comentários, e upload de imagens com informações detalhadas. Com essas funcionalidades, o projeto busca facilitar o planejamento de visitas, estimular o turismo e fortalecer a economia e a cultura locais, promovendo a cidade como um destino completo e conectando os visitantes aos encantos e tradições que fazem de Cajazeiras uma cidade única no sertão paraibano.</p>
+
+                    <hr class="my-4">
+
+                    <h4><i class="fas fa-map-signs me-2 text-primary"></i>Tipos de Serviços Turíticos</h4>
+                    <p>Para manter a organização, os serviços turísticos são classificados da seguinte forma:</p>
+                    <div class="mt-3">
+                        <h6><i class="fas fa-hotel me-2"></i>Hospedagem</h6>
+                        <p>Hotéis, pousadas e outros meios de hospedagem na cidade.</p>
+                        <h6><i class="fas fa-utensils me-2"></i>Alimentação/Lazer</h6>
+                        <p>Restaurantes, bares, lanchonetes e locais de lazer gastronômico.</p>
+                        <h6><i class="fas fa-landmark me-2"></i>Ponto Turístico</h6>
+                        <p>Igrejas, museus, praças e outros marcos culturais, religiosos ou de aventura em Cajazeiras.</p>
+                    </div>
+
+                    <p>Os <strong>Eventos</strong> estão listados no botão na barra de navegação da página inicial.</p>
+
+                    <div class="alert alert-info mt-4">
+                        Explore, descubra e apaixone-se por Cajazeiras! ☀️
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        Entendido!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="modalPonto" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
