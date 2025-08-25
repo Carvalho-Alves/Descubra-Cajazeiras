@@ -1,7 +1,5 @@
 import Ponto from '../models/Ponto.js';
 import pontoService from '../service/pontoService.js'; 
-
-
 class PontoController {
     constructor() {
         this.markers = new Map();
@@ -77,22 +75,40 @@ class PontoController {
      * Inicializa os mapas
      */
     initMapa() {
-        this.mapa = L.map('mapa').setView([-6.8897, -38.5583], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(this.mapa);
+        // --- Configurações Compartilhadas para ambos os mapas ---
+        const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const tileAttribution = '© OpenStreetMap contributors';
+        const initialCoords = [-6.8897, -38.5583]; // Centro de Cajazeiras
 
+        // --- 1. Inicialização do Mapa Principal (com limites) ---
+
+        // Define os cantos do "retângulo" que limitará a navegação
+        const southWest = L.latLng(-6.95, -38.62);
+        const northEast = L.latLng(-6.83, -38.50);
+        const bounds = L.latLngBounds(southWest, northEast);
+
+        this.mapa = L.map('mapa', {
+            center: initialCoords,
+            zoom: 15,
+            maxBounds: bounds,            // A "cerca" geográfica que limita o mapa
+            maxBoundsViscosity: 1.0,      // Faz a borda ser "dura", não elástica
+            minZoom: 13                   // Impede o usuário de dar muito zoom para trás
+        });
+        L.tileLayer(tileUrl, { attribution: tileAttribution }).addTo(this.mapa);
+
+        // Tenta centralizar o mapa na localização do usuário para conveniência
         this.obterLocalizacaoUsuario();
 
-        this.miniMapa = L.map('miniMapa').setView([-6.8897, -38.5583], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(this.miniMapa);
+        // --- 2. Inicialização do Mini Mapa (do formulário) ---
+        this.miniMapa = L.map('miniMapa').setView(initialCoords, 15);
+        L.tileLayer(tileUrl, { attribution: tileAttribution }).addTo(this.miniMapa);
 
+        // --- 3. Evento de Clique para o Mini Mapa ---
+        // Adiciona um evento que preenche os inputs de latitude/longitude quando o mapa é clicado.
         this.miniMapa.on('click', (e) => {
             document.getElementById('inputLatitude').value = e.latlng.lat.toFixed(6);
             document.getElementById('inputLongitude').value = e.latlng.lng.toFixed(6);
-            this.atualizarMiniMapa();
+            this.atualizarMiniMapa(); // Atualiza o marcador no mini mapa
         });
     }
 
