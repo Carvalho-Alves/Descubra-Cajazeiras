@@ -1,6 +1,7 @@
 /* Variáveis CSS */
 :root {
   --primary-color: #ffd500;
+  --primary-dark-color: #e0be00;
   --secondary-color: #6c757d;
   --success-color: #198754;
   --danger-color: #dc3545;
@@ -26,91 +27,14 @@ body {
   line-height: 1.6;
 }
 
-/* Layout do login e cadastro */
-.login-container, .cadastro-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 2em;
-  background-color: var(--light-color);
-}
-
-.login-container h2, .cadastro-container h2 {
-  font-family: var(--font-heading);
-  color: var(--primary-color);
-  text-align: center;
-  margin-bottom: 1em;
-}
-
-.login-container form, .cadastro-container form {
-  background: white;
-  padding: 2em;
-  border-radius: 10px;
-  box-shadow: 0 0 20px var(--shadow-light);
-  width: 100%;
-  max-width: 400px;
-}
-
-.login-container label, .cadastro-container label {
-  display: block;
-  margin-top: 1em;
-  font-weight: bold;
-}
-
-.login-container input, .cadastro-container input, .login-container button, .cadastro-container button {
-  width: 100%;
-  padding: 0.8em;
-  margin-top: 0.5em;
-  box-sizing: border-box;
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  transition: border-color var(--transition-speed);
-}
-
-.login-container input:focus, .cadastro-container input:focus {
-  border-color: var(--primary-color);
-  outline: none;
-}
-
-.login-container button[type="submit"], .cadastro-container button[type="submit"] {
-  padding: 1em;
-  margin-top: 1.5em;
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-  font-weight: bold;
-  transition: background-color var(--transition-speed), transform var(--transition-speed);
-}
-
-.login-container button[type="submit"]:hover, .cadastro-container button[type="submit"]:hover {
-  background-color: #004a99; /* Cor de hover ajustada */
-  transform: translateY(-2px);
-}
-
-.login-container p, .cadastro-container p {
-  margin-top: 1em;
-  text-align: center;
-}
-
-.login-container a, .cadastro-container a {
-  color: var(--primary-color);
-  text-decoration: none;
-  font-weight: bold;
-}
-
 /* Header */
 header {
+  background-color: var(--primary-color);
+  color: var(--dark-color);
+  padding: 1.5em 2em;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--primary-color);
-  color: var(--dark-color);
-  padding: 1.5em 2em;
   box-shadow: 0 4px 6px var(--shadow-medium);
   flex-wrap: wrap;
 }
@@ -252,13 +176,44 @@ h2 {
   font-size: 0.75rem;
 }
 
+/* Ícones de tipo de ponto */
+.tipo-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--dark-color);
+  margin-right: 15px;
+  font-size: 18px;
+  box-shadow: 0 2px 4px var(--shadow-light);
+  background-color: var(--primary-dark-color); /* Fallback, será sobrescrito */
+}
+
+/* Cores específicas para cada tipo de ponto */
+.tipo-icon.tipo-roupas-e-acessorios { background-color: #4CAF50; }
+.tipo-icon.tipo-casa-e-decoracao { background-color: #2196F3; }
+.tipo-icon.tipo-cultura { background-color: #FF5722; }
+.tipo-icon.tipo-alimentos { background-color: #FFC107; }
+.tipo-icon.tipo-outros { background-color: #607D8B; }
+
 /* Mapa */
-#mapa, #miniMapa {
+#mapa {
+  height: 600px;
+  width: 100%;
+  border-radius: 0.375rem;
+}
+
+#miniMapa {
+  height: 200px;
+  width: 100%;
   border-radius: 0.375rem;
 }
 
 .leaflet-container {
   font-family: inherit;
+  border-radius: 0.5rem;
 }
 
 .leaflet-popup-content {
@@ -406,4 +361,29 @@ h2 {
 
 .fade-in {
   animation: fadeIn 0.3s ease-in-out;
+}
+
+.area-usuario {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 5px 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.area-usuario .foto-perfil {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.area-usuario button {
+    margin-left: 10px;
 }

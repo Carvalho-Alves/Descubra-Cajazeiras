@@ -22,7 +22,6 @@ export async function disconnectMongo(): Promise<void> {
     return;
   }
 
-  
     await mongoose.disconnect();
     console.log('✅ Desconectado do banco de dados MongoDB.');
   }

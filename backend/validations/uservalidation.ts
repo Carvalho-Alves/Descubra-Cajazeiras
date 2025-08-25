@@ -1,13 +1,23 @@
-import { z } from 'zod';
+import { z } from "zod";
 
+// 🔹 Campos comuns
+const credenciaisSchema = {
+  email: z.string().email({ message: "Email inválido." }),
+  senha: z.string().min(6, { message: "A senha deve ter no mínimo 6 caracteres." }),
+};
+
+// 🔹 Registro
 export const registerSchema = z.object({
-  nome: z.string().min(2),
-  email: z.string().email(),
-  senha: z.string().min(6),
+  nome: z.string().min(2, { message: "O nome deve ter no mínimo 2 caracteres." }),
   foto: z.string().optional(),
+  ...credenciaisSchema,
 });
 
+// 🔹 Login
 export const loginSchema = z.object({
-  email: z.string().email(),
-  senha: z.string().min(6),
+  ...credenciaisSchema,
 });
+
+// 🔹 Tipos
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;

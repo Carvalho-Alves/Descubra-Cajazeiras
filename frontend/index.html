@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -7,9 +7,16 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/styles/index.css">
-    <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: *.tile.openstreetmap.org;">
+    <link rel="stylesheet" href="styles/index.css">
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.png">
+    
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        img-src 'self' data: https://*.tile.openstreetmap.org;
+        script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+        font-src 'self' https://cdnjs.cloudflare.com;
+    ">
 </head>
 <body>
     <header>
@@ -19,20 +26,21 @@
             </a>
         </div>
         <nav class="menu-centro">
-            <button class="btn btn-outline-light me-2" id="btnConhecaProjeto" data-bs-toggle="modal" data-bs-target="#modalSobreProjeto">
-                <i class="fas fa-info-circle me-1"></i> Conheça o Projeto
+            <button class="btn btn-outline-light me-2" id="btnDashboard" data-bs-toggle="modal" data-bs-target="#modalDashboard">
+                <i class="fas fa-chart-bar me-1"></i> Dashboard
             </button>
             <button class="btn btn-outline-light me-2" id="btnVerEventos" data-bs-toggle="modal" data-bs-target="#modalEventos">
                 <i class="fas fa-calendar-alt me-1"></i> Eventos
             </button>
-            <button class="btn btn-outline-light" id="btnNovo" style="display: none;">
-                <i class="fas fa-plus me-1"></i> Novo
+            <button class="btn btn-outline-light" id="btnNovoPonto">
+                <i class="fas fa-plus me-1"></i> Novo Ponto
             </button>
-
         </nav>
         <div class="usuario" id="usuario-area">
             </div>
     </header>
+
+    <div id="area-usuario" class="area-usuario"></div>
 
     <main>
         <section id="conteudo-principal">
@@ -44,13 +52,14 @@
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h5 class="mb-0">
                                         <i class="fas fa-store me-2"></i>
-                                        Serviços Turísticos </h5>
+                                        Pontos Turísticos
+                                    </h5>
                                     <button class="btn btn-sm btn-outline-primary" id="btnAtualizarLista">
                                         <i class="fas fa-sync-alt"></i>
                                     </button>
                                 </div>
                                 <div class="input-group input-group-sm">
-                                    <input type="text" class="form-control" id="inputBusca" placeholder="Buscar serviços...">
+                                    <input type="text" class="form-control" id="inputBusca" placeholder="Buscar pontos...">
                                     <button class="btn btn-outline-secondary" type="button" id="btnBuscar">
                                         <i class="fas fa-search"></i>
                                     </button>
@@ -60,16 +69,16 @@
                                 </div>
                             </div>
                             <div class="card-body p-0">
-                                <div id="loadingServicos" class="text-center p-4">
+                                <div id="loadingPontos" class="text-center p-4" style="display: none;">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Carregando...</span>
                                     </div>
                                 </div>
-                                <div id="listaServicos" class="list-group list-group-flush" style="max-height: 600px; overflow-y: auto;">
-                                    </div>
-                                <div id="nenhumServico" class="text-center p-4 text-muted" style="display: none;">
+                                <div id="listaPontos" class="list-group list-group-flush" style="max-height: 600px; overflow-y: auto;">
+                                </div>
+                                <div id="nenhumPonto" class="text-center p-4 text-muted" style="display: none;">
                                     <i class="fas fa-map-marker-alt fa-3x mb-3"></i>
-                                    <p>Nenhum serviço cadastrado</p>
+                                    <p>Nenhum ponto cadastrado.</p>
                                 </div>
                             </div>
                         </div>
@@ -78,7 +87,7 @@
                     <div class="col-md-8">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="mb-0"><i class="fas fa-map me-2"></i> Mapa</h5>
+                                <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i> Mapa</h5>
                             </div>
                             <div class="card-body p-0">
                                 <div id="mapa" style="height: 600px; width: 100%;"></div>
@@ -90,76 +99,155 @@
         </section>
     </main>
 
-    <div class="modal fade" id="modalSobreProjeto" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+    <div class="modal fade" id="modalPonto" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="formPonto">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Novo Ponto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="alertContainer"></div>
+                        <div class="mb-3">
+                            <label for="inputNome" class="form-label">Nome *</label>
+                            <input type="text" class="form-control" id="inputNome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="inputTipo" class="form-label">Tipo *</label>
+                            <select class="form-select" id="inputTipo" required>
+                                <option value="Roupas e Acessórios">Roupas e Acessórios</option>
+                                <option value="Casa e Decoração">Casa e Decoração</option>
+                                <option value="Cultura">Cultura</option>
+                                <option value="Alimentos">Alimentos</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="inputDescricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="inputDescricao" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="inputEndereco" class="form-label">Endereço</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="inputEndereco" placeholder="Digite um endereço para buscar">
+                                <button class="btn btn-outline-secondary" type="button" id="btnBuscarEndereco">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div class="dropdown-menu" id="resultadosBusca"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="inputLatitude" class="form-label">Latitude *</label>
+                                <input type="text" class="form-control" id="inputLatitude" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="inputLongitude" class="form-label">Longitude *</label>
+                                <input type="text" class="form-control" id="inputLongitude" required>
+                            </div>
+                        </div>
+                        <div id="miniMapa"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Ponto</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalConfirmarExclusao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza que deseja excluir o ponto "<strong id="nomeExclusao"></strong>"?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDashboard" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Conheça o Projeto Descubra+ Cajazeiras
+                        <i class="fas fa-chart-bar me-2"></i> Dashboard de Pontos Turísticos
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="lead">O sistema <strong>Descubra+ Cajazeiras</strong> é uma aplicação web que visa divulgar, organizar e facilitar o acesso aos atrativos turísticos, históricos e estabelecimentos da cidade de Cajazeiras–PB, conhecida como "A Terra que ensinou a Paraíba a ler". A proposta é centralizar todas as informações que um turista precisa em uma única plataforma, oferecendo recursos como o cadastro e gerenciamento de pontos turísticos, hotéis, restaurantes e eventos, geolocalização dos locais em mapa, sistema de avaliação com notas e comentários, e upload de imagens com informações detalhadas. Com essas funcionalidades, o projeto busca facilitar o planejamento de visitas, estimular o turismo e fortalecer a economia e a cultura locais, promovendo a cidade como um destino completo e conectando os visitantes aos encantos e tradições que fazem de Cajazeiras uma cidade única no sertão paraibano.</p>
-
-                    <hr class="my-4">
-
-                    <h4><i class="fas fa-map-signs me-2 text-primary"></i>Tipos de Serviços Turíticos</h4>
-                    <p>Para manter a organização, os serviços turísticos são classificados da seguinte forma:</p>
-                    <div class="mt-3">
-                        <h6><i class="fas fa-hotel me-2"></i>Hospedagem</h6>
-                        <p>Hotéis, pousadas e outros meios de hospedagem na cidade.</p>
-                        <h6><i class="fas fa-utensils me-2"></i>Alimentação/Lazer</h6>
-                        <p>Restaurantes, bares, lanchonetes e locais de lazer gastronômico.</p>
-                        <h6><i class="fas fa-landmark me-2"></i>Ponto Turístico</h6>
-                        <p>Igrejas, museus, praças e outros marcos culturais, religiosos ou de aventura em Cajazeiras.</p>
-                    </div>
-
-                    <p>Os <strong>Eventos</strong> estão listados no botão na barra de navegação da página inicial.</p>
-
-                    <div class="alert alert-info mt-4">
-                        Explore, descubra e apaixone-se por Cajazeiras! ☀️
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-                        Entendido!
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalEventos" tabindex="-1" aria-labelledby="modalEventosLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalEventosLabel"><i class="fas fa-calendar-alt me-2"></i> Eventos em Cajazeiras</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="loadingEventos" class="text-center p-4" style="display: none;">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Carregando...</span>
+                    <div class="row mb-4 text-center">
+                        <div class="col-md-3">
+                            <div class="dashboard-card">
+                                <h6>Total de Pontos</h6>
+                                <p id="totalPontos" class="display-5 text-primary">0</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="dashboard-card">
+                                <h6>Tipo Mais Comum</h6>
+                                <p id="tipoMaisComum" class="lead">N/A</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="dashboard-card">
+                                <h6>Região com Mais Pontos</h6>
+                                <p id="regiaoMaior" class="lead">N/A</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="dashboard-card">
+                                <h6>Crescimento (mês)</h6>
+                                <p id="crescimentoMes" class="display-5 text-success">0</p>
+                            </div>
                         </div>
                     </div>
-                    <div id="listaEventos">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-center">Pontos por Tipo</h6>
+                            <canvas id="graficoPorTipo"></canvas>
                         </div>
-                    <div id="nenhumEvento" class="text-center p-4 text-muted" style="display: none;">
-                        <i class="fas fa-calendar-times fa-3x mb-3"></i>
-                        <p>Nenhum evento futuro cadastrado</p>
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-center">Distribuição Geográfica</h6>
+                            <canvas id="graficoGeografico"></canvas>
+                        </div>
+                        <div class="col-md-12 mb-4">
+                            <h6 class="text-center">Pontos Cadastrados por Mês</h6>
+                            <canvas id="graficoCrescimento"></canvas>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6 class="text-center">Pontos Recentes</h6>
+                            <div class="list-group" id="pontosRecentes"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="btnAtualizarDashboard">Atualizar</button>
                 </div>
             </div>
         </div>
     </div>
-
+    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="scripts/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script type="module" src="./scripts/models/Ponto.js"></script>
+    <script type="module" src="./scripts/service/pontoService.js"></script>
+    <script type="module" src="./scripts/controller/pontoModel.js"></script>
+    <script type="module" src="./scripts/index.js"></script>
 </body>
 </html>

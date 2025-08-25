@@ -2,26 +2,30 @@ import { Request, Response, NextFunction } from 'express';
 import { createServicoSchema, updateServicoSchema } from '../validations/servicovalidation';
 import * as servicoService from '../service/servicoService';
 
-/**
- * @route   POST /api/servicos
- * @desc    Cria um novo serviço turístico
- * @access  Private (requer autenticação)
- */
-export const create = async (req: Request, res: Response, next: NextFunction) => {
+export const create = async (req: Request, res: Response) => {
   try {
-    // Valida os dados recebidos no corpo da requisição
-    const servicoData = createServicoSchema.parse(req.body);
-    
-    // Pega o ID do usuário que foi injetado pelo middleware de autenticação (ensureAuth)
-    const usuarioId = req.userId!; 
+    // 1. Obtenha o 'usuarioId' do objeto de requisição (req).
+    //    Isso geralmente vem do middleware de autenticação (ex: req.user.id).
+    const usuarioId = req.userId; // Ou req.user.id, dependendo de como você configurou o middleware.
 
-    // Chama a camada de serviço para criar o recurso no banco de dados
-    const novoServico = await servicoService.createServico({ ...servicoData, usuarioId });
-    
-    res.status(201).json(novoServico);
-  } catch (error) {
-    // Em caso de erro (validação ou outro), passa para o próximo middleware de erro
-    next(error); 
+    // 2. Obtenha os dados do serviço do corpo da requisição.
+    const servicoData = req.body;
+
+    // 3. Chame a função createServico, passando os dois argumentos esperados.
+    const servico = createServico(servicoData, usuarioId);
+
+    // 4. Envie uma resposta de sucesso.
+    res.status(201).json({
+      success: true,
+      data: servico,
+      message: "Serviço criado com sucesso.",
+    });
+  } catch (error: any) {
+    // 5. Trate os erros, se houver.
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -77,11 +81,6 @@ export const update = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
-/**
- * @route   DELETE /api/servicos/:id
- * @desc    Deleta um serviço turístico
- * @access  Private (requer autenticação e posse do recurso)
- */
 export const remove = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
@@ -93,3 +92,7 @@ export const remove = async (req: Request, res: Response, next: NextFunction) =>
     next(error);
   }
 };
+
+function createServico(_servicoData: any, _usuarioId: string | undefined) {
+  throw new Error('Function not implemented.');
+}
