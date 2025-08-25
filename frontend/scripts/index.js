@@ -307,14 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btnVerEventos.addEventListener('click', carregarEventos);
         btnCentralizarLocalizacao.addEventListener('click', centralizarNaMinhaLocalizacao);
         btnNovoPonto.addEventListener('click', () => { 
-            // Usa o modal implementado no CRUD em vez de redirecionar
-            if (window.servicoCrud) {
-                window.servicoCrud.abrirModalCriacao();
-            } else {
-                // Fallback caso o CRUD não esteja carregado
-                console.warn('CRUD não inicializado, redirecionando...');
-                window.location.href = 'ponto.html'; 
-            }
+            // Redireciona para a página dedicada de gerenciamento de serviços
+            window.location.href = 'servicos.html';
         });
         
         // Carrega os dados iniciais
