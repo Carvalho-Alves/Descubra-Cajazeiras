@@ -55,7 +55,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h5 class="mb-0">
                                         <i class="fas fa-store me-2"></i>
-                                        Pontos Turísticos
+                                        Serviços Turísticos
                                     </h5>
                                     <button class="btn btn-sm btn-outline-primary" id="btnAtualizarLista">
                                         <i class="fas fa-sync-alt"></i>
@@ -220,66 +220,84 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalDashboard" tabindex="-1">
+    <div class="modal fade" id="modalDashboard" tabindex="-1" aria-labelledby="modalDashboardLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-chart-bar me-2"></i> Dashboard de Pontos Turísticos
+                    <h5 class="modal-title" id="modalDashboardLabel">
+                        <i class="fas fa-chart-bar me-2"></i> Dashboard Geral
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-4 text-center">
-                        <div class="col-md-3">
-                            <div class="dashboard-card">
-                                <h6>Total de Pontos</h6>
-                                <p id="totalPontos" class="display-5 text-primary">0</p>
+                        <div class="col-md-3 col-6">
+                            <div class="card card-body h-100">
+                                <h6 class="text-muted">Total de Serviços</h6>
+                                <p id="totalServicos" class="display-5 fw-bold text-primary">0</p>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="dashboard-card">
-                                <h6>Tipo Mais Comum</h6>
-                                <p id="tipoMaisComum" class="lead">N/A</p>
+                        <div class="col-md-3 col-6">
+                            <div class="card card-body h-100">
+                                <h6 class="text-muted">Total de Eventos</h6>
+                                <p id="totalEventos" class="display-5 fw-bold text-info">0</p>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="dashboard-card">
-                                <h6>Região com Mais Pontos</h6>
-                                <p id="regiaoMaior" class="lead">N/A</p>
+                        <div class="col-md-3 col-6 mt-3 mt-md-0">
+                            <div class="card card-body h-100">
+                                <h6 class="text-muted">Tipo de Serviço Mais Comum</h6>
+                                <p id="tipoMaisComum" class="h5 mt-2">N/A</p>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="dashboard-card">
-                                <h6>Crescimento (mês)</h6>
-                                <p id="crescimentoMes" class="display-5 text-success">0</p>
+                        <div class="col-md-3 col-6 mt-3 mt-md-0">
+                            <div class="card card-body h-100">
+                                <h6 class="text-muted">Novos Cadastros (Mês)</h6>
+                                <p id="crescimentoMes" class="display-5 fw-bold text-success">0</p>
                             </div>
                         </div>
                     </div>
+
                     <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <h6 class="text-center">Pontos por Tipo</h6>
-                            <canvas id="graficoPorTipo"></canvas>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">Serviços Turísticos por Tipo</div>
+                                <div class="card-body">
+                                    <canvas id="graficoServicosPorTipo" style="min-height: 250px;"></canvas>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-4">
-                            <h6 class="text-center">Distribuição Geográfica</h6>
-                            <canvas id="graficoGeografico"></canvas>
-                        </div>
-                        <div class="col-md-12 mb-4">
-                            <h6 class="text-center">Pontos Cadastrados por Mês</h6>
-                            <canvas id="graficoCrescimento"></canvas>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">Crescimento de Cadastros por Mês</div>
+                                <div class="card-body">
+                                    <canvas id="graficoCrescimento" style="min-height: 250px;"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                     <div class="row">
-                        <div class="col-md-12">
-                            <h6 class="text-center">Pontos Recentes</h6>
-                            <div class="list-group" id="pontosRecentes"></div>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">Serviços Adicionados Recentemente</div>
+                                <div class="list-group list-group-flush" id="servicosRecentes">
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card">
+                                <div class="card-header">Próximos Eventos</div>
+                                <div class="list-group list-group-flush" id="proximosEventos">
+                                    </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-primary" id="btnAtualizarDashboard">Atualizar</button>
+                    <button type="button" class="btn btn-primary" id="btnAtualizarDashboard">
+                        <i class="fas fa-sync-alt me-2"></i>Atualizar
+                    </button>
                 </div>
             </div>
         </div>
@@ -311,6 +329,53 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarUsuarioLabel">Editar Usuário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="form-editar-usuario" novalidate>
+                <div class="modal-body">
+                    <input type="hidden" id="edit-userId">
+
+                    <div class="text-center mb-3">
+                        <img id="edit-foto-preview" src="assets/images/default-avatar.png" class="rounded-circle" alt="Foto de Perfil" width="100" height="100">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit-nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="edit-nome" name="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="edit-email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-role" class="form-label">Função (Role)</label>
+                        <select class="form-select" id="edit-role" name="role" required>
+                            <option value="turista">Turista</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-foto" class="form-label">Alterar Foto de Perfil</label>
+                        <input class="form-control" type="file" id="edit-foto" name="foto" accept="image/*">
+                    </div>
+                    <div id="edit-user-alert-container"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -320,5 +385,10 @@
     <script type="module" src="./scripts/service/pontoService.js"></script>
     <script type="module" src="./scripts/controller/pontoModel.js"></script>
     <script type="module" src="./scripts/index.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="scripts/index.js"></script>
 </body>
 </html>
