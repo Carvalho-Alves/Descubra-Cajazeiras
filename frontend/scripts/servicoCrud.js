@@ -11,7 +11,7 @@ class ServicoCrudManager {
         this.servicos = [];
         this.filtroAtivo = '';
         this.modoEdicao = false;
-        
+
         this.initializeElements();
         this.setupEventListeners();
         this.setupMiniMapa();
@@ -25,7 +25,7 @@ class ServicoCrudManager {
         this.tituloModal = document.getElementById('tituloModal');
         this.btnTexto = document.getElementById('btnTexto');
         this.alertContainer = document.getElementById('alertContainer');
-        
+
         // Form inputs
         this.inputNome = document.getElementById('inputNome');
         this.inputTipoServico = document.getElementById('inputTipoServico');
@@ -36,11 +36,11 @@ class ServicoCrudManager {
         this.inputInstagram = document.getElementById('inputInstagram');
         this.inputServicoId = document.getElementById('inputServicoId');
         this.camposDinamicos = document.getElementById('camposDinamicos');
-        
+
         // Filter elements
         this.filtrosTipo = document.querySelectorAll('input[name="filtroTipo"]');
         this.listaServicos = document.getElementById('listaPontos');
-        
+
         // Buttons
         this.btnNovoPonto = document.getElementById('btnNovoPonto');
         this.btnAtualizarLista = document.getElementById('btnAtualizarLista');
@@ -51,24 +51,24 @@ class ServicoCrudManager {
         // Formulário
         this.form.addEventListener('submit', (e) => this.handleFormSubmit(e));
         this.inputTipoServico.addEventListener('change', () => this.atualizarCamposDinamicos());
-        
+
         // Coordenadas
         this.inputLatitude.addEventListener('change', () => this.atualizarMiniMapa());
         this.inputLongitude.addEventListener('change', () => this.atualizarMiniMapa());
-        
+
         // Filtros
         this.filtrosTipo.forEach(filtro => {
             filtro.addEventListener('change', (e) => this.aplicarFiltro(e.target.value));
         });
-        
+
         // Botões
         this.btnNovoPonto.addEventListener('click', () => this.abrirModalCriacao());
         this.btnAtualizarLista.addEventListener('click', () => this.carregarServicos());
         this.btnAdicionarNoMapa.addEventListener('click', () => this.abrirModalCriacao());
-        
+
         // Clique no mapa para criar novo serviço
         this.map.on('click', (e) => this.onMapClick(e));
-        
+
         // Modal events
         document.getElementById('modalPonto').addEventListener('hidden.bs.modal', () => this.limparFormulario());
     }
@@ -79,7 +79,7 @@ class ServicoCrudManager {
             if (!this.miniMapa) {
                 this.miniMapa = L.map('miniMapa').setView([-6.8897, -38.5583], 15);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.miniMapa);
-                
+
                 // Clique no mini mapa atualiza coordenadas
                 this.miniMapa.on('click', (e) => {
                     this.inputLatitude.value = e.latlng.lat.toFixed(6);
@@ -87,7 +87,7 @@ class ServicoCrudManager {
                     this.atualizarMiniMapa();
                 });
             }
-            
+
             // Força o redimensionamento do mini mapa
             setTimeout(() => {
                 this.miniMapa.invalidateSize();
@@ -98,16 +98,16 @@ class ServicoCrudManager {
 
     atualizarMiniMapa() {
         if (!this.miniMapa) return;
-        
+
         const lat = parseFloat(this.inputLatitude.value);
         const lng = parseFloat(this.inputLongitude.value);
-        
+
         if (!isNaN(lat) && !isNaN(lng)) {
             // Remove marcador anterior
             if (this.miniMapaMarcador) {
                 this.miniMapa.removeLayer(this.miniMapaMarcador);
             }
-            
+
             // Adiciona novo marcador
             this.miniMapaMarcador = L.marker([lat, lng]).addTo(this.miniMapa);
             this.miniMapa.setView([lat, lng], 16);
@@ -117,11 +117,11 @@ class ServicoCrudManager {
     atualizarCamposDinamicos() {
         const tipo = this.inputTipoServico.value;
         this.camposDinamicos.innerHTML = '';
-        
+
         if (!tipo) return;
-        
+
         let camposHTML = '<h6 class="mt-3 mb-3"><i class="fas fa-cog me-2"></i>Informações Específicas</h6>';
-        
+
         switch (tipo) {
             case 'Hospedagem':
                 camposHTML += `
@@ -154,7 +154,7 @@ class ServicoCrudManager {
                     </div>
                 `;
                 break;
-                
+
             case 'Alimentação/Lazer':
                 camposHTML += `
                     <div class="row">
@@ -186,7 +186,7 @@ class ServicoCrudManager {
                     </div>
                 `;
                 break;
-                
+
             case 'Ponto Turístico':
                 camposHTML += `
                     <div class="row">
@@ -223,7 +223,7 @@ class ServicoCrudManager {
                 `;
                 break;
         }
-        
+
         this.camposDinamicos.innerHTML = camposHTML;
     }
 
@@ -241,12 +241,14 @@ class ServicoCrudManager {
     }
 
     renderizarServicos() {
-        const servicosFiltrados = this.filtroAtivo 
+        const servicosFiltrados = this.filtroAtivo
             ? this.servicos.filter(s => s.tipo_servico === this.filtroAtivo)
             : this.servicos;
 
         this.listaServicos.innerHTML = '';
-        
+
+        const usuarioLogadoId = this.getUsuarioId(); // Obtém o ID do usuário
+
         servicosFiltrados.forEach(servico => {
             const item = document.createElement('div');
             item.className = 'list-group-item list-group-item-action';
@@ -263,23 +265,25 @@ class ServicoCrudManager {
                         <button class="btn btn-outline-primary btn-sm" onclick="servicoCrud.visualizarServico('${servico._id}')">
                             <i class="fas fa-eye"></i>
                         </button>
+                        ${servico.usuario === usuarioLogadoId ? `
                         <button class="btn btn-outline-warning btn-sm" onclick="servicoCrud.editarServico('${servico._id}')">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-outline-danger btn-sm" onclick="servicoCrud.excluirServico('${servico._id}')">
                             <i class="fas fa-trash"></i>
                         </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
-            
+
             // Clique no item centraliza no mapa
             item.addEventListener('click', (e) => {
                 if (!e.target.closest('.btn-group-vertical')) {
                     this.centralizarNoServico(servico);
                 }
             });
-            
+
             this.listaServicos.appendChild(item);
         });
     }
@@ -288,13 +292,14 @@ class ServicoCrudManager {
         // Limpa marcadores existentes
         this.map.removeLayer(this.marcadores);
         this.marcadores = new L.MarkerClusterGroup();
-        
+
         this.servicos.forEach(servico => {
             if (servico.localizacao && servico.localizacao.latitude && servico.localizacao.longitude) {
                 const marcador = L.marker([servico.localizacao.latitude, servico.localizacao.longitude], {
                     icon: this.criarIconePorTipo(servico.tipo_servico)
                 });
-                
+
+                const usuarioLogadoId = this.getUsuarioId();
                 const popupContent = `
                     <div class="popup-servico">
                         <h6>${servico.nome}</h6>
@@ -304,27 +309,29 @@ class ServicoCrudManager {
                             <button class="btn btn-primary" onclick="servicoCrud.visualizarServico('${servico._id}')">
                                 <i class="fas fa-eye me-1"></i>Ver
                             </button>
+                            ${servico.usuario === usuarioLogadoId ? `
                             <button class="btn btn-warning" onclick="servicoCrud.editarServico('${servico._id}')">
                                 <i class="fas fa-edit me-1"></i>Editar
                             </button>
                             <button class="btn btn-danger" onclick="servicoCrud.excluirServico('${servico._id}')">
                                 <i class="fas fa-trash me-1"></i>Excluir
                             </button>
+                            ` : ''}
                         </div>
                     </div>
                 `;
-                
+
                 marcador.bindPopup(popupContent);
                 this.marcadores.addLayer(marcador);
             }
         });
-        
+
         this.map.addLayer(this.marcadores);
     }
 
     criarIconePorTipo(tipo) {
         let iconClass, color;
-        
+
         switch (tipo) {
             case 'Hospedagem':
                 iconClass = 'fa-bed';
@@ -342,11 +349,11 @@ class ServicoCrudManager {
                 iconClass = 'fa-map-marker-alt';
                 color = '#007bff';
         }
-        
+
         return L.divIcon({
             className: 'custom-marker',
             html: `<div class="marker-icon" style="background-color: ${color}">
-                     <i class="fas ${iconClass}"></i>
+                    <i class="fas ${iconClass}"></i>
                    </div>`,
             iconSize: [32, 32],
             iconAnchor: [16, 32],
@@ -384,7 +391,7 @@ class ServicoCrudManager {
         this.limparFormulario();
         this.tituloModal.textContent = 'Novo Serviço Turístico';
         this.btnTexto.textContent = 'Salvar Serviço';
-        
+
         if (coordenadas) {
             this.inputLatitude.value = coordenadas.latitude.toFixed(6);
             this.inputLongitude.value = coordenadas.longitude.toFixed(6);
@@ -393,7 +400,7 @@ class ServicoCrudManager {
             this.inputLatitude.value = '-6.8897';
             this.inputLongitude.value = '-38.5583';
         }
-        
+
         this.modal.show();
     }
 
@@ -422,7 +429,8 @@ class ServicoCrudManager {
     async excluirServico(id) {
         if (confirm('Tem certeza que deseja excluir este serviço?')) {
             try {
-                await this.pontoService.deletarServico(id);
+                const usuarioId = this.getUsuarioId();
+                await this.pontoService.deletarServico(id, usuarioId); // Envia o ID do usuário
                 this.mostrarAlerta('Serviço excluído com sucesso!', 'success');
                 this.carregarServicos();
             } catch (error) {
@@ -436,20 +444,20 @@ class ServicoCrudManager {
         this.inputNome.value = servico.nome || '';
         this.inputTipoServico.value = servico.tipo_servico || '';
         this.inputDescricao.value = servico.descricao || '';
-        
+
         if (servico.localizacao) {
             this.inputLatitude.value = servico.localizacao.latitude || '';
             this.inputLongitude.value = servico.localizacao.longitude || '';
         }
-        
+
         if (servico.contato) {
             this.inputTelefone.value = servico.contato.telefone || '';
             this.inputInstagram.value = servico.contato.instagram || '';
         }
-        
+
         // Atualiza campos dinâmicos
         this.atualizarCamposDinamicos();
-        
+
         // Preenche campos dinâmicos se existirem
         setTimeout(() => {
             if (servico.categoria) {
@@ -464,7 +472,7 @@ class ServicoCrudManager {
         this.inputServicoId.value = '';
         this.camposDinamicos.innerHTML = '';
         this.alertContainer.innerHTML = '';
-        
+
         if (this.miniMapaMarcador) {
             this.miniMapa.removeLayer(this.miniMapaMarcador);
             this.miniMapaMarcador = null;
@@ -473,19 +481,20 @@ class ServicoCrudManager {
 
     async handleFormSubmit(e) {
         e.preventDefault();
-        
+
         const dadosServico = this.coletarDadosFormulario();
         const isEdicao = !!this.inputServicoId.value;
-        
+
         try {
+            const usuarioId = this.getUsuarioId();
             if (isEdicao) {
-                await this.pontoService.atualizarServico(this.inputServicoId.value, dadosServico);
+                await this.pontoService.atualizarServico(this.inputServicoId.value, usuarioId, dadosServico);
                 this.mostrarAlerta('Serviço atualizado com sucesso!', 'success');
             } else {
                 await this.pontoService.criarServico(dadosServico);
                 this.mostrarAlerta('Serviço criado com sucesso!', 'success');
             }
-            
+
             this.modal.hide();
             this.carregarServicos();
         } catch (error) {
@@ -508,13 +517,13 @@ class ServicoCrudManager {
                 instagram: this.inputInstagram.value.trim()
             }
         };
-        
+
         // Adiciona campos dinâmicos
         const subcategoria = document.getElementById('inputSubcategoria');
         if (subcategoria && subcategoria.value) {
             dados.categoria = subcategoria.value;
         }
-        
+
         return dados;
     }
 
@@ -531,10 +540,10 @@ class ServicoCrudManager {
             ${mensagem}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        
+
         this.alertContainer.innerHTML = '';
         this.alertContainer.appendChild(alert);
-        
+
         // Auto remove após 5 segundos
         setTimeout(() => {
             if (alert.parentNode) {
@@ -542,7 +551,97 @@ class ServicoCrudManager {
             }
         }, 5000);
     }
+    
+    // Método para obter o ID do usuário (mesclado do AuthService)
+    getUsuarioId() {
+        // Lógica real para obter o ID do usuário autenticado (ex: do token JWT)
+        // IMPORTANTE: Altere este valor para o ID do usuário que você está testando.
+        // Ele deve corresponder a um usuário que é proprietário de um serviço no seu banco de dados para que os botões de edição/exclusão apareçam e funcionem.
+        return "68acfd1a25aaff2fa222e132";
+    }
 }
 
 // Variável global para acesso fácil
 let servicoCrud = null;
+
+// Garante que o script só seja executado após o DOM ser carregado
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicialização do mapa
+    const map = L.map('mapa').setView([-6.8897, -38.5583], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Inicialização do gerenciador de serviços
+    const pontoService = new PontoService();
+    const authService = new authService();
+    let servicoCrud = new ServicoCrudManager(map, pontoService, authService);
+    window.servicoCrud = servicoCrud; // Torna a variável global para que os onclicks funcionem
+});
+
+// A classe PontoService precisa ser definida em algum lugar do seu código
+// (exemplo abaixo)
+class PontoService {
+    async listarServicos() {
+        const response = await fetch('/api/servicos');
+        if (!response.ok) {
+            throw new Error('Erro ao listar serviços.');
+        }
+        return response.json();
+    }
+
+    async obterServico(id) {
+        const response = await fetch(`/api/servicos/${id}`);
+        if (!response.ok) {
+            throw new Error('Serviço não encontrado.');
+        }
+        return response.json();
+    }
+
+    async criarServico(dados) {
+        const response = await fetch('/api/servicos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dados),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erro ao criar serviço.');
+        }
+
+        return response.json();
+    }
+
+    async atualizarServico(id, usuarioId, dados) {
+        const response = await fetch(`/api/servicos/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ...dados, usuarioId }), 
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erro ao atualizar serviço.');
+        }
+
+        return response.json();
+    }
+
+    async deletarServico(id, usuarioId) {
+        const response = await fetch(`/api/servicos/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ usuarioId }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erro ao excluir serviço.');
+        }
+    }
+}
