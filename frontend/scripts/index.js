@@ -20,14 +20,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const listaEventosContainer = document.getElementById('listaEventos');
     const loadingEventosSpinner = document.getElementById('loadingEventos');
     const nenhumEventoDiv = document.getElementById('nenhumEvento');
+
+    const southWest = L.latLng(-6.920, -38.595); 
+    const northEast = L.latLng(-6.860, -38.530); 
+    const bounds = L.latLngBounds(southWest, northEast);
     
     // --- 2. ESTADO DA APLICAÇÃO ---
     let todosOsServicos = [];
     let eventosCarregados = false;
 
     // --- 3. INICIALIZAÇÃO DO MAPA ---
-    const map = L.map('mapa').setView([-6.8897, -38.5583], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    const map = L.map('mapa', {
+        center: [-6.8897, -38.5583], // O mesmo centro de antes
+        zoom: 15,                     // O mesmo zoom de antes
+        maxBounds: bounds,            // Aplica os limites
+        maxBoundsViscosity: 1.0       // Faz a borda ser "sólida" (não elástica)
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        minZoom: 13 // Opcional: Impede o usuário de se afastar demais no zoom
+    }).addTo(map);
 
     // Marcador da localização do usuário
     let userLocationMarker = null;
