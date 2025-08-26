@@ -6,7 +6,13 @@ export const create = async (req: Request, res: Response) => {
   try {
     // 1. Obtenha o 'usuarioId' do objeto de requisição (req).
     //    Isso geralmente vem do middleware de autenticação (ex: req.user.id).
-    const usuarioId = req.userId; // Ou req.user.id, dependendo de como você configurou o middleware.
+    const usuarioId = req.userId;
+    if (!usuarioId || typeof usuarioId !== 'string') {
+      return res.status(401).json({
+        success: false,
+        message: "Usuário não autenticado ou ID inválido.",
+      });
+    }
 
     // 2. Obtenha os dados do serviço do corpo da requisição.
     const servicoData = req.body;

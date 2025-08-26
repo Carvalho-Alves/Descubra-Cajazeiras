@@ -31,7 +31,7 @@ export const createServico = async (
        MERGE (u)-[:OFERECE]->(s)`,
       {
         userId: usuarioId,
-        servicoId: servico._id.toString(),
+        servicoId: servico.id.toString(),
         nome: servico.nome,
       }
     );

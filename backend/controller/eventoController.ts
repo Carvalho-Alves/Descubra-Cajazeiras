@@ -14,7 +14,7 @@ const eventoController = {
     }
   },
 
-  findAll: async (req: Request, res: Response) => {
+  findAll: async (_req: Request, res: Response) => {
     try {
       const eventos = await Evento.find();
       res.status(200).json(eventos);

@@ -5,7 +5,7 @@ class ServicoCrudManager {
     constructor(map, pontoService) {
         this.map = map;
         this.pontoService = pontoService;
-        this.marcadores = new L.MarkerClusterGroup();
+        this.marcadores = L.MarkerClusterGroup();
         this.miniMapa = null;
         this.miniMapaMarcador = null;
         this.servicos = [];

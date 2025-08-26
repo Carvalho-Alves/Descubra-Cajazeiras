@@ -22,26 +22,47 @@ const app = express();
 app.use(cors());
 
 // Configuração do Helmet para permitir CDNs e estilos em linha
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-    "script-src": ["'self'", "cdn.jsdelivr.net", "unpkg.com", "cdnjs.cloudflare.com"],
-    "style-src": ["'self'", "cdn.jsdelivr.net", "unpkg.com", "cdnjs.cloudflare.com", "'unsafe-inline'"],
-  },
-}));
-
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      // Permite imagens do OpenStreetMap
-      "img-src": ["'self'", "data:", "https://*.tile.openstreetmap.org"],
-      // Permite scripts dos CDNs
-      "script-src": ["'self'", "https://unpkg.com", "https://cdn.jsdelivr.net"],
-      // Permite estilos dos CDNs e estilos em linha
-      "style-src": ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-      // Permite fontes de CDNs
-      "font-src": ["'self'", "https://cdnjs.cloudflare.com"],
+      // Adicionando 'https://unpkg.com' para permitir o carregamento dos ícones do Leaflet
+      "img-src": [
+        "'self'",
+        "data:",
+        "https://*.tile.openstreetmap.org",
+        "https://unpkg.com" 
+      ],
+      // Permissões para scripts de CDNs
+      "script-src": [
+        "'self'",
+        "https://unpkg.com",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com"
+      ],
+      // Permissões para estilos de CDNs e estilos inline
+      "style-src": [
+        "'self'",
+        "'unsafe-inline'",
+        "https://unpkg.com",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com"
+      ],
+      // Permissões para fontes de CDNs
+      "font-src": [
+        "'self'",
+        "https://cdnjs.cloudflare.com"
+      ],
+      // Permissões para requisições de conexão
+      "connect-src": [
+        "'self'",
+        "https://nominatim.openstreetmap.org"
+      ],
+      // Permissão para manipuladores de eventos em linha (como onclick)
+      "script-src-attr": [
+        "'self'",
+        "'unsafe-inline'"
+      ],
     },
   },
 }));

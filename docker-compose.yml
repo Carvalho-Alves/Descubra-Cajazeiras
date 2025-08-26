@@ -1,16 +1,11 @@
+version: '3.8'
 services:
   api:
     build: .
     ports:
       - "${PORT-3333}:3333"
-    environment:
-      - PORT=3333
-      - JWT_SECRET=dev-secret-key-for-descubra-cajazeiras
-      - MONGODB_URI=mongodb://mongo:27017/descubra_cajazeiras
-      - MONGODB_DB_NAME=descubra_cajazeiras
-      - NEO4J_URI=bolt://neo4j:7687
-      - NEO4J_USER=neo4j
-      - NEO4J_PASSWORD=neo4j_password
+    env_file:
+      - .env
     volumes:
       - ./backend:/app/backend
     depends_on:
