@@ -1,5 +1,3 @@
-// scripts/models/Ponto.js
-
 class Ponto {
     constructor(data) {
         this._id = data._id;
@@ -13,7 +11,6 @@ class Ponto {
     }
 
     getLatLng() {
-        // A geolocalização é armazenada como [longitude, latitude] no GeoJSON
         return [this.localizacao.coordinates[1], this.localizacao.coordinates[0]];
     }
 

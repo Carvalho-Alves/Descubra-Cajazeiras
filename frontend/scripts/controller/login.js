@@ -1,5 +1,3 @@
-// scripts/login.js
-
 import pontoService from '../service/pontoService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,10 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const resultado = await pontoService.loginUsuario(email, senha);
             
-            // Salva os dados do usuário e token no localStorage
             localStorage.setItem('usuarioAutenticado', JSON.stringify(resultado));
             
-            // Salva o token separadamente para uso em requisições
             if (resultado.token) {
                 localStorage.setItem('authToken', resultado.token);
             }

@@ -11,7 +11,6 @@ import {
 
 const driver = getNeo4jDriver();
 
-// Criar serviço
 export const createServico = async (
   input: CreateServicoInput,
   usuarioId: string
@@ -42,19 +41,16 @@ export const createServico = async (
   }
 };
 
-// Listar serviços
 export const listServicos = async (): Promise<HydratedDocument<IServico>[]> => {
   const servicos = await Servico.find().populate("usuario", "nome email");
   return servicos as HydratedDocument<IServico>[];
 };
 
-// Buscar serviço por ID
 export const getServicoById = async (id: string) => {
   const servico = await Servico.findById(id).populate("usuario", "nome email");
   return servico;
 };
 
-// Atualizar serviço
 export const updateServico = async (
   id: string,
   usuarioId: string,
@@ -101,7 +97,6 @@ export const updateServico = async (
   }
 };
 
-// Deletar serviço
 export const deleteServico = async (id: string, usuarioId: string) => {
   const session = driver.session();
   try {

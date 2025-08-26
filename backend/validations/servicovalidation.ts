@@ -17,7 +17,5 @@ export const createServicoSchema = z.object({
 });
 
 export const updateServicoSchema = createServicoSchema.partial();
-
-
 export type CreateServicoInput = z.infer<typeof createServicoSchema> & { usuarioId: string };
 export type UpdateServicoInput = z.infer<typeof updateServicoSchema>;

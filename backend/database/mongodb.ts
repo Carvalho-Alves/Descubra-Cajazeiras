@@ -9,8 +9,7 @@ export async function connectMongo(): Promise<void> {
   if (mongoose.connection.readyState === 1) {
     return;
   }
-
-  
+ 
     await mongoose.connect(env.MONGODB_URI, {
       dbName: env.MONGODB_DB_NAME
     });

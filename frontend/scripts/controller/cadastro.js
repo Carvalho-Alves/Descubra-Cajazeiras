@@ -1,5 +1,3 @@
-// scripts/cadastro.js
-
 import pontoService from '../service/pontoService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,13 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('email', email);
         formData.append('senha', senha);
         
-        // A foto só é adicionada ao FormData se ela existir
         if (foto) {
             formData.append('foto', foto);
         }
 
         try {
-            // A chamada de registro usa o PontoService, resolvendo o aviso
             const resultado = await pontoService.registrarUsuario(formData);
 
             alert('Cadastro realizado com sucesso! Redirecionando para o login...');

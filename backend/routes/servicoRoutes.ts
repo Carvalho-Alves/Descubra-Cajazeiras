@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { ensureAuth } from '../middleware/auth';
-
-// 1. Importa todas as funções do controller de uma vez com um "apelido"
 import * as servicoController from '../controller/servicoController';
 
 const router = Router();

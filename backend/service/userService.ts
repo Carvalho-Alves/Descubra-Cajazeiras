@@ -6,17 +6,14 @@ import neo4j from 'neo4j-driver';
 import { loginSchema, registerSchema } from '../validations/uservalidation';
 import { User, IUser } from '../models/user';
 
-// --- Tipagem para atualização ---
 type UpdateUserInput = {
   nome?: string;
   email?: string;
   role?: 'USER' | 'ADMIN';
 };
 
-// --- Tipagem do usuário público (sem senha) ---
 export type PublicUser = Omit<IUser, 'senha'>;
 
-// --- Configuração do Neo4j ---
 const driver = neo4j.driver(
   process.env.NEO4J_URI || 'bolt://localhost:7687',
   neo4j.auth.basic(
@@ -25,7 +22,6 @@ const driver = neo4j.driver(
   )
 );
 
-// --- SERVIÇO DE REGISTRO ---
 type CreateUserInput = z.infer<typeof registerSchema>;
 type LoginUserInput = z.infer<typeof loginSchema>;
 
@@ -46,7 +42,6 @@ export const createUserService = async (
     const newUser = new User({ nome, email, senha, foto });
     await newUser.save();
 
-    // Cria o nó no Neo4j
     await session.run(
       `CREATE (u:User {userId: $userId, email: $email, nome: $nome, foto: $foto})`,
       { userId: newUser._id.toString(), email: newUser.email, nome: newUser.nome, foto: newUser.foto || '' }
@@ -80,7 +75,6 @@ export const loginUserService = async (
   return user;
 };
 
-// --- SERVIÇO DE ATUALIZAÇÃO ---
 export const updateUserService = async (id: string, updateData: Partial<IUser>): Promise<IUser | null> => {
   const session = driver.session();
   try {
@@ -91,14 +85,12 @@ export const updateUserService = async (id: string, updateData: Partial<IUser>):
       throw error;
     }
 
-    // Atualiza nó no Neo4j
     await session.run(
       `MATCH (u:User {userId: $userId}) 
        SET u.nome = $nome, u.email = $email`,
       { userId: id, nome: updateData.nome, email: updateData.email }
     );
 
-    // Atualiza no MongoDB
     if (updateData.nome) user.nome = updateData.nome;
     if (updateData.email) user.email = updateData.email;
     if (updateData.role) user.role = updateData.role;
@@ -111,7 +103,6 @@ export const updateUserService = async (id: string, updateData: Partial<IUser>):
   }
 };
 
-// --- SERVIÇO DE DELETAR ---
 export const deleteUserService = async (id: string) => {
   const session = driver.session();
   try {
@@ -122,7 +113,6 @@ export const deleteUserService = async (id: string) => {
       throw error;
     }
 
-    // Remove nó no Neo4j
     await session.run(
       `MATCH (u:User {userId: $userId}) DETACH DELETE u`,
       { userId: id }
@@ -134,7 +124,6 @@ export const deleteUserService = async (id: string) => {
   }
 };
 
-// --- SERVIÇO DE BUSCAR TODOS ---
 export const findUsersService = async () => {
   const users = (await User.find()) as HydratedDocument<IUser>[];
 
@@ -163,7 +152,6 @@ export const findUsersService = async () => {
   }
 };
 
-// --- SERVIÇO DE BUSCAR POR ID ---
 export const findUserService = async (id: string) => {
   const mongoUser = (await User.findById(id)) as HydratedDocument<IUser> | null;
 

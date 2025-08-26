@@ -1,0 +1,420 @@
+[33mcommit 7cf14b8bd168a328c54b1e34a813d65f948e45d6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mCarvalho[m[33m)[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Mon Aug 25 22:30:23 2025 -0300
+
+    Lidando com erros de importação e atualizando o helmet para permissão do uso do leaflet, além de consertar alguns erros no front
+
+[33mcommit 8566372539e70e1e2512d30a9d62f7a72811184c[m[33m ([m[1;31morigin/Matheus[m[33m, [m[1;32mMatheus[m[33m)[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Mon Aug 25 22:03:56 2025 -0300
+
+    Lidando com erros de importação e atualizando o helmet para permissão do uso do leaflet, além de consertar alguns erros no frontend
+
+[33mcommit 41373acf358972db47055e287d9db6d9cec6f65b[m
+Author: JigsawBR <matheus_jigsaw@outlook.com>
+Date:   Mon Aug 25 20:20:43 2025 -0300
+
+    CRUD
+
+[33mcommit 37e50d082c298db633a38682e76ef2d873d51cad[m
+Author: JigsawBR <matheus_jigsaw@outlook.com>
+Date:   Mon Aug 25 20:01:49 2025 -0300
+
+    .
+
+[33mcommit 3c6eed014af38b4b81765bb19458152c0d9d15a5[m
+Author: JigsawBR <matheus_jigsaw@outlook.com>
+Date:   Mon Aug 25 19:23:10 2025 -0300
+
+    Botão para centralizar localização.
+
+[33mcommit 78c71e412ffac73697639f9b47af4dad363d30b6[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 17:50:00 2025 -0300
+
+    Update index.html
+
+[33mcommit d45d55f5797d921e3c6c5867460be7bff80c4015[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 17:44:45 2025 -0300
+
+    Atualiza botões
+
+[33mcommit 332f7e12c223f917645d6096b0ad221179588401[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 17:44:26 2025 -0300
+
+    Update uservalidation.ts
+
+[33mcommit 87eeb89772bf1c34a8eaf664363ec8921cad7583[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 17:44:22 2025 -0300
+
+    Atualiza pra poder funcionar botão de update
+
+[33mcommit 8650e7afddafb4ddebdad3411945d83465052d2d[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 16:15:37 2025 -0300
+
+    Limita coordenadas para dentro de Cajazeiras PB
+
+[33mcommit 49a7acdd17cc72717459f24e8e7dd7a0f0d8f06d[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 16:15:18 2025 -0300
+
+    Limita mapa a Cajazeiras PB
+
+[33mcommit c3bcef74a6f8bc51e72305da34947690a4b78631[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 15:38:27 2025 -0300
+
+    Acrescenta Modal de "Eventos"
+
+[33mcommit ae5a89a9dc9ca154189680250d87a3cb67a1b125[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 15:38:10 2025 -0300
+
+    Estiliza paginas de autenticação
+
+[33mcommit 424be0e0eee3091f856384dc0fa36f41c25767df[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 15:29:00 2025 -0300
+
+    Adiciona Modal "Conheça o Projeto"
+
+[33mcommit ed377cad55b058acf17b4307ae711fd4e8e8b5a6[m[33m ([m[1;31morigin/Alyce[m[33m, [m[1;32mAlyce[m[33m)[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Mon Aug 25 15:08:20 2025 -0300
+
+    Alterações no front e back para consumo da api no front e conserto de erros que impediam o mesmo
+
+[33mcommit 8437366306568347c4a3b15005605daa73aedcea[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 02:18:16 2025 -0300
+
+    Altera index.js
+
+[33mcommit 15f1e14efb307d960ecde332df20a0d749eb4202[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 02:18:07 2025 -0300
+
+    Refatora model de Serviço Turístico
+
+[33mcommit 281cfd5e5d90f26aef69fb2b11006876503fd928[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 01:55:49 2025 -0300
+
+    Fix(mapa): Permite o carregamento das imagens do mapa Leaflet
+
+[33mcommit dedf9be7ec1378973e7a60746fdad4439e7a4c7e[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 01:54:08 2025 -0300
+
+    Conserta redirecionamento das telas de login e cadastro
+
+[33mcommit f709488975cfa08048baa05f72354525ae3a0481[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 01:48:47 2025 -0300
+
+    Atualiza index.js
+
+[33mcommit 614a1055a0fab377df1065ac31f8d34f880727bc[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 01:48:36 2025 -0300
+
+    Altera primary-color do projeto
+
+[33mcommit ac044a3e71b65c6b07fc99c18445533eb23e80ce[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 01:48:24 2025 -0300
+
+    Cria página dos pontos
+
+[33mcommit 4941d89a37b9a540b8b42381e679d50719e7b7f2[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 01:47:48 2025 -0300
+
+    Retificação do html da aplicação
+
+[33mcommit 6e2ca4538dbfbf4e9ac5186a76ace5f273f70d7d[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 01:46:59 2025 -0300
+
+    Adiciona o model de evento
+
+[33mcommit 49428a07606e080b379e1be397a370a9ca9989a7[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 01:46:48 2025 -0300
+
+    Adiciona controller de evento
+
+[33mcommit 6a89e7345ee7427c5ef1aec3e2e671a2af6cf547[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Mon Aug 25 01:46:35 2025 -0300
+
+    Adiciona a rota de evento
+
+[33mcommit b9aaee59a1544d306fa9d68c4fb77a6cfa8707fa[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Sun Aug 24 18:28:12 2025 -0300
+
+    Adiciona rotas de Evento no index
+
+[33mcommit 47d17064f5e421b495c360118689ce745bf77dd7[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Sun Aug 24 18:25:27 2025 -0300
+
+    Cria CRUD de Evento
+
+[33mcommit cfbb48672a7658ad7e98f812fe48f9c41fda3285[m
+Author: alycebarreto <barreto.maria@academico.ifpb.edu.br>
+Date:   Sun Aug 24 17:55:45 2025 -0300
+
+    Adiciona logo e favicon
+
+[33mcommit d4f6a317ac4049e0b9e6ac98e8b4f9b49e8d7d54[m[33m ([m[1;31morigin/Carvalho[m[33m)[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Sun Aug 24 00:55:10 2025 -0300
+
+    Consertando create serviços
+
+[33mcommit 25f2bb843f19af74a4cee3e786384d8e880bdc32[m
+Merge: ed54401 7e8c6e6
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Sat Aug 23 23:37:41 2025 -0300
+
+    Merge remote-tracking branch 'origin/Matheus' into Carvalho
+
+[33mcommit ed5440105b1d69824d81f46a694f3e748649b1e5[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Sat Aug 23 15:24:45 2025 -0300
+
+    Frontend adicionado
+
+[33mcommit a3c8b6136b1b53eb25dd5ed2063e39dba888c585[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Sat Aug 23 15:24:04 2025 -0300
+
+    Ajustando o index.ts para back servir o front sem erros
+
+[33mcommit a668ad6167e757b37b538611eb988521b12ea624[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Sat Aug 23 15:23:22 2025 -0300
+
+    Ajustando o Dockerfile
+
+[33mcommit 7e8c6e68b5878618ccaa45f9f7bb4e0c4340537c[m
+Author: JigsawBR <matheus_jigsaw@outlook.com>
+Date:   Sat Aug 23 15:04:46 2025 -0300
+
+    Criando CRUD de Serviço Turístico
+
+[33mcommit be2d4db521a5c06683b67296c5df5c9214cdebdd[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Sat Aug 23 00:08:54 2025 -0300
+
+    Consertando registro de usuario e editar usuario para registrar foto e atualizar foto de perfil
+
+[33mcommit 37690839a755360f5351d689b0173ebe7274d76f[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Sat Aug 23 00:08:15 2025 -0300
+
+    Consertando rotas
+
+[33mcommit 54cd1c2824254940340c0f71f72db29d74210e8b[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:11:44 2025 -0300
+
+    removide algumas rotas do index.ts que nao existem mais
+
+[33mcommit 9065c650643f81a05c79475912d790df4079dd84[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:07:03 2025 -0300
+
+    Adicionado readme para documentar a API
+
+[33mcommit 73ad380877556e38da78e71ec22b40df116c59f9[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:06:33 2025 -0300
+
+    Adicionado o index.ts para startar a API
+
+[33mcommit a0ce8c79b37668c8874146960cb6f1cbaa168ed9[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:06:05 2025 -0300
+
+    Adicionado funções que usam a biblioteca zod para validar dados no servidor
+
+[33mcommit bc834e1050b64e501c5d3dc9fd5a0afb4348c6a7[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:04:31 2025 -0300
+
+    Adicionado bcrypt para criptografar senhas
+
+[33mcommit 2370c1eb32e06d3c2b5371709cda008b888dd021[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:04:12 2025 -0300
+
+    Adicionado jwt para criação e atualização de tokens
+
+[33mcommit dd5bcd709a4498432aaeaa7cc94a2c646e94842d[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:03:19 2025 -0300
+
+    Adicionado helper para evitar usar try/catch em todos os controllers
+
+[33mcommit b7187d680de88fca909b30c2980ce8a980964c9f[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:01:40 2025 -0300
+
+    Adicionado rotas para fotos dos usuarios
+
+[33mcommit 80fc83ec4cc34622fee98717e5fd19e0c8826f32[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:01:22 2025 -0300
+
+    Adicionado rotas para autenticação do usuario
+
+[33mcommit 8f2b2c3b38f23a61d56d40b7e1e4201cf0c01f77[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 23:00:22 2025 -0300
+
+    Adicionado serviços para os cruds dos usuarios
+
+[33mcommit 8d56085ad3c44f1eaa5dcffb4d8d282370891142[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:59:09 2025 -0300
+
+    Adicionado serviços para interagir com o banco de dados neo4j, permitindo que crie e relacione nós
+
+[33mcommit 2f70a5711d7fb4af8192e6d02a90564acc8017d5[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:55:54 2025 -0300
+
+    model dos usuarios
+
+[33mcommit 4d3123d4b2dff271c156379516707553696cacc2[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:55:40 2025 -0300
+
+    model dos uploads
+
+[33mcommit 4145bab2816848944e32e491dc09c72c40430adc[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:55:10 2025 -0300
+
+    RefreshToken adicionado para permitir login de usuario por token durante muito tempo
+
+[33mcommit 4b58b91b2c6be92f717f6f199cefea55dc0565f5[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:52:28 2025 -0300
+
+    Middleware para adicionar limitador de taxa no express
+
+[33mcommit 4edf3f597779cb3b976ea36544cd41e12a53dd8c[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:51:27 2025 -0300
+
+    Middleware para erros de Bancos
+
+[33mcommit 9b3657e442a12ae3a643b8a459c9acfe37abb568[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:51:05 2025 -0300
+
+    Middleware para erros de autenticações
+
+[33mcommit a87dfc34ea5b724bcb4f5f313d9b636f7f0ae43c[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:49:39 2025 -0300
+
+    Consertando importações
+
+[33mcommit 407c838a5c418e19801a8beedfd8e2922cc33013[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:47:12 2025 -0300
+
+    Adicionado controller para pesquisar todos os usuarios
+
+[33mcommit 5dfbf81d7ba33491f1c999c812761428ec330c0a[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:46:43 2025 -0300
+
+    Adicionado controller para pesquisar usuario por ID
+
+[33mcommit 24a367b183371e34f1ae78b880f985c2ba358697[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:46:22 2025 -0300
+
+    Adicionado controller para editar informações do usuario
+
+[33mcommit 280429ca2de84f96b55ccc85197a21c92cfb389e[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:46:03 2025 -0300
+
+    Adicionado controller para deletar usuario
+
+[33mcommit d75ab64ac0e9c5c91b26916e9c65b9fb35c3da8c[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:45:44 2025 -0300
+
+    Adicionado controller para login de usuario
+
+[33mcommit b14d3e330f6315f4b5e2e70d2b44c48f869e0c17[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:45:26 2025 -0300
+
+    Adicionado controller para registro de usuario
+
+[33mcommit 521a8e90a3ffa15cafa738fbbc2dd14142531e37[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:44:06 2025 -0300
+
+    Adicionando env.ts para validar e garantir integridade das variaveis de ambiente
+
+[33mcommit 4a9be02cc7f2a319e38dda31f24b674b00ca3ac6[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:42:44 2025 -0300
+
+    Adicionando conexão para o banco de dados neo4j
+
+[33mcommit 0eb6726168e5a1efff39ed6372330a55111e5cc2[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:42:25 2025 -0300
+
+    Adicionando conexão para o banco de dados mongodb
+
+[33mcommit c1f6eeecc683b182733d5b7bb9894140290cd7e6[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:40:07 2025 -0300
+
+    Adicionado openapi.yaml para um uso de manual da api
+
+[33mcommit 63c6605d135127643dc77e48a685e3c4c82b817e[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:38:55 2025 -0300
+
+    Adicionando docker compose e docker file para inicio da api e conteiners dos bancos
+
+[33mcommit cd0e50430203c6c4ced9103f94b6741f6a8a3200[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:37:55 2025 -0300
+
+    Adicionado eslintrc para um uso de manual da api
+
+[33mcommit 3e0ef004e3fa7a54e00763e28dfe8bf442d7d439[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:35:59 2025 -0300
+
+    gitignore adicionado para evitar envio de arquivos de segurança
+
+[33mcommit fb4b39a3e89fbfd17d69027043a55952849e706b[m
+Author: Carvalho-Alves <pedrocasa808080@gmail.com>
+Date:   Fri Aug 22 22:33:45 2025 -0300
+
+    Commit inicial, baixando dependencias e configurando os jsons
+
+[33mcommit 569cac5d4729b427526bd39fb4ae4b341a9d178b[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: Carvalho-Alves <115095911+Carvalho-Alves@users.noreply.github.com>
+Date:   Mon Aug 18 01:45:02 2025 -0300
+
+    Initial commit

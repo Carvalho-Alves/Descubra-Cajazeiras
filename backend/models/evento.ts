@@ -42,7 +42,6 @@ const EventoSchema = new Schema<IEvento>({
   },
   latitude: {
     type: Number,
-    // --- VALIDAÇÃO ADICIONADA AQUI ---
     validate: {
       validator: (lat: number) => lat >= limitesCajazeiras.latMin && lat <= limitesCajazeiras.latMax,
       message: 'A latitude fornecida está fora da área de Cajazeiras.'
@@ -50,7 +49,6 @@ const EventoSchema = new Schema<IEvento>({
   },
   longitude: {
     type: Number,
-    // --- VALIDAÇÃO ADICIONADA AQUI ---
     validate: {
       validator: (lon: number) => lon >= limitesCajazeiras.lonMin && lon <= limitesCajazeiras.lonMax,
       message: 'A longitude fornecida está fora da área de Cajazeiras.'

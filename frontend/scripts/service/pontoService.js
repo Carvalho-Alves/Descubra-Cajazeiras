@@ -1,5 +1,3 @@
-// scripts/service/pontoService.js
-
 class PontoService {
 
     constructor() {
@@ -8,11 +6,6 @@ class PontoService {
         this.estatisticasUrl = '/api/estatisticas';
     }
 
-    /**
-     * Lista todos os serviços (pontos turísticos).
-     * @returns {Promise<Array>} Uma promessa que resolve para uma lista de serviços.
-     * @throws {Error} Se a requisição falhar.
-     */
     async listarServicos() {
         try {
             const response = await fetch(this.servicosUrl);
@@ -28,11 +21,6 @@ class PontoService {
         }
     }
     
-    /**
-     * Lista todos os eventos.
-     * @returns {Promise<Array>} Uma promessa que resolve para uma lista de eventos.
-     * @throws {Error} Se a requisição falhar.
-     */
     async listarEventos() {
         try {
             const response = await fetch(this.eventosUrl);
@@ -48,12 +36,6 @@ class PontoService {
         }
     }
 
-    /**
-     * Cria um novo serviço.
-     * @param {Object} servicoData Os dados do serviço a ser criado.
-     * @returns {Promise<Object>} O serviço recém-criado.
-     * @throws {Error} Se a requisição falhar.
-     */
     async criarServico(servicoData) {
         try {
             const token = this.getAuthToken();
@@ -82,12 +64,6 @@ class PontoService {
         }
     }
     
-    /**
-     * Cria um novo evento.
-     * @param {Object} eventoData Os dados do evento a ser criado.
-     * @returns {Promise<Object>} O evento recém-criado.
-     * @throws {Error} Se a requisição falhar.
-     */
     async criarEvento(eventoData) {
         try {
             const response = await fetch(this.eventosUrl, {
@@ -109,13 +85,6 @@ class PontoService {
         }
     }
 
-    /**
-     * Atualiza um serviço existente.
-     * @param {string} id O ID do serviço a ser atualizado.
-     * @param {Object} servicoData Os dados atualizados do serviço.
-     * @returns {Promise<Object>} O serviço atualizado.
-     * @throws {Error} Se a requisição falhar.
-     */
     async atualizarServico(id, servicoData) {
         try {
             const token = this.getAuthToken();
@@ -144,13 +113,6 @@ class PontoService {
         }
     }
     
-    /**
-     * Atualiza um evento existente.
-     * @param {string} id O ID do evento a ser atualizado.
-     * @param {Object} eventoData Os dados atualizados do evento.
-     * @returns {Promise<Object>} O evento atualizado.
-     * @throws {Error} Se a requisição falhar.
-     */
     async atualizarEvento(id, eventoData) {
         try {
             const response = await fetch(`${this.eventosUrl}/${id}`, {
@@ -172,12 +134,6 @@ class PontoService {
         }
     }
 
-    /**
-     * Deleta um serviço.
-     * @param {string} id O ID do serviço a ser deletado.
-     * @returns {Promise<Object>} Uma promessa que resolve para uma mensagem de sucesso.
-     * @throws {Error} Se a requisição falhar.
-     */
     async deletarServico(id) {
         try {
             const token = this.getAuthToken();
@@ -203,12 +159,6 @@ class PontoService {
         }
     }
     
-    /**
-     * Deleta um evento.
-     * @param {string} id O ID do evento a ser deletado.
-     * @returns {Promise<Object>} Uma promessa que resolve para uma mensagem de sucesso.
-     * @throws {Error} Se a requisição falhar.
-     */
     async deletarEvento(id) {
         try {
             const response = await fetch(`${this.eventosUrl}/${id}`, {
@@ -226,12 +176,6 @@ class PontoService {
         }
     }
 
-    /**
-     * Busca pontos turísticos (serviços) com base em uma query de texto.
-     * @param {string} query A string de busca.
-     * @returns {Promise<Array>} Uma promessa que resolve para uma lista de pontos correspondentes.
-     * @throws {Error} Se a requisição falhar.
-     */
     async buscarPontos(query) {
         try {
             const response = await fetch(`${this.servicosUrl}?q=${encodeURIComponent(query)}`);
@@ -247,11 +191,6 @@ class PontoService {
         }
     }
     
-    /**
-     * Obtém estatísticas do dashboard.
-     * @returns {Promise<Object>} As estatísticas do dashboard.
-     * @throws {Error} Se a requisição falhar.
-     */
     async obterEstatisticas() {
         try {
             const response = await fetch(this.estatisticasUrl);
@@ -267,12 +206,6 @@ class PontoService {
         }
     }
 
-    /**
-     * Registra um novo usuário.
-     * @param {FormData} formData Os dados do formulário, incluindo a foto.
-     * @returns {Promise<Object>} O usuário recém-criado.
-     * @throws {Error} Se a requisição falhar.
-     */
     async registrarUsuario(formData) {
         try {
             const response = await fetch('/api/auth/register', {
@@ -292,13 +225,6 @@ class PontoService {
         }
     }
 
-    /**
-     * Autentica um usuário.
-     * @param {string} email O email do usuário.
-     * @param {string} senha A senha do usuário.
-     * @returns {Promise<Object>} Os dados do usuário logado.
-     * @throws {Error} Se a requisição falhar ou as credenciais forem inválidas.
-     */
     async loginUsuario(email, senha) {
         try {
             const response = await fetch('/api/auth/login', {
@@ -321,10 +247,6 @@ class PontoService {
         }
     }
 
-    /**
-     * Verifica se o usuário está autenticado.
-     * @returns {Object|null} Os dados do usuário se estiver logado, ou null.
-     */
     getUsuarioAutenticado() {
         try {
             const usuario = localStorage.getItem('usuarioAutenticado');
@@ -335,9 +257,6 @@ class PontoService {
         }
     }
 
-    /**
-     * Faz logout do usuário, removendo os dados de autenticação.
-     */
     logoutUsuario() {
         localStorage.removeItem('usuarioAutenticado');
         localStorage.removeItem('authToken');
@@ -345,15 +264,10 @@ class PontoService {
         window.location.href = 'index.html'; // Redireciona para a página principal
     }
 
-    /**
-     * Obtém o token de autenticação.
-     * @returns {string|null} O token se estiver logado, ou null.
-     */
     getAuthToken() {
         return localStorage.getItem('authToken');
     }
 
 }
 
-// Exporta uma única instância do serviço para ser usada em toda a aplicação
 export default new PontoService();

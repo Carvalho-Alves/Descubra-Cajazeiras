@@ -1,6 +1,3 @@
-// scripts/auth.js
-// Gerenciador de autenticação unificado
-
 import pontoService from './service/pontoService.js';
 
 class AuthManager {
@@ -11,7 +8,6 @@ class AuthManager {
     }
 
     initializeElements() {
-        // Forms
         this.loginForm = document.getElementById('loginForm');
         this.registerForm = document.getElementById('registerForm');
         
@@ -45,7 +41,6 @@ class AuthManager {
     }
 
     checkExistingAuth() {
-        // Verifica se já está logado
         const usuario = pontoService.getUsuarioAutenticado();
         if (usuario) {
             this.showAlert('Você já está logado! Redirecionando...', 'info');
@@ -72,15 +67,12 @@ class AuthManager {
             const resultado = await pontoService.loginUsuario(email, senha);
             console.log('Login bem-sucedido:', resultado);
             
-            // Salva os dados no localStorage
             localStorage.setItem('usuarioAutenticado', JSON.stringify(resultado));
             if (resultado.token) {
                 localStorage.setItem('authToken', resultado.token);
             }
             
             this.showAlert('Login realizado com sucesso! Redirecionando...', 'success');
-            
-            // Redireciona após 1.5 segundos
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 1500);
@@ -110,7 +102,6 @@ class AuthManager {
         try {
             console.log('Tentando cadastrar usuário...');
             
-            // Usar o método correto do pontoService
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: {
@@ -129,7 +120,6 @@ class AuthManager {
             
             this.showAlert('Cadastro realizado com sucesso! Fazendo login...', 'success');
             
-            // Faz login automaticamente após cadastro
             setTimeout(async () => {
                 try {
                     const loginResult = await pontoService.loginUsuario(email, senha);
@@ -261,7 +251,6 @@ class AuthManager {
         
         this.alertContainer.innerHTML = alertHTML;
         
-        // Auto-remove após 5 segundos
         setTimeout(() => {
             const alert = this.alertContainer.querySelector('.alert');
             if (alert) {
@@ -282,12 +271,10 @@ class AuthManager {
     }
 }
 
-// Inicializa quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
     new AuthManager();
 });
 
-// Limpa dados antigos ao carregar a página
 localStorage.removeItem('usuarioAutenticado');
 localStorage.removeItem('authToken');
 console.log('Dados de autenticação limpos');

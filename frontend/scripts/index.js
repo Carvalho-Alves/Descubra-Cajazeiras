@@ -1,5 +1,5 @@
 import PontoController from './controller/pontoModel.js';
-import pontoService from './service/pontoService.js'; // Importa o serviço para verificar o login
+import pontoService from './service/pontoService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
