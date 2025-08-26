@@ -551,7 +551,7 @@ class ServicoCrudManager {
             }
         }, 5000);
     }
-    
+
     // Método para obter o ID do usuário (mesclado do AuthService)
     getUsuarioId() {
         // Lógica real para obter o ID do usuário autenticado (ex: do token JWT)
@@ -572,9 +572,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicialização do gerenciador de serviços
     const pontoService = new PontoService();
-    const authService = new authService();
-    let servicoCrud = new ServicoCrudManager(map, pontoService, authService);
-    window.servicoCrud = servicoCrud; // Torna a variável global para que os onclicks funcionem
+    let servicoCrud = new ServicoCrudManager(map, pontoService);
+    window.servicoCrud = servicoCrud;
 });
 
 // A classe PontoService precisa ser definida em algum lugar do seu código
