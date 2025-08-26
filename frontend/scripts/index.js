@@ -204,11 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lng = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
 
-                // Remove marcador anterior se existir
-                if (userLocationMarker) {
-                    map.removeLayer(userLocationMarker);
-                }
-
                 // Cria um marcador personalizado para a localização do usuário
                 const userIcon = L.divIcon({
                     className: 'user-location-marker',

@@ -11,7 +11,6 @@ import {
 
 const driver = getNeo4jDriver();
 
-// Criar serviço
 export const createServico = async (
   input: CreateServicoInput,
   usuarioId: string
@@ -19,24 +18,51 @@ export const createServico = async (
   const session = driver.session();
   try {
     const parsed = createServicoSchema.parse(input);
-
     const servico = await Servico.create({
       ...parsed,
       usuario: new Types.ObjectId(usuarioId),
     });
 
+    console.log("MongoDB: Serviço criado com sucesso. ID:", servico.id);
+    console.log("Iniciando a criação do nó no Neo4j...");
+    
+    // Assegura que latitude e longitude sejam valores válidos (ou null)
+    const latitude = servico.localizacao?.latitude ?? null;
+    const longitude = servico.localizacao?.longitude ?? null;
+    const categoria = servico.categoria ?? null;
+
     await session.run(
-      `MATCH (u:User {userId: $userId})
-       CREATE (s:Servico {servicoId: $servicoId, nome: $nome})
+      `MERGE (u:User {userId: $userId})
+       CREATE (s:Servico {
+         servicoId: $servicoId,
+         nome: $nome,
+         descricao: $descricao,
+         tipo_servico: $tipo_servico,
+         categoria: $categoria,
+         latitude: $latitude,
+         longitude: $longitude
+       })
        MERGE (u)-[:OFERECE]->(s)`,
       {
         userId: usuarioId,
         servicoId: servico.id.toString(),
         nome: servico.nome,
+        descricao: servico.descricao,
+        tipo_servico: servico.tipo_servico,
+        categoria: categoria,
+        latitude: latitude,
+        longitude: longitude,
       }
     );
 
+    console.log("Neo4j: Nó e relacionamento criados com sucesso.");
+
     return servico;
+  } catch (error) {
+    console.error("Erro na criação do nó Neo4j:", error);
+    // Em caso de falha no Neo4j, você pode querer reverter o salvamento do MongoDB
+    // await Servico.findByIdAndDelete(servico.id);
+    throw error; // Propaga o erro para que o front-end saiba que a operação falhou
   } finally {
     await session.close();
   }

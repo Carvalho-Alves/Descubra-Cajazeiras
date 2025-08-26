@@ -1,3 +1,5 @@
+// userservice.ts
+
 import { HydratedDocument, Types } from 'mongoose';
 import { z } from 'zod';
 import jwt from 'jsonwebtoken';
@@ -30,32 +32,34 @@ type CreateUserInput = z.infer<typeof registerSchema>;
 type LoginUserInput = z.infer<typeof loginSchema>;
 
 export const createUserService = async (
-  input: CreateUserInput
+  input: CreateUserInput
 ): Promise<HydratedDocument<IUser>> => {
-  const session = driver.session();
-  try {
-    const { nome, email, senha, foto } = input;
+  const session = driver.session();
+  try {
+    const { nome, email, senha, foto } = input;
 
-    const existingMongoUser = await User.findOne({ email });
-    if (existingMongoUser) {
-      const error: any = new Error('Um usuário com este e-mail já existe.');
-      error.statusCode = 409;
-      throw error;
-    }
+    const existingMongoUser = await User.findOne({ email });
+    if (existingMongoUser) {
+      const error: any = new Error('Um usuário com este e-mail já existe.');
+      error.statusCode = 409;
+      throw error;
+    }
 
-    const newUser = new User({ nome, email, senha, foto });
-    await newUser.save();
+    const newUser = new User({ nome, email, senha, foto });
+    await newUser.save();
 
-    // Cria o nó no Neo4j
-    await session.run(
-      `CREATE (u:User {userId: $userId, email: $email, nome: $nome, foto: $foto})`,
-      { userId: newUser._id.toString(), email: newUser.email, nome: newUser.nome, foto: newUser.foto || '' }
-    );
+    // CORREÇÃO: Usa MERGE para garantir que o nó de usuário exista antes de criar.
+    // AGORA INCLUI NOME E EMAIL NA QUERY
+    await session.run(
+      `MERGE (u:User {userId: $userId})
+       ON CREATE SET u.email = $email, u.nome = $nome, u.foto = $foto`,
+      { userId: newUser._id.toString(), email: newUser.email, nome: newUser.nome, foto: newUser.foto || '' }
+    );
 
-    return newUser;
-  } finally {
+    return newUser;
+  } finally {
     await session.close();
- }
+  }
 };
 
 export const loginUserService = async (
@@ -91,17 +95,18 @@ export const updateUserService = async (id: string, updateData: Partial<IUser>):
       throw error;
     }
 
-    // Atualiza nó no Neo4j
+    // CORREÇÃO: A query de atualização também foi ajustada
     await session.run(
       `MATCH (u:User {userId: $userId}) 
-       SET u.nome = $nome, u.email = $email`,
-      { userId: id, nome: updateData.nome, email: updateData.email }
+       SET u.nome = $nome, u.email = $email, u.foto = $foto`,
+      { userId: id, nome: updateData.nome, email: updateData.email, foto: updateData.foto || '' }
     );
 
     // Atualiza no MongoDB
     if (updateData.nome) user.nome = updateData.nome;
     if (updateData.email) user.email = updateData.email;
     if (updateData.role) user.role = updateData.role;
+    if (updateData.foto) user.foto = updateData.foto;
 
     await user.save();
 
