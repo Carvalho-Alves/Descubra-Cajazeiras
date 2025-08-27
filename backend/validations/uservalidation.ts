@@ -32,3 +32,4 @@ export const adminEditUserSchema = z.object({
 // 🔹 Tipos
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+

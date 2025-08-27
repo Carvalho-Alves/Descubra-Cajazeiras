@@ -1,0 +1,172 @@
+### Teste da API de Estabelecimentos Comerciais
+
+# Base URL
+@baseUrl = http://localhost:3333
+@authToken = {{login.response.body.token}}
+
+### 1. Login para obter token
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "senha": "admin123"
+}
+
+### 2. Listar todos os estabelecimentos (PÚBLICO)
+GET {{baseUrl}}/api/estabelecimentos
+
+### 3. Buscar estabelecimento por ID (PÚBLICO)
+GET {{baseUrl}}/api/estabelecimentos/64f8a1b2c3d4e5f6a7b8c9d0
+
+### 4. Buscar estabelecimentos por tipo (PÚBLICO)
+GET {{baseUrl}}/api/estabelecimentos/tipo/Restaurante
+
+### 5. Buscar estabelecimentos próximos (PÚBLICO)
+GET {{baseUrl}}/api/estabelecimentos/proximos?lat=-6.8897&lng=-38.5583&raio=5
+
+### 6. Criar novo estabelecimento (PRIVADO - Admin)
+POST {{baseUrl}}/api/estabelecimentos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "nome": "Restaurante Sabor da Terra",
+  "tipo": "Restaurante",
+  "categoria": "Culinária Regional",
+  "descricao": "Restaurante especializado em pratos típicos da região, com ambiente familiar e atendimento acolhedor.",
+  "endereco": {
+    "rua": "Rua das Flores",
+    "numero": "123",
+    "bairro": "Centro",
+    "cep": "58900-000"
+  },
+  "localizacao": {
+    "latitude": -6.8897,
+    "longitude": -38.5583
+  },
+  "contato": {
+    "telefone": "(83) 3531-1234",
+    "whatsapp": "(83) 99999-1234",
+    "instagram": "sabordaterra",
+    "facebook": "https://facebook.com/sabordaterra",
+    "site": "https://sabordaterra.com.br"
+  },
+  "horario_funcionamento": {
+    "segunda": {
+      "abertura": "11:00",
+      "fechamento": "22:00",
+      "fechado": false
+    },
+    "terca": {
+      "abertura": "11:00",
+      "fechamento": "22:00",
+      "fechado": false
+    },
+    "quarta": {
+      "abertura": "11:00",
+      "fechamento": "22:00",
+      "fechado": false
+    },
+    "quinta": {
+      "abertura": "11:00",
+      "fechamento": "22:00",
+      "fechado": false
+    },
+    "sexta": {
+      "abertura": "11:00",
+      "fechamento": "23:00",
+      "fechado": false
+    },
+    "sabado": {
+      "abertura": "11:00",
+      "fechamento": "23:00",
+      "fechado": false
+    },
+    "domingo": {
+      "abertura": "12:00",
+      "fechamento": "21:00",
+      "fechado": false
+    }
+  },
+  "servicos": [
+    "Delivery",
+    "Wi-Fi",
+    "Estacionamento",
+    "Ar Condicionado",
+    "Reservas"
+  ],
+  "pagamentos": [
+    "Dinheiro",
+    "Cartão de Crédito",
+    "Cartão de Débito",
+    "PIX"
+  ],
+  "imagens": [
+    "https://example.com/imagem1.jpg",
+    "https://example.com/imagem2.jpg"
+  ],
+  "status": "ativo"
+}
+
+### 7. Atualizar estabelecimento (PRIVADO - Admin)
+PUT {{baseUrl}}/api/estabelecimentos/64f8a1b2c3d4e5f6a7b8c9d0
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "nome": "Restaurante Sabor da Terra - Atualizado",
+  "descricao": "Descrição atualizada do restaurante com mais detalhes sobre nossa culinária regional.",
+  "servicos": [
+    "Delivery",
+    "Wi-Fi",
+    "Estacionamento",
+    "Ar Condicionado",
+    "Reservas",
+    "Buffet"
+  ]
+}
+
+### 8. Remover estabelecimento (PRIVADO - Admin)
+DELETE {{baseUrl}}/api/estabelecimentos/64f8a1b2c3d4e5f6a7b8c9d0
+Authorization: Bearer {{authToken}}
+
+### 9. Teste de validação - Dados inválidos
+POST {{baseUrl}}/api/estabelecimentos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "nome": "",
+  "tipo": "TipoInvalido",
+  "localizacao": {
+    "latitude": 0,
+    "longitude": 0
+  }
+}
+
+### 10. Teste de validação - Coordenadas fora de Cajazeiras
+POST {{baseUrl}}/api/estabelecimentos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "nome": "Estabelecimento Fora da Área",
+  "tipo": "Restaurante",
+  "categoria": "Teste",
+  "descricao": "Teste de validação geográfica",
+  "endereco": {
+    "rua": "Rua Teste",
+    "numero": "123",
+    "bairro": "Centro",
+    "cep": "00000-000"
+  },
+  "localizacao": {
+    "latitude": -5.0,
+    "longitude": -35.0
+  },
+  "contato": {
+    "telefone": "(83) 0000-0000"
+  }
+}

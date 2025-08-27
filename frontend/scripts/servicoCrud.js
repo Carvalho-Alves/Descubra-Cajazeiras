@@ -37,6 +37,11 @@ class ServicoCrudManager {
         this.inputServicoId = document.getElementById('inputServicoId');
         this.camposDinamicos = document.getElementById('camposDinamicos');
 
+        // Campo de busca de endereço
+        this.inputEndereco = document.getElementById('inputEnderecoServico');
+        this.btnBuscarEndereco = document.getElementById('btnBuscarEnderecoServico');
+        this.resultadosBusca = document.getElementById('resultadosBuscaServico');
+
         // Filter elements
         this.filtrosTipo = document.querySelectorAll('input[name="filtroTipo"]');
         this.listaServicos = document.getElementById('listaPontos');
