@@ -1,17 +1,19 @@
 import { Router } from 'express';
 import eventoController from '../controller/eventoController';
+import { asyncHandler } from '../utils/asyncHandler'; 
 
 const router = Router();
 
 
-router.post('/', eventoController.create); 
 
-router.get('/', eventoController.findAll);
+router.post('/', asyncHandler(eventoController.create)); 
 
-router.get('//:id', eventoController.findById);
+router.get('/', asyncHandler(eventoController.findAll));
 
-router.put('/:id', eventoController.update);
+router.get('/:id', asyncHandler(eventoController.findById));
 
-router.delete('/:id', eventoController.delete);
+router.put('/:id', asyncHandler(eventoController.update));
+
+router.delete('/:id', asyncHandler(eventoController.delete));
 
 export default router;
