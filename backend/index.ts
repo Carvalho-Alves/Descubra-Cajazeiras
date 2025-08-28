@@ -16,6 +16,7 @@ import { errorHandler, notFoundHandler } from './middleware/error';
 import authRoutes from './routes/authRoutes';
 import servicoRoutes from './routes/servicoRoutes';
 import eventoRoutes from './routes/eventoRoutes';
+import avaliacaoRoutes from './routes/avaliacaoRoutes';
 
 const app = express();
 
@@ -90,6 +91,7 @@ if (fs.existsSync(openapiPath)) {
 // Usando as rotas da aplicação (para a API)
 // TODAS as rotas agora usam o prefixo '/api'
 app.use('/api/auth', authRoutes);
+app.use('/api/avaliacoes', avaliacaoRoutes);
 app.use('/api/servicos', servicoRoutes);
 app.use('/api/eventos', eventoRoutes); // O nome do prefixo foi ajustado para maior clareza
 
