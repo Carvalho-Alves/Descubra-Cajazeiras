@@ -10,7 +10,7 @@ import yaml from 'yaml';
 import { Server } from 'http';
 import { connectMongo, disconnectMongo } from './database/mongodb';
 import { getNeo4jDriver, closeNeo4j } from './database/neo4j';
-import { errorHandler } from './middleware/error';
+import { errorHandler, notFoundHandler } from './middleware/error';
 
 // Importando as rotas da aplicação
 import authRoutes from './routes/authRoutes';
@@ -97,6 +97,9 @@ app.use('/api/eventos', eventoRoutes); // O nome do prefixo foi ajustado para ma
 app.get('/', (_req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
+
+// Middleware de tratamento de erros 404 (Not Found)
+app.use(notFoundHandler);
 
 // Middleware de tratamento de erros (deve ser o último)
 app.use(errorHandler);
