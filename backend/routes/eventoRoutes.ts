@@ -4,14 +4,14 @@ import eventoController from '../controller/eventoController';
 const router = Router();
 
 
-router.post('/eventos', eventoController.create); 
+router.post('/', eventoController.create); 
 
-router.get('/eventos', eventoController.findAll);
+router.get('/', eventoController.findAll);
 
-router.get('/eventos/:id', eventoController.findById);
+router.get('//:id', eventoController.findById);
 
-router.put('/eventos/:id', eventoController.update);
+router.put('/:id', eventoController.update);
 
-router.delete('/eventos/:id', eventoController.delete);
+router.delete('/:id', eventoController.delete);
 
 export default router;
