@@ -4,8 +4,6 @@ import * as servicoService from '../service/servicoService';
 
 export const create = async (req: Request, res: Response) => {
   try {
-    // 1. Obtenha o 'usuarioId' do objeto de requisição (req).
-    //    Isso geralmente vem do middleware de autenticação (ex: req.user.id).
     const usuarioId = req.userId;
     if (!usuarioId || typeof usuarioId !== 'string') {
       return res.status(401).json({
@@ -14,20 +12,15 @@ export const create = async (req: Request, res: Response) => {
       });
     }
 
-    // 2. Obtenha os dados do serviço do corpo da requisição.
     const servicoData = req.body;
-
-    // 3. Chame a função createServico, passando os dois argumentos esperados.
     const servico = await servicoService.createServico(servicoData, usuarioId);
 
-    // 4. Envie uma resposta de sucesso.
     res.status(201).json({
       success: true,
       data: servico,
       message: "Serviço criado com sucesso.",
     });
   } catch (error: any) {
-    // 5. Trate os erros, se houver.
     res.status(400).json({
       success: false,
       message: error.message,

@@ -16,9 +16,6 @@ import { erroHandler } from './middleware/error';
 import authRoutes from './routes/authRoutes';
 import servicoRoutes from './routes/servicoRoutes';
 import eventoRoutes from './routes/eventoRoutes';
-import estabelecimentoRoutes from './routes/estabelecimentoRoutes';
-import hotelRoutes from './routes/hotelRoutes';
-import atracaoRoutes from './routes/atracaoRoutes';
 
 const app = express();
 
@@ -95,9 +92,6 @@ if (fs.existsSync(openapiPath)) {
 app.use('/api/auth', authRoutes);
 app.use('/api/servicos', servicoRoutes);
 app.use('/api/eventos', eventoRoutes); // O nome do prefixo foi ajustado para maior clareza
-app.use('/api/estabelecimentos', estabelecimentoRoutes);
-app.use('/api/hoteis', hotelRoutes);
-app.use('/api/atracoes', atracaoRoutes);
 
 // Servindo a página inicial para a rota raiz (/).
 app.get('/', (_req, res) => {
