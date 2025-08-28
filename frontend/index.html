@@ -41,9 +41,7 @@
             <button class="btn btn-outline-light me-2" id="btnNovoPonto" data-bs-toggle="modal" data-bs-target="#modalPonto">
                 <i class="fas fa-plus me-1"></i> Serviços
             </button>
-            <button class="btn btn-outline-light" id="btnEstabelecimentos" data-bs-toggle="modal" data-bs-target="#modalEstabelecimentos">
-                <i class="fas fa-store me-1"></i> Estabelecimentos
-            </button>
+
         </nav>
         <div class="usuario" id="usuario-area">
             </div>
@@ -157,7 +155,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="lead">O sistema <strong>Descubra+ Cajazeiras</strong> é uma aplicação web que visa divulgar, organizar e facilitar o acesso aos atrativos turísticos, históricos e estabelecimentos da cidade de Cajazeiras–PB, conhecida como "A Terra que ensinou a Paraíba a ler". A proposta é centralizar todas as informações que um turista precisa em uma única plataforma, oferecendo recursos como o cadastro e gerenciamento de pontos turísticos, hotéis, restaurantes e eventos, geolocalização dos locais em mapa, sistema de avaliação com notas e comentários, e upload de imagens com informações detalhadas. Com essas funcionalidades, o projeto busca facilitar o planejamento de visitas, estimular o turismo e fortalecer a economia e a cultura locais, promovendo a cidade como um destino completo e conectando os visitantes aos encantos e tradições que fazem de Cajazeiras uma cidade única no sertão paraibano.</p>
+                    <p class="lead">O sistema <strong>Descubra+ Cajazeiras</strong> é uma aplicação web que visa divulgar, organizar e facilitar o acesso aos atrativos turísticos e históricos da cidade de Cajazeiras–PB, conhecida como "A Terra que ensinou a Paraíba a ler". A proposta é centralizar todas as informações que um turista precisa em uma única plataforma, oferecendo recursos como o cadastro e gerenciamento de pontos turísticos, hotéis, restaurantes e eventos, geolocalização dos locais em mapa, sistema de avaliação com notas e comentários, e upload de imagens com informações detalhadas. Com essas funcionalidades, o projeto busca facilitar o planejamento de visitas, estimular o turismo e fortalecer a economia e a cultura locais, promovendo a cidade como um destino completo e conectando os visitantes aos encantos e tradições que fazem de Cajazeiras uma cidade única no sertão paraibano.</p>
 
                     <hr class="my-4">
 
@@ -467,88 +465,7 @@
         </div>
     </div>
 
-    <!-- Modal de Estabelecimentos Comerciais -->
-    <div class="modal fade" id="modalEstabelecimentos" tabindex="-1" aria-labelledby="modalEstabelecimentosLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalEstabelecimentosLabel">
-                        <i class="fas fa-store me-2"></i> Estabelecimentos Comerciais
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Filtros e Busca -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="btn-group w-100" role="group" id="filtrosEstabelecimento">
-                                <input type="radio" class="btn-check" name="filtroEstabelecimento" id="filtroTodosEstabelecimentos" value="" checked>
-                                <label class="btn btn-outline-secondary btn-sm" for="filtroTodosEstabelecimentos">
-                                    <i class="fas fa-list me-1"></i>Todos
-                                </label>
-                                <input type="radio" class="btn-check" name="filtroEstabelecimento" id="filtroRestaurante" value="Restaurante">
-                                <label class="btn btn-outline-secondary btn-sm" for="filtroRestaurante">
-                                    <i class="fas fa-utensils me-1"></i>Restaurante
-                                </label>
-                                <input type="radio" class="btn-check" name="filtroEstabelecimento" id="filtroBar" value="Bar">
-                                <label class="btn btn-outline-secondary btn-sm" for="filtroBar">
-                                    <i class="fas fa-glass-martini-alt me-1"></i>Bar
-                                </label>
-                                <input type="radio" class="btn-check" name="filtroEstabelecimento" id="filtroLoja" value="Loja">
-                                <label class="btn btn-outline-secondary btn-sm" for="filtroLoja">
-                                    <i class="fas fa-shopping-bag me-1"></i>Loja
-                                </label>
-                                <input type="radio" class="btn-check" name="filtroEstabelecimento" id="filtroFarmacia" value="Farmácia">
-                                <label class="btn btn-outline-secondary btn-sm" for="filtroFarmacia">
-                                    <i class="fas fa-pills me-1"></i>Farmácia
-                                </label>
-                                <input type="radio" class="btn-check" name="filtroEstabelecimento" id="filtroSupermercado" value="Supermercado">
-                                <label class="btn btn-outline-secondary btn-sm" for="filtroSupermercado">
-                                    <i class="fas fa-shopping-cart me-1"></i>Supermercado
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="inputBuscaEstabelecimento" placeholder="Buscar estabelecimentos...">
-                                <button class="btn btn-outline-secondary" type="button" id="btnBuscarEstabelecimento">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                <button class="btn btn-outline-secondary" type="button" id="btnLimparBuscaEstabelecimento" style="display: none;">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-primary w-100" id="btnNovoEstabelecimento">
-                                <i class="fas fa-plus me-1"></i> Novo
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- Loading e Lista -->
-                    <div id="loadingEstabelecimentos" class="text-center p-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Carregando...</span>
-                        </div>
-                    </div>
-                    
-                    <div id="listaEstabelecimentos" class="row g-3"></div>
-                    
-                    <div id="nenhumEstabelecimento" class="text-center p-4" style="display: none;">
-                        <i class="fas fa-store fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Nenhum estabelecimento encontrado.</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-primary" id="btnAtualizarEstabelecimentos">
-                        <i class="fas fa-sync-alt me-2"></i>Atualizar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
@@ -556,11 +473,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script type="module" src="./scripts/models/Ponto.js"></script>
-    <script type="module" src="./scripts/models/Estabelecimento.js"></script>
+
     <script type="module" src="./scripts/service/pontoService.js"></script>
-    <script type="module" src="./scripts/service/estabelecimentoService.js"></script>
+
     <script type="module" src="./scripts/controller/pontoModel.js"></script>
-    <script type="module" src="./scripts/controller/estabelecimentoController.js"></script>
+
     <script type="module" src="./scripts/index.js"></script>
     <script src="./scripts/servicosPage.js"></script>
 </body>

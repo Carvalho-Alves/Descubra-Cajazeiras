@@ -1,6 +1,6 @@
 import PontoController from './controller/pontoModel.js';
 import pontoService from './service/pontoService.js'; // Importa o serviço para verificar o login
-import estabelecimentoController from './controller/estabelecimentoController.js';
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -42,13 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 100);
 
-    // --- 5. INICIALIZAÇÃO DO CONTROLLER DE ESTABELECIMENTOS ---
-    setTimeout(() => {
-        if (estabelecimentoController) {
-            estabelecimentoController.init();
-            console.log('✅ Controller de Estabelecimentos inicializado');
-        }
-    }, 200);
+
 
     // --- 5. LÓGICA DE AUTENTICAÇÃO E RENDERIZAÇÃO DA UI ---
     
