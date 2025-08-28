@@ -150,7 +150,6 @@ export const findUsersService = async () => {
 
     const combinedUsers = users.map(mongoUser => {
       const userObject = mongoUser.toObject();
-      delete userObject.senha;
 
       const neo4jData = neo4jNodes.find(
         node => node.userId === userObject._id.toString()
@@ -182,7 +181,6 @@ export const findUserService = async (id: string) => {
     );
 
     const userObject = mongoUser.toObject();
-    delete userObject.senha;
 
     const neo4jNode = neo4jNodeResult.records[0]
       ? neo4jNodeResult.records[0].get('u').properties

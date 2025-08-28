@@ -10,7 +10,7 @@ import yaml from 'yaml';
 import { Server } from 'http';
 import { connectMongo, disconnectMongo } from './database/mongodb';
 import { getNeo4jDriver, closeNeo4j } from './database/neo4j';
-import { erroHandler } from './middleware/error';
+import { errorHandler } from './middleware/error';
 
 // Importando as rotas da aplicação
 import authRoutes from './routes/authRoutes';
@@ -99,7 +99,7 @@ app.get('/', (_req, res) => {
 });
 
 // Middleware de tratamento de erros (deve ser o último)
-app.use(erroHandler);
+app.use(errorHandler);
 
 let server: Server;
 
