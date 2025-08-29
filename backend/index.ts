@@ -89,11 +89,11 @@ if (fs.existsSync(openapiPath)) {
 }
 
 // Usando as rotas da aplicação (para a API)
-// TODAS as rotas agora usam o prefixo '/api'
 app.use('/api/auth', authRoutes);
 app.use('/api/avaliacoes', avaliacaoRoutes);
 app.use('/api/servicos', servicoRoutes);
-app.use('/api/eventos', eventoRoutes); // O nome do prefixo foi ajustado para maior clareza
+app.use('/api/eventos', eventoRoutes)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Servindo a página inicial para a rota raiz (/).
 app.get('/', (_req, res) => {

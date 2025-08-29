@@ -59,7 +59,7 @@ export const remove = async (req: Request, res: Response) => {
 
   await avaliacaoService.remover(id, usuarioId);
 
-  res.status(204).json({ message: "Avaliação deletada com sucesso.", success: true });
+  res.status(200).json({ message: "Avaliação deletada com sucesso.", success: true });
 };
 
 // Lista todas as avaliações

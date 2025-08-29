@@ -8,8 +8,10 @@ import { deleteUser } from '../controller/deleteUser';
 import { asyncHandler } from '../utils/asyncHandler';
 import multer from 'multer';
 
+import uploadConfig from '../service/uploadConfig'; 
+
 const router = Router();
-const upload = multer({ dest: 'backend/uploads/' }); // Pasta para uploads
+const upload = multer(uploadConfig.upload('uploads'));
 
 router.post('/login', asyncHandler(loginController));
 router.get('/:id', asyncHandler(findUser));
