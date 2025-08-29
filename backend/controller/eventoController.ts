@@ -67,7 +67,7 @@ const eventoController = {
       return res.status(404).json({ message: 'Evento não encontrado.' });
     }
 
-    res.status(204).send();
+    res.status(204).json({ message: "Avaliação deletada com sucesso.", success: true });
   },
 };
 

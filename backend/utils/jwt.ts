@@ -3,7 +3,7 @@ import { env } from '../database/env';
 
 export function signAccessToken(sub: string, email: string) {
   const secret = (env as any).JWT_ACCESS_SECRET || (env as any).JWT_SECRET || 'dev-secret';
-  const expiresIn = (env as any).JWT_EXPIRES_IN || '15m';
+  const expiresIn = (env as any).JWT_EXPIRES_IN || '60m';
   return jwt.sign({ sub, email }, secret, { expiresIn });
 }
 

@@ -5,15 +5,17 @@ import { ensureAuth } from "../middleware/auth";
 
 const router = Router();
 
-// Criar avaliação (usuário autenticado ou anônimo)
-router.post("/", asyncHandler(avaliacaoController.create));
+// Listar todas as avaliações (paginado)
+router.get("/", asyncHandler(avaliacaoController.listarTodas));
+
+// Criar avaliação (usuário autenticado)
+router.post("/", ensureAuth, asyncHandler(avaliacaoController.create));
 
 // Listar avaliações e estatísticas por referência
-// Ex.: GET /api/avaliacoes/servico/:id
 router.get("/:tipo/:id", asyncHandler(avaliacaoController.listarPorReferencia));
 
 // Buscar avaliação por ID
-router.get("/id/:id", asyncHandler(avaliacaoController.getById));
+router.get("/:id", asyncHandler(avaliacaoController.getById));
 
 // Atualizar avaliação (requer autenticação e ser dono da avaliação)
 router.put("/:id", ensureAuth, asyncHandler(avaliacaoController.update));
