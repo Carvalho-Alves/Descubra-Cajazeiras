@@ -3,7 +3,7 @@ info:
   title: Descubra Cajazeiras API
   version: "1.0.1"
 servers:
-  - url: http://localhost:3333
+  - url: http://localhost:3333/api
 paths:
   /health:
     get:
