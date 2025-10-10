@@ -23,10 +23,6 @@ export const createServico = async (
       usuario: new Types.ObjectId(usuarioId),
     });
 
-    console.log("MongoDB: Serviço criado com sucesso. ID:", servico.id);
-    console.log("Iniciando a criação do nó no Neo4j...");
-    
-    // Assegura que latitude e longitude sejam valores válidos (ou null)
     const latitude = servico.localizacao?.latitude ?? null;
     const longitude = servico.localizacao?.longitude ?? null;
     const categoria = servico.categoria ?? null;
@@ -39,6 +35,7 @@ export const createServico = async (
          descricao: $descricao,
          tipo_servico: $tipo_servico,
          categoria: $categoria,
+         imagem: $imagem,
          latitude: $latitude,
          longitude: $longitude
        })
@@ -50,37 +47,30 @@ export const createServico = async (
         descricao: servico.descricao,
         tipo_servico: servico.tipo_servico,
         categoria: categoria,
+        imagem: servico.imagem,
         latitude: latitude,
         longitude: longitude,
       }
     );
 
-    console.log("Neo4j: Nó e relacionamento criados com sucesso.");
-
     return servico;
   } catch (error) {
-    console.error("Erro na criação do nó Neo4j:", error);
-    // Em caso de falha no Neo4j, você pode querer reverter o salvamento do MongoDB
-    // await Servico.findByIdAndDelete(servico.id);
-    throw error; // Propaga o erro para que o front-end saiba que a operação falhou
+    throw error;
   } finally {
     await session.close();
   }
 };
 
-// Listar serviços
 export const listServicos = async (): Promise<HydratedDocument<IServico>[]> => {
   const servicos = await Servico.find().populate("usuario", "nome email");
   return servicos as HydratedDocument<IServico>[];
 };
 
-// Buscar serviço por ID
 export const getServicoById = async (id: string) => {
   const servico = await Servico.findById(id).populate("usuario", "nome email");
   return servico;
 };
 
-// Atualizar serviço
 export const updateServico = async (
   id: string,
   usuarioId: string,
@@ -88,63 +78,67 @@ export const updateServico = async (
 ) => {
   const session = driver.session();
   try {
-    const servico = await Servico.findById(id);
-    if (!servico) {
-      const error: any = new Error("Serviço não encontrado.");
+    const parsed = updateServicoSchema.parse(input);
+    const updatedServico = await Servico.findOneAndUpdate(
+      { _id: id, usuario: new Types.ObjectId(usuarioId) },
+      { ...parsed },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedServico) {
+      const error: any = new Error(
+        "Serviço não encontrado ou operação não permitida."
+      );
       error.statusCode = 404;
       throw error;
     }
 
-    if (servico.usuario.toString() !== usuarioId) {
-      const error: any = new Error("Operação não permitida.");
-      error.statusCode = 403;
-      throw error;
-    }
-
-    const parsed = updateServicoSchema.parse(input);
-
-    if (parsed.nome !== undefined) servico.nome = parsed.nome;
-    if (parsed.descricao !== undefined) servico.descricao = parsed.descricao;
-    if (parsed.tipo_servico !== undefined)
-      servico.tipo_servico = parsed.tipo_servico;
-    if (parsed.categoria !== undefined) servico.categoria = parsed.categoria;
-    if (parsed.contato !== undefined) servico.contato = parsed.contato;
-    if (parsed.localizacao !== undefined)
-      servico.localizacao = parsed.localizacao;
-    if (parsed.imagens !== undefined) servico.imagens = parsed.imagens;
-
-    await servico.save();
+    const latitude = updatedServico.localizacao.latitude ?? null;
+    const longitude = updatedServico.localizacao.longitude ?? null;
+    const categoria = updatedServico.categoria ?? null;
 
     await session.run(
       `MATCH (s:Servico {servicoId: $servicoId})
-       SET s.nome = $nome`,
-      { servicoId: id, nome: servico.nome }
+       SET s.nome = $nome,
+           s.descricao = $descricao,
+           s.tipo_servico = $tipo_servico,
+           s.categoria = $categoria,
+           s.imagem = $imagem,
+           s.latitude = $latitude,
+           s.longitude = $longitude`,
+      {
+        servicoId: updatedServico.id.toString(),
+        nome: updatedServico.nome,
+        descricao: updatedServico.descricao,
+        tipo_servico: updatedServico.tipo_servico,
+        categoria: categoria,
+        imagem: updatedServico.imagem,
+        latitude: latitude,
+        longitude: longitude,
+      }
     );
 
-    return servico;
+    return updatedServico;
   } finally {
     await session.close();
   }
 };
 
-// Deletar serviço
 export const deleteServico = async (id: string, usuarioId: string) => {
   const session = driver.session();
   try {
-    const servico = await Servico.findById(id);
-    if (!servico) {
-      const error: any = new Error("Serviço não encontrado.");
+    const deletedServico = await Servico.findOneAndDelete({
+      _id: id,
+      usuario: new Types.ObjectId(usuarioId),
+    });
+
+    if (!deletedServico) {
+      const error: any = new Error(
+        "Serviço não encontrado ou operação não permitida."
+      );
       error.statusCode = 404;
       throw error;
     }
-
-    if (servico.usuario.toString() !== usuarioId) {
-      const error: any = new Error("Operação não permitida.");
-      error.statusCode = 403;
-      throw error;
-    }
-
-    await Servico.findByIdAndDelete(id);
 
     await session.run(
       `MATCH (s:Servico {servicoId: $servicoId}) DETACH DELETE s`,

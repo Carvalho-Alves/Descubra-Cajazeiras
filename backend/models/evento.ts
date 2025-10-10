@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types} from 'mongoose';
 
 // --- DEFINIÇÃO DOS LIMITES GEOGRÁFICOS ---
 const limitesCajazeiras = {
@@ -12,12 +12,14 @@ export interface IEvento extends Document {
   nome: string;
   descricao?: string;
   data: Date;
-  horario?: string;
-  local?: string;
-  latitude?: number;
-  longitude?: number;
+  horario: string;
+  localizacao: {
+    latitude: number;
+    longitude: number;
+  };
   imagem?: string;
-  status?: 'ativo' | 'cancelado' | 'encerrado';
+  usuario: Types.ObjectId;
+  status: 'ativo' | 'cancelado' | 'encerrado';
 }
 
 const EventoSchema = new Schema<IEvento>({
@@ -37,23 +39,20 @@ const EventoSchema = new Schema<IEvento>({
   horario: {
     type: String
   },
-  local: {
-    type: String
-  },
-  latitude: {
-    type: Number,
-    // --- VALIDAÇÃO ADICIONADA AQUI ---
-    validate: {
-      validator: (lat: number) => lat >= limitesCajazeiras.latMin && lat <= limitesCajazeiras.latMax,
-      message: 'A latitude fornecida está fora da área de Cajazeiras.'
-    }
-  },
-  longitude: {
-    type: Number,
-    // --- VALIDAÇÃO ADICIONADA AQUI ---
-    validate: {
-      validator: (lon: number) => lon >= limitesCajazeiras.lonMin && lon <= limitesCajazeiras.lonMax,
-      message: 'A longitude fornecida está fora da área de Cajazeiras.'
+    localizacao: {
+      latitude: { 
+        type: Number,
+        validate: {
+          validator: (lat: number) => lat >= limitesCajazeiras.latMin && lat <= limitesCajazeiras.latMax,
+          message: 'A latitude fornecida está fora da área de Cajazeiras.'
+        }
+      },
+    longitude: { 
+      type: Number,
+      validate: {
+        validator: (lon: number) => lon >= limitesCajazeiras.lonMin && lon <= limitesCajazeiras.lonMax,
+        message: 'A longitude fornecida está fora da área de Cajazeiras.'
+      }
     }
   },
   imagem: {

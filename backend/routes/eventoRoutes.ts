@@ -1,20 +1,22 @@
 import { Router } from 'express';
-import eventoController from '../controller/eventoController';
+import {createEventoController} from '../controller/createEvento';
+import {deleteEventoController} from '../controller/deleteEvento';
+import {editEventoController} from '../controller/editEvento';
+import {findAllEventoController} from '../controller/findAllEvento';
+import {findEventoController} from '../controller/findEvento';
 import { asyncHandler } from '../utils/asyncHandler'; 
 import { ensureAuth } from '../middleware/auth';
 
 const router = Router();
 
+router.post('/', ensureAuth, asyncHandler(createEventoController)); 
 
+router.get('/', asyncHandler(findAllEventoController));
 
-router.post('/', ensureAuth, asyncHandler(eventoController.create)); 
+router.get('/:id', asyncHandler(findEventoController));
 
-router.get('/', asyncHandler(eventoController.findAll));
+router.put('/:id', ensureAuth, asyncHandler(editEventoController));
 
-router.get('/:id', asyncHandler(eventoController.findById));
-
-router.put('/:id', ensureAuth, asyncHandler(eventoController.update));
-
-router.delete('/:id', asyncHandler(eventoController.delete));
+router.delete('/:id', asyncHandler(deleteEventoController));
 
 export default router;

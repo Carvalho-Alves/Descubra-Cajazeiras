@@ -10,7 +10,7 @@ export interface IUser extends Document {
   nome: string;
   email: string;
   senha: string;
-  role: 'turista' | 'admin';
+  role: 'Turista' | 'Organizador';
   foto?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -44,8 +44,8 @@ const UserSchema = new Schema<IUser>(
     },
     role: {
       type: String,
-      enum: ['turista', 'admin'],
-      default: 'turista',
+      enum: ['Turista', 'Organizador'],
+      default: 'Turista'
     },
     foto: {
       type: String,

@@ -3,11 +3,6 @@ import { updateUserService } from '../service/userService';
 import { adminEditUserSchema } from '../validations/uservalidation';
 import { IUser } from '../models/user';
 
-/**
- * @route   PUT /api/users/:id
- * @desc    (Admin) Edita os dados de um usuário específico.
- * @access  Private (Admin)
- */
 export const editUser = async (req: Request, res: Response, next: NextFunction) => {
     const validatedData = adminEditUserSchema.parse(req.body);
     const { id } = req.params;

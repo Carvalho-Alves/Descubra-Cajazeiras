@@ -2,18 +2,10 @@
 
 import { HydratedDocument, Types } from 'mongoose';
 import { z } from 'zod';
-import jwt from 'jsonwebtoken';
 import neo4j from 'neo4j-driver';
 
 import { loginSchema, registerSchema } from '../validations/uservalidation';
 import { User, IUser } from '../models/user';
-
-// --- Tipagem para atualização ---
-type UpdateUserInput = {
-  nome?: string;
-  email?: string;
-  role?: 'USER' | 'ADMIN';
-};
 
 // --- Tipagem do usuário público (sem senha) ---
 export type PublicUser = Omit<IUser, 'senha'>;
@@ -36,7 +28,7 @@ export const createUserService = async (
 ): Promise<HydratedDocument<IUser>> => {
   const session = driver.session();
   try {
-    const { nome, email, senha, foto } = input;
+    const { nome, email, senha, foto, role } = input;
 
     const existingMongoUser = await User.findOne({ email });
     if (existingMongoUser) {
@@ -45,15 +37,13 @@ export const createUserService = async (
       throw error;
     }
 
-    const newUser = new User({ nome, email, senha, foto });
+    const newUser = new User({ nome, email, senha, foto, role });
     await newUser.save();
 
-    // CORREÇÃO: Usa MERGE para garantir que o nó de usuário exista antes de criar.
-    // AGORA INCLUI NOME E EMAIL NA QUERY
     await session.run(
       `MERGE (u:User {userId: $userId})
-       ON CREATE SET u.email = $email, u.nome = $nome, u.foto = $foto`,
-      { userId: newUser._id.toString(), email: newUser.email, nome: newUser.nome, foto: newUser.foto || '' }
+       ON CREATE SET u.email = $email, u.nome = $nome, u.foto = $foto, u.role = $role`,
+      { userId: newUser._id.toString(), email: newUser.email, nome: newUser.nome, foto: newUser.foto || '', role: newUser.role }
     );
 
     return newUser;
@@ -85,32 +75,53 @@ export const loginUserService = async (
 };
 
 // --- SERVIÇO DE ATUALIZAÇÃO ---
-export const updateUserService = async (id: string, updateData: Partial<IUser>): Promise<IUser | null> => {
+export const updateUserService = async (id: string, updateData: IUser): Promise<IUser | null> => {
   const session = driver.session();
   try {
-    const user = await User.findById(id);
-    if (!user) {
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
       const error: any = new Error('Usuário não encontrado.');
       error.statusCode = 404;
       throw error;
     }
 
-    // CORREÇÃO: A query de atualização também foi ajustada
-    await session.run(
-      `MATCH (u:User {userId: $userId}) 
-       SET u.nome = $nome, u.email = $email, u.foto = $foto`,
-      { userId: id, nome: updateData.nome, email: updateData.email, foto: updateData.foto || '' }
-    );
+    const neo4jUpdateProps: { [key: string]: any } = { userId: id };
+    let setClause = '';
 
-    // Atualiza no MongoDB
-    if (updateData.nome) user.nome = updateData.nome;
-    if (updateData.email) user.email = updateData.email;
-    if (updateData.role) user.role = updateData.role;
-    if (updateData.foto) user.foto = updateData.foto;
+    if (updateData.nome !== undefined) {
+      setClause += 'u.nome = $nome, ';
+      neo4jUpdateProps.nome = updateData.nome;
+    }
+    if (updateData.email !== undefined) {
+      setClause += 'u.email = $email, ';
+      neo4jUpdateProps.email = updateData.email;
+    }
+    if (updateData.foto !== undefined) {
+      setClause += 'u.foto = $foto, ';
+      neo4jUpdateProps.foto = updateData.foto;
+    }
+    if (updateData.role !== undefined) {
+      setClause += 'u.role = $role, ';
+      neo4jUpdateProps.role = updateData.role;
+    }
+    
+    // Remove a vírgula extra no final da string
+    setClause = setClause.slice(0, -2); 
 
-    await user.save();
-
-    return user;
+    if (setClause) {
+      await session.run(
+        `MATCH (u:User {userId: $userId}) 
+         SET ${setClause}`,
+        neo4jUpdateProps
+      );
+    }
+    
+    return updatedUser;
   } finally {
     await session.close();
   }
@@ -120,14 +131,13 @@ export const updateUserService = async (id: string, updateData: Partial<IUser>):
 export const deleteUserService = async (id: string) => {
   const session = driver.session();
   try {
-    const user = await User.findByIdAndDelete(id);
-    if (!user) {
+    const deletedUser = await User.findByIdAndDelete(id);
+    if (!deletedUser) {
       const error: any = new Error('Usuário não encontrado.');
       error.statusCode = 404;
       throw error;
     }
 
-    // Remove nó no Neo4j
     await session.run(
       `MATCH (u:User {userId: $userId}) DETACH DELETE u`,
       { userId: id }

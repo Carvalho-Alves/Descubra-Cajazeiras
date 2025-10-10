@@ -2,13 +2,20 @@ import { Types } from "mongoose";
 import { Avaliacao } from "../models/avaliacao";
 import { Servico } from "../models/servico";
 import { Evento } from "../models/evento";
+import { ref } from "process";
 
 interface CriarAvaliacaoDTO {
   tipo: "servico" | "evento";
   referenciaId: string;
   nota: number;
   comentario?: string;
-  usuarioId?: string;
+  usuarioId: string;
+}
+
+export const validarId = (id: string, nomeCampo = "ID") => {
+  if (!Types.ObjectId.isValid(id)) {
+    throw new Error(`${nomeCampo}ID inválido.`);
+  }
 }
 
 // Criar avaliação
@@ -19,9 +26,7 @@ export const criarAvaliacao = async (dados: CriarAvaliacaoDTO) => {
     throw new Error("Tipo inválido. Use 'servico' ou 'evento'.");
   }
 
-  if (!Types.ObjectId.isValid(referenciaId)) {
-    throw new Error("ID de referência inválido.");
-  }
+  validarId(referenciaId, "ID de Referência ");
 
   if (nota < 1 || nota > 5) {
     throw new Error("A nota deve ser entre 1 e 5.");
@@ -62,10 +67,11 @@ export const listarAvaliacoesPorReferencia = async (
 };
 
 // Estatísticas (média e total)
-export const obterEstatisticas = async (
+export const obterEstatisticasAvaliacao = async (
   tipo: "servico" | "evento",
   referenciaId: string
 ) => {
+  validarId(referenciaId, "ID de Referência ");
   const stats = await Avaliacao.aggregate([
     { $match: { tipo, referenciaId: new Types.ObjectId(referenciaId) } },
     {
@@ -86,49 +92,52 @@ export const obterEstatisticas = async (
 };
 
 // Buscar por ID
-export const buscarPorId = async (id: string) => {
-  if (!Types.ObjectId.isValid(id)) throw new Error("ID inválido.");
+export const buscarPorIdAvaliacao = async (id: string) => {
+  validarId(id, "ID");
   const avaliacao = await Avaliacao.findById(id).lean();
   if (!avaliacao) throw new Error("Avaliação não encontrada.");
   return avaliacao; 
 };
 
 // Atualizar
-export const atualizar = async (
+export const atualizarAvaliacao = async (
   id: string,
   usuarioId: string,
   data: { nota?: number; comentario?: string }
 ) => {
-  if (!Types.ObjectId.isValid(id)) throw new Error("ID inválido.");
-  const avaliacao = await Avaliacao.findById(id);
-  if (!avaliacao) throw new Error("Avaliação não encontrada.");
-
-  if (usuarioId && avaliacao.usuarioId?.toString() !== usuarioId) {
-    throw new Error("Não autorizado a atualizar esta avaliação.");
+  validarId(id, "ID");
+  if (data.nota && (data.nota < 1 || data.nota > 5)) {
+    throw new Error("A nota deve ser entre 1 e 5.");
+  }
+  const avaliacao = await Avaliacao.findByIdAndUpdate(
+    {_id: id, usuarioId: usuarioId},
+    data,
+    { new: true , lean: true}
+  );
+  if (!avaliacao) {
+    throw new Error("Avaliação não encontrada.");
   }
 
-  if (data.nota) avaliacao.nota = data.nota;
-  if (data.comentario !== undefined) avaliacao.comentario = data.comentario;
-
-  await avaliacao.save();
-  return avaliacao.toObject();
+  return avaliacao;
 };
 
 // Remover
-export const remover = async (id: string, usuarioId: string) => {
-  if (!Types.ObjectId.isValid(id)) throw new Error("ID inválido.");
-  const avaliacao = await Avaliacao.findById(id);
-  if (!avaliacao) throw new Error("Avaliação não encontrada.");
+export const removerAvaliacao = async (id: string, usuarioId: string) => {
+  validarId(id, "ID");
+  
+  const avaliacao = await Avaliacao.findOneAndDelete(
+    { _id: id, usuarioId: usuarioId }
+  );
 
-  if (usuarioId && avaliacao.usuarioId?.toString() !== usuarioId) {
-    throw new Error("Não autorizado a deletar esta avaliação.");
+  if (!avaliacao) {
+    throw new Error("Avaliação não encontrada ou não autorizada a deletar.");
   }
-  await Avaliacao.findByIdAndDelete(id);
+
   return true;
 };
 
 // Lista todos
-export const listarTodas = async (limit = 20, page = 1) => {
+export const listarTodasAValiacao = async (limit = 20, page = 1) => {
   return Avaliacao.find()
     .skip((page - 1) * limit)
     .limit(limit)

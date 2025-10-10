@@ -12,16 +12,16 @@ export interface IServico extends Document {
   nome: string;
   descricao?: string;
   tipo_servico: "Hospedagem" | "Alimentação/Lazer" | "Ponto Turístico";
-  categoria?: string;
+  categoria: string;
   contato?: {
     telefone?: string;
     instagram?: string;
   };
-  localizacao?: {
-    latitude?: number;
-    longitude?: number;
+  localizacao: {
+    latitude: number;
+    longitude: number;
   };
-  imagens?: string[];
+  imagem?: string[];
   usuario: Types.ObjectId;
 }
 
@@ -67,7 +67,7 @@ const ServicoTuristicoSchema = new Schema<IServico>(
         }
       },
     },
-    imagens: {
+    imagem: {
       type: [String],
     },
     usuario: {
