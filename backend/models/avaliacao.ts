@@ -2,11 +2,12 @@ import { Schema, model, Document, Types } from "mongoose";
 
 export interface IAvaliacao extends Document {
   tipo: "servico" | "evento";
-  referenciaId: Types.ObjectId;
-  usuarioId?: Types.ObjectId;
-  nota: number;
+  referenciaId: Types.ObjectId;   // <- aponta para Servico ou Evento, conforme "tipo"
+  usuarioId: Types.ObjectId;      // <- obrigatório (vem do token)
+  nota: number;                   // 1..5
   comentario?: string;
   criadoEm: Date;
+  atualizadoEm: Date;
 }
 
 const AvaliacaoSchema = new Schema<IAvaliacao>(
@@ -15,6 +16,7 @@ const AvaliacaoSchema = new Schema<IAvaliacao>(
       type: String,
       enum: ["servico", "evento"],
       required: true,
+      index: true,
     },
     referenciaId: {
       type: Schema.Types.ObjectId,
@@ -23,8 +25,9 @@ const AvaliacaoSchema = new Schema<IAvaliacao>(
     },
     usuarioId: {
       type: Schema.Types.ObjectId,
-      required: false,
       ref: "User",
+      required: true,
+      index: true,
     },
     nota: {
       type: Number,
@@ -34,7 +37,7 @@ const AvaliacaoSchema = new Schema<IAvaliacao>(
     },
     comentario: {
       type: String,
-      required: false,
+      trim: true,
     },
   },
   {
@@ -43,6 +46,12 @@ const AvaliacaoSchema = new Schema<IAvaliacao>(
   }
 );
 
-AvaliacaoSchema.index({ tipo: 1, referenciaId: 1 });
+/**
+ * Índices úteis
+ * - Busca cronológica por item avaliado
+ * - Evitar avaliações duplicadas do mesmo usuário no mesmo item
+ */
+AvaliacaoSchema.index({ tipo: 1, referenciaId: 1, criadoEm: -1 });
+AvaliacaoSchema.index({ tipo: 1, referenciaId: 1, usuarioId: 1 }, { unique: true });
 
 export const Avaliacao = model<IAvaliacao>("Avaliacao", AvaliacaoSchema);
