@@ -13,7 +13,7 @@ export const loginController = async (req: Request, res: Response, next: NextFun
     };
     const secret = (env as any).JWT_ACCESS_SECRET || 'dev-secret';
     const token = jwt.sign(payload, secret, {
-        expiresIn: '1h'
+        expiresIn: '24h' // Token válido por 24 horas
     });
     return res.status(200).json({
         message: 'Login bem-sucedido!',

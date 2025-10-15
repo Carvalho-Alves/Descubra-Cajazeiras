@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. SELEÇÃO DE ELEMENTOS DO HTML ---
     const usuarioArea = document.getElementById('usuario-area');
     const btnNovoPonto = document.getElementById('btnNovoPonto');
-    const btnDashboard = document.getElementById('btnDashboard');
     const btnVerEventos = document.getElementById('btnVerEventos');
     const btnAtualizarLista = document.getElementById('btnAtualizarLista');
     const btnCentralizarLocalizacao = document.getElementById('btnCentralizarLocalizacao');
@@ -74,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             btnNovoPonto.style.display = 'inline-block';
-            btnDashboard.style.display = 'inline-block';
 
             document.getElementById('btnSair').addEventListener('click', (e) => {
                 e.preventDefault();
@@ -97,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             // Esconde os botões de admin
             btnNovoPonto.style.display = 'none';
-            btnDashboard.style.display = 'none';
         }
     }
 
@@ -128,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         servicos.forEach(servico => {
             const item = document.createElement('a');
             item.className = 'list-group-item list-group-item-action';
-            item.href = `ponto.html?id=${servico._id}&tipo=servico`;
+            item.href = `pontoModel.html?id=${servico._id}&tipo=servico`;
             item.innerHTML = `
                 <h5 class="mb-1">${servico.nome || servico.titulo}</h5>
                 <p class="mb-1 text-muted">${servico.tipo_servico}</p>

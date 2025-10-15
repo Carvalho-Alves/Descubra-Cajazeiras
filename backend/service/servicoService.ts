@@ -78,7 +78,7 @@ export const updateServico = async (
 ) => {
   const session = driver.session();
   try {
-    const parsed = updateServicoSchema.parse(input);
+    const parsed = updateServicoSchema.parse(input);   
     const updatedServico = await Servico.findOneAndUpdate(
       { _id: id, usuario: new Types.ObjectId(usuarioId) },
       { ...parsed },

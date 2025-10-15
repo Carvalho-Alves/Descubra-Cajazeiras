@@ -1,0 +1,126 @@
+body {
+  background-color: #f8f9fa;
+}
+.ponto-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+}
+.ponto-card {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+.info-section {
+  padding: 1.5rem;
+}
+.info-item {
+  display: flex;
+  align-items: start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+.info-item:last-child {
+  border-bottom: none;
+}
+.info-icon {
+  width: 40px;
+  height: 40px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+.info-icon i {
+  font-size: 1.2rem;
+  color: #667eea;
+}
+.tipo-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  display: inline-block;
+}
+.tipo-hospedagem {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+.tipo-alimentacao {
+  background: #fff3e0;
+  color: #f57c00;
+}
+.tipo-turistico {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+#mapaPonto {
+  height: 400px;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.btn-action {
+  padding: 0.75rem 2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.loading-container {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avaliacoes-section {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.avaliacao-item {
+  border-left: 4px solid #667eea;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+.stars {
+  color: #ffc107;
+}
+
+.container-b{
+    margin: 0 1rem;
+}
+
+/* Modal de Edição - Scroll */
+#modalEditarPonto .modal-dialog {
+  max-height: 90vh;
+}
+
+#modalEditarPonto .modal-content {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#modalEditarPonto .modal-body {
+  overflow-y: auto;
+  max-height: calc(90vh - 120px); /* Subtrai altura do header e footer */
+  padding: 1.5rem;
+}
+
+#modalEditarPonto .modal-header,
+#modalEditarPonto .modal-footer {
+  flex-shrink: 0;
+}

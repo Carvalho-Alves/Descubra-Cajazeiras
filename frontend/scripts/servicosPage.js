@@ -56,6 +56,7 @@ class ServicosPageManager {
         this.btnPrimeiroServico = document.getElementById('btnPrimeiroServico');
         this.btnAtualizarServicos = document.getElementById('btnAtualizarServicos');
         this.btnCentralizarMapa = document.getElementById('btnCentralizarMapa');
+        this.btnDashboard = document.getElementById('btnDashboard');
     }
 
     setupMap() {
@@ -129,6 +130,11 @@ class ServicosPageManager {
                 </div>
             `;
             
+            // Mostrar botão Dashboard para usuários logados
+            if (this.btnDashboard) {
+                this.btnDashboard.style.display = 'inline-block';
+            }
+            
             document.getElementById('btnSairServicos').addEventListener('click', (e) => {
                 e.preventDefault();
                 if (confirm('Deseja realmente sair?')) {
@@ -141,6 +147,11 @@ class ServicosPageManager {
                     <i class="fas fa-sign-in-alt me-2"></i>Entrar
                 </a>
             `;
+            
+            // Esconder botão Dashboard para usuários não logados
+            if (this.btnDashboard) {
+                this.btnDashboard.style.display = 'none';
+            }
         }
     }
 
@@ -629,7 +640,247 @@ class ServicosPageManager {
     }
 }
 
+// === DASHBOARD MANAGER ===
+class DashboardManager {
+    constructor() {
+        this.btnAtualizarDashboard = document.getElementById('btnAtualizarDashboard');
+        this.graficos = {
+            servicosPorTipo: null,
+            crescimento: null
+        };
+        
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        // Atualizar dashboard quando o modal for aberto
+        document.getElementById('modalDashboard').addEventListener('shown.bs.modal', () => {
+            this.carregarDashboard();
+        });
+
+        // Botão de atualizar
+        this.btnAtualizarDashboard?.addEventListener('click', () => {
+            this.carregarDashboard();
+        });
+    }
+
+    async carregarDashboard() {
+        try {
+            // Buscar dados
+            const [servicos, eventos] = await Promise.all([
+                fetch('/api/servicos').then(res => res.json()),
+                fetch('/api/eventos').then(res => res.json()).catch(() => [])
+            ]);
+
+            // Atualizar estatísticas
+            this.atualizarEstatisticas(servicos, eventos);
+            
+            // Atualizar gráficos
+            this.atualizarGraficos(servicos);
+            
+            // Atualizar listas
+            this.atualizarListas(servicos, eventos);
+
+        } catch (error) {
+            console.error('Erro ao carregar dashboard:', error);
+        }
+    }
+
+    atualizarEstatisticas(servicos, eventos) {
+        // Total de serviços
+        document.getElementById('dashTotalServicos').textContent = servicos.length;
+        
+        // Total de eventos
+        document.getElementById('dashTotalEventos').textContent = eventos.length;
+        
+        // Tipo mais comum
+        const tiposCounts = {};
+        servicos.forEach(s => {
+            const tipo = s.tipo_servico || 'Outro';
+            tiposCounts[tipo] = (tiposCounts[tipo] || 0) + 1;
+        });
+        
+        const tipoMaisComum = Object.entries(tiposCounts)
+            .sort((a, b) => b[1] - a[1])[0];
+        
+        document.getElementById('dashTipoMaisComum').textContent = 
+            tipoMaisComum ? `${tipoMaisComum[0]} (${tipoMaisComum[1]})` : 'N/A';
+        
+        // Novos cadastros no mês
+        const mesAtual = new Date().getMonth();
+        const anoAtual = new Date().getFullYear();
+        const novosMes = servicos.filter(s => {
+            if (!s.createdAt) return false;
+            const data = new Date(s.createdAt);
+            return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+        }).length;
+        
+        document.getElementById('dashCrescimentoMes').textContent = novosMes;
+    }
+
+    atualizarGraficos(servicos) {
+        this.criarGraficoServicosPorTipo(servicos);
+        this.criarGraficoCrescimento(servicos);
+    }
+
+    criarGraficoServicosPorTipo(servicos) {
+        const ctx = document.getElementById('graficoServicosPorTipo');
+        if (!ctx) return;
+
+        // Contar por tipo
+        const tiposCounts = {};
+        servicos.forEach(s => {
+            const tipo = s.tipo_servico || 'Outro';
+            tiposCounts[tipo] = (tiposCounts[tipo] || 0) + 1;
+        });
+
+        // Destruir gráfico anterior se existir
+        if (this.graficos.servicosPorTipo) {
+            this.graficos.servicosPorTipo.destroy();
+        }
+
+        // Criar novo gráfico
+        this.graficos.servicosPorTipo = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(tiposCounts),
+                datasets: [{
+                    data: Object.values(tiposCounts),
+                    backgroundColor: [
+                        '#0d6efd', // blue
+                        '#198754', // green
+                        '#ffc107', // yellow
+                        '#dc3545', // red
+                        '#6c757d'  // gray
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    criarGraficoCrescimento(servicos) {
+        const ctx = document.getElementById('graficoCrescimento');
+        if (!ctx) return;
+
+        // Agrupar por mês (últimos 6 meses)
+        const meses = [];
+        const counts = [];
+        const hoje = new Date();
+        
+        for (let i = 5; i >= 0; i--) {
+            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            const mesNome = data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+            meses.push(mesNome);
+            
+            const count = servicos.filter(s => {
+                if (!s.createdAt) return false;
+                const servicoData = new Date(s.createdAt);
+                return servicoData.getMonth() === data.getMonth() && 
+                       servicoData.getFullYear() === data.getFullYear();
+            }).length;
+            
+            counts.push(count);
+        }
+
+        // Destruir gráfico anterior se existir
+        if (this.graficos.crescimento) {
+            this.graficos.crescimento.destroy();
+        }
+
+        // Criar novo gráfico
+        this.graficos.crescimento = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: 'Novos Serviços',
+                    data: counts,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    atualizarListas(servicos, eventos) {
+        // Serviços recentes (últimos 5)
+        const servicosRecentes = [...servicos]
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5);
+
+        const containerServicos = document.getElementById('dashServicosRecentes');
+        containerServicos.innerHTML = servicosRecentes.length === 0 
+            ? '<div class="list-group-item text-muted">Nenhum serviço cadastrado</div>'
+            : servicosRecentes.map(s => `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${s.nome || s.titulo}</h6>
+                            <small class="text-muted">${s.tipo_servico || 'Tipo não especificado'}</small>
+                        </div>
+                        <small class="text-muted">
+                            ${s.createdAt ? new Date(s.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível'}
+                        </small>
+                    </div>
+                </div>
+            `).join('');
+
+        // Próximos eventos (próximos 5)
+        const hoje = new Date();
+        const proximosEventos = eventos
+            .filter(e => new Date(e.data) >= hoje)
+            .sort((a, b) => new Date(a.data) - new Date(b.data))
+            .slice(0, 5);
+
+        const containerEventos = document.getElementById('dashProximosEventos');
+        containerEventos.innerHTML = proximosEventos.length === 0
+            ? '<div class="list-group-item text-muted">Nenhum evento próximo</div>'
+            : proximosEventos.map(e => `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${e.nome}</h6>
+                            <small class="text-muted">${e.local || 'Local a definir'}</small>
+                        </div>
+                        <small class="text-muted">
+                            ${new Date(e.data).toLocaleDateString('pt-BR')}
+                        </small>
+                    </div>
+                </div>
+            `).join('');
+    }
+}
+
 // Inicializa quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
     window.servicosPage = new ServicosPageManager();
+    window.dashboardManager = new DashboardManager();
 });

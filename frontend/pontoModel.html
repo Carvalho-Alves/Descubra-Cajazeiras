@@ -3,101 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novo Ponto - Descubra+ Cajazeiras</title>
+    <title>Detalhes do Ponto - Descubra+ Cajazeiras</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/styles/ponto.css"> 
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self';
-        img-src 'self' data: https://*.tile.openstreetmap.org;
-        script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net;
-        style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
-        font-src 'self' https://cdnjs.cloudflare.com;
-    ">
+    <link rel="stylesheet" href="styles/index.css">
+    <link rel="stylesheet" href="styles/pontoModel.css">
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.png">
 </head>
 <body>
+    <!-- Header -->
     <header>
-        <nav class="navbar" style="background-color: #fdd835;">
-            <div class="logo">
-                <a class="navbar-brand" href="#">
-                    <img src="assets/images/logotipo.png" alt="Logo Descubra+ Cajazeiras" height="70">
-                </a>
-            </div>
+        <div class="logo">
+            <a class="navbar-brand" href="index.html">
+                <img src="assets/images/logotipo.png" alt="Logo Descubra+ Cajazeiras" height="70">
+            </a>
+        </div>
+        <nav class="menu-centro">
+            <a href="index.html" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-1"></i> Voltar ao Mapa
+            </a>
         </nav>
+        <div class="usuario" id="usuario-area">
+            <!-- Área do usuário será preenchida pelo JavaScript -->
+        </div>
     </header>
 
-    <main class="container my-5">
-        <form id="form-ponto" class="card p-4 shadow-sm" novalidate>
-            <h2 class="mb-4">Novo Ponto</h2>
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="mb-3">
-                        <label for="ponto-nome" class="form-label">Nome *</label>
-                        <input type="text" class="form-control" id="ponto-nome" name="nome" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="ponto-descricao" class="form-label">Descrição</label>
-                        <textarea class="form-control" id="ponto-descricao" name="descricao" rows="5"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="tipoCadastro" class="form-label">Tipo *</label>
-                        <select class="form-select" id="tipoCadastro" required>
-                            <option value="" disabled selected>Selecione um tipo</option>
-                            <option value="servico">Serviço Turístico</option>
-                            <option value="evento">Evento</option>
-                        </select>
-                    </div>
+    <!-- Loading -->
+    <div id="loading" class="loading-container" style="display: none;">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-3 text-muted">Carregando detalhes...</p>
+        </div>
+    </div>
 
-                    <div id="campos-dinamicos" class="mt-3"></div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="mb-3">
-                        <label for="ponto-endereco" class="form-label">Endereço</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="ponto-endereco" placeholder="Digite um endereço para buscar no mapa">
-                            <button class="btn btn-outline-secondary" type="button" id="btn-buscar-endereco">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
+    <!-- Conteúdo Principal -->
+    <main id="conteudo-principal" style="display: none;">
+        <!-- Header do Ponto -->
+        <div class="ponto-header">
+            <div class="container-b">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h1 class="display-5 fw-bold mb-2" id="pontoNome">Carregando...</h1>
+                        <div id="pontoTipoBadge"></div>
                     </div>
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <label for="ponto-latitude" class="form-label">Latitude *</label>
-                            <input type="number" step="any" class="form-control" id="ponto-latitude" name="latitude" required>
-                        </div>
-                        <div class="col-sm-6">
-                            <label for="ponto-longitude" class="form-label">Longitude *</label>
-                            <input type="number" step="any" class="form-control" id="ponto-longitude" name="longitude" required>
-                        </div>
-                    </div>
-                    <div class="d-grid mt-3">
-                         <button type="button" class="btn btn-outline-primary" id="btn-usar-localizacao">
-                            <i class="fas fa-location-arrow me-2"></i>Usar Minha Localização
+                    <div id="acoes-admin" style="display: none;">
+                        <button class="btn btn-light btn-action me-2" id="btnEditarPonto">
+                            <i class="fas fa-edit me-2"></i>Editar
+                        </button>
+                        <button class="btn btn-danger btn-action" id="btnExcluirPonto">
+                            <i class="fas fa-trash me-2"></i>Excluir
                         </button>
                     </div>
-                    <hr>
-                    <label class="form-label">Selecione no mapa:</label>
-                    <small class="d-block text-muted mb-2">Clique ou arraste o marcador para definir a localização.</small>
-                    <div id="mapaCadastro" style="height: 300px; width: 100%; border-radius: 8px;"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="mt-4 text-end">
-                <a href="/index.html" class="btn btn-secondary btn-lg">Cancelar</a>
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-save me-2"></i>Salvar
-                </button>
+        <div class="container-t">
+            <div class="row">
+                <!-- Informações do Ponto -->
+                <div class="col-lg-5">
+                    <div class="ponto-card">
+                        <div class="info-section">
+                            <h4 class="mb-4">
+                                <i class="fas fa-info-circle me-2 text-primary"></i>
+                                Informações
+                            </h4>
+                            
+                            <!-- Descrição -->
+                            <div class="info-item">
+                                <div class="info-icon">
+                                    <i class="fas fa-align-left"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 text-muted">Descrição</h6>
+                                    <p class="mb-0" id="pontoDescricao">-</p>
+                                </div>
+                            </div>
+
+                            <!-- Endereço -->
+                            <div class="info-item">
+                                <div class="info-icon">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 text-muted">Localização</h6>
+                                    <p class="mb-0" id="pontoEndereco">-</p>
+                                </div>
+                            </div>
+
+                            <!-- Campos Dinâmicos -->
+                            <div id="camposDinamicos"></div>
+
+                            <!-- Contato (se houver) -->
+                            <div id="contatoSection" style="display: none;">
+                                <h5 class="mt-4 mb-3">
+                                    <i class="fas fa-phone me-2 text-primary"></i>
+                                    Contato
+                                </h5>
+                                <div class="info-item" id="telefoneItem" style="display: none;">
+                                    <div class="info-icon">
+                                        <i class="fas fa-phone"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 text-muted">Telefone</h6>
+                                        <a href="#" class="text-decoration-none" id="pontoTelefone">-</a>
+                                    </div>
+                                </div>
+                                <div class="info-item" id="instagramItem" style="display: none;">
+                                    <div class="info-icon">
+                                        <i class="fab fa-instagram"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 text-muted">Instagram</h6>
+                                        <a href="#" target="_blank" class="text-decoration-none" id="pontoInstagram">-</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Avaliações -->
+                    <div class="avaliacoes-section" id="avaliacoesSection">
+                        <h4 class="mb-4">
+                            <i class="fas fa-star me-2 text-warning"></i>
+                            Avaliações
+                        </h4>
+                        <div id="listaAvaliacoes">
+                            <p class="text-muted">Nenhuma avaliação ainda.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mapa -->
+                <div class="col-lg-7">
+                    <div class="ponto-card">
+                        <div id="mapaPonto"></div>
+                    </div>
+
+                    <!-- Instruções ou informações adicionais -->
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Dica:</strong> Use o mapa para visualizar a localização exata do estabelecimento.
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </main>
+
+    <!-- Erro -->
+    <div id="erro-container" class="container my-5" style="display: none;">
+        <div class="alert alert-danger text-center">
+            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+            <h4>Erro ao carregar informações</h4>
+            <p id="mensagemErro">Não foi possível carregar os detalhes deste ponto.</p>
+            <a href="index.html" class="btn btn-primary mt-3">
+                <i class="fas fa-arrow-left me-2"></i>Voltar ao Mapa
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div class="modal fade" id="modalEditarPonto" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <form id="formEditarPonto">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit me-2"></i>
+                            Editar Ponto Turístico
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="alertContainerEdit"></div>
+
+                        <!-- Informações Básicas -->
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="editNome" class="form-label">Nome do Estabelecimento *</label>
+                                <input type="text" class="form-control" id="editNome" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editTipoServico" class="form-label">Tipo de Serviço *</label>
+                                <select class="form-select" id="editTipoServico" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Hospedagem">🏨 Hospedagem</option>
+                                    <option value="Alimentação/Lazer">🍽️ Alimentação/Lazer</option>
+                                    <option value="Ponto Turístico">🏛️ Ponto Turístico</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editDescricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="editDescricao" rows="3"></textarea>
+                        </div>
+
+                        <!-- Campos Dinâmicos -->
+                        <div id="camposDinamicosEdit"></div>
+
+                        <!-- Localização -->
+                        <h6 class="mt-4 mb-3">
+                            <i class="fas fa-map-marker-alt me-2"></i>Localização
+                        </h6>
+
+                        <div class="mb-3">
+                            <label for="editEndereco" class="form-label">Endereço</label>
+                            <input type="text" class="form-control" id="editEndereco">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editLatitude" class="form-label">Latitude *</label>
+                                <input type="number" step="any" class="form-control" id="editLatitude" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editLongitude" class="form-label">Longitude *</label>
+                                <input type="number" step="any" class="form-control" id="editLongitude" required>
+                            </div>
+                        </div>
+
+                        <!-- Mini Mapa de Edição -->
+                        <div id="miniMapaEdit" style="height: 250px; border-radius: 8px; border: 2px solid #ddd; margin-bottom: 1rem;"></div>
+                        <small class="text-muted">Clique no mapa para ajustar a localização</small>
+
+                        <!-- Contato -->
+                        <h6 class="mt-4 mb-3">
+                            <i class="fas fa-phone me-2"></i>Contato (Opcional)
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editTelefone" class="form-label">Telefone</label>
+                                <input type="tel" class="form-control" id="editTelefone">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editInstagram" class="form-label">Instagram</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" id="editInstagram">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module" src="./scripts/models/Ponto.js"></script>
-    <script type="module" src="./scripts/service/pontoService.js"></script>
-    <script type="module" src="./scripts/controller/pontoModel.js"></script>
-    <script type="module" src="./scripts/index.js"></script>
+    <script src="scripts/pontoDetail.js"></script>
 </body>
 </html>

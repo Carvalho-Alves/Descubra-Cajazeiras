@@ -29,9 +29,6 @@
             </a>
         </div>
         <nav class="menu-centro">
-            <button class="btn btn-outline-light me-2" id="btnDashboard" data-bs-toggle="modal" data-bs-target="#modalDashboard">
-                <i class="fas fa-chart-bar me-1"></i> Dashboard
-            </button>
             <button class="btn btn-outline-light me-2" id="btnConhecaProjeto" data-bs-toggle="modal" data-bs-target="#modalSobreProjeto">
                 <i class="fas fa-info-circle me-1"></i> Conheça o Projeto
             </button>
@@ -303,89 +300,6 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalDashboard" tabindex="-1" aria-labelledby="modalDashboardLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalDashboardLabel">
-                        <i class="fas fa-chart-bar me-2"></i> Dashboard Geral
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row mb-4 text-center">
-                        <div class="col-md-3 col-6">
-                            <div class="card card-body h-100">
-                                <h6 class="text-muted">Total de Serviços</h6>
-                                <p id="totalServicos" class="display-5 fw-bold text-primary">0</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6">
-                            <div class="card card-body h-100">
-                                <h6 class="text-muted">Total de Eventos</h6>
-                                <p id="totalEventos" class="display-5 fw-bold text-info">0</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mt-3 mt-md-0">
-                            <div class="card card-body h-100">
-                                <h6 class="text-muted">Tipo de Serviço Mais Comum</h6>
-                                <p id="tipoMaisComum" class="h5 mt-2">N/A</p>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-6 mt-3 mt-md-0">
-                            <div class="card card-body h-100">
-                                <h6 class="text-muted">Novos Cadastros (Mês)</h6>
-                                <p id="crescimentoMes" class="display-5 fw-bold text-success">0</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-6 mb-4">
-                            <div class="card h-100">
-                                <div class="card-header">Serviços Turísticos por Tipo</div>
-                                <div class="card-body">
-                                    <canvas id="graficoServicosPorTipo" style="min-height: 250px;"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 mb-4">
-                            <div class="card h-100">
-                                <div class="card-header">Crescimento de Cadastros por Mês</div>
-                                <div class="card-body">
-                                    <canvas id="graficoCrescimento" style="min-height: 250px;"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-6 mb-4">
-                            <div class="card">
-                                <div class="card-header">Serviços Adicionados Recentemente</div>
-                                <div class="list-group list-group-flush" id="servicosRecentes">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 mb-4">
-                            <div class="card">
-                                <div class="card-header">Próximos Eventos</div>
-                                <div class="list-group list-group-flush" id="proximosEventos">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="button" class="btn btn-primary" id="btnAtualizarDashboard">
-                        <i class="fas fa-sync-alt me-2"></i>Atualizar
-                    </button>
                 </div>
             </div>
         </div>
