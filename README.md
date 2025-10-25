@@ -1,8 +1,13 @@
 🌍 Descubra+ Cajazeiras
 
-API RESTful desenvolvida para centralizar e disponibilizar informações turísticas da cidade de Cajazeiras – PB, incluindo pontos turísticos, eventos, gastronomia e hospedagem.
+API e Frontend para centralizar e disponibilizar informações turísticas da cidade de Cajazeiras – PB, incluindo pontos turísticos, eventos, gastronomia e hospedagem.
 
-O projeto utiliza Node.js + Express + TypeScript, banco de dados PostgreSQL (com PostGIS) e integrações com MongoDB Atlas e Neo4j para fornecer dados relacionais e geoespaciais.
+Stack atual:
+- Node.js + Express + TypeScript
+- MongoDB (Mongoose)
+- Neo4j (opcional, desabilitado por padrão via NEO4J_ENABLED=false)
+- JWT, Helmet, CORS, Rate Limit, Multer
+- Frontend vanilla JS + Bootstrap + Leaflet + Chart.js
 
 🚀 Tecnologias Utilizadas
 
@@ -10,15 +15,11 @@ Node.js com Express
 
 TypeScript
 
-PostgreSQL + PostGIS
+MongoDB (Mongoose)
 
-MongoDB Atlas
+Neo4j (opcional)
 
-Neo4j
-
-Sequelize (ORM)
-
-Zod para validações
+Zod e express-validator para validações
 
 JWT para autenticação
 
@@ -80,7 +81,14 @@ JWT_SECRET=sua_chave_secreta
 
 Execute a aplicação em modo desenvolvimento:
 
-docker compose up --build
+Instância local (recomendado para desenvolvimento):
+
+```powershell
+npm install
+npm run dev
+```
+
+Por padrão, o app inicia em http://localhost:3333 e serve os arquivos estáticos do diretório `frontend/`.
 
 📖 Documentação da API
 
@@ -92,13 +100,21 @@ http://localhost:3333/api-docs
 
 O login retorna um JWT que deve ser incluído no Authorization Header:
 
+```
 Authorization: Bearer <token>
+```
 
-🧪 Testes
+📚 Principais Endpoints
 
-Para rodar os testes:
+- GET /api/servicos — lista serviços
+- GET /api/servicos/{id} — detalhe do serviço
+- POST /api/servicos — cria serviço
+- PUT /api/servicos/{id} — atualiza serviço
+- DELETE /api/servicos/{id} — remove serviço
+- GET /api/servicos/search?q=termo — busca textual com fallback acento-insensível
+- GET /api/estatisticas — dados para o dashboard (totais, por tipo, por mês, recentes)
 
-npm run test
+Outros grupos: /api/eventos, /api/avaliacoes, /api/auth
 
 📌 Funcionalidades
 
@@ -110,7 +126,7 @@ npm run test
 
 🏷️ Categorias de pontos turísticos
 
-🌐 Integração com MongoDB e Neo4j
+🌐 Integração com MongoDB e (opcionalmente) Neo4j
 
 📑 Documentação interativa com Swagger
 

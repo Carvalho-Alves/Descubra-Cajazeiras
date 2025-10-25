@@ -17,6 +17,7 @@ import authRoutes from './routes/authRoutes';
 import servicoRoutes from './routes/servicoRoutes';
 import eventoRoutes from './routes/eventoRoutes';
 import avaliacaoRoutes from './routes/avaliacaoRoutes';
+import estatisticasRoutes from './routes/estatisticasRoutes';
 
 const app = express();
 
@@ -32,7 +33,8 @@ app.use(helmet({
         "'self'",
         "data:",
         "https://*.tile.openstreetmap.org",
-        "https://unpkg.com" 
+        "https://unpkg.com",
+        "https://cdn.jsdelivr.net"
       ],
       // Permissões para scripts de CDNs
       "script-src": [
@@ -57,7 +59,10 @@ app.use(helmet({
       // Permissões para requisições de conexão
       "connect-src": [
         "'self'",
-        "https://nominatim.openstreetmap.org"
+  "https://nominatim.openstreetmap.org",
+  "https://unpkg.com",
+  "https://cdn.jsdelivr.net",
+  "https://cdnjs.cloudflare.com"
       ],
       // Permissão para manipuladores de eventos em linha (como onclick)
       "script-src-attr": [
@@ -77,6 +82,9 @@ const frontendPath = path.resolve(__dirname, '..', 'frontend');
 // Serve todos os arquivos estáticos da pasta frontend, como CSS, JS e outras páginas HTML.
 app.use(express.static(frontendPath));
 
+// Silencia requisições .well-known do Chrome DevTools para evitar logs de erro
+app.use('/.well-known', (_req, res) => res.status(204).end());
+
 // Rota de Health Check
 app.get('/health', (_req, res) => res.json({ status: 'UP' }));
 
@@ -93,6 +101,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/avaliacoes', avaliacaoRoutes);
 app.use('/api/servicos', servicoRoutes);
 app.use('/api/eventos', eventoRoutes)
+app.use('/api/estatisticas', estatisticasRoutes)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Servindo a página inicial para a rota raiz (/).
@@ -110,9 +119,14 @@ let server: Server;
 
 const startServer = async () => {
   try {
-    await connectMongo();
-    await getNeo4jDriver().verifyAuthentication();
-    console.log('✅ Conexão com Neo4j estabelecida com sucesso!');
+  await connectMongo();
+    const neo4jEnabled = (process.env.NEO4J_ENABLED || 'false').toLowerCase() === 'true';
+    if (neo4jEnabled) {
+      await getNeo4jDriver().verifyAuthentication();
+      console.log('✅ Conexão com Neo4j estabelecida com sucesso!');
+    } else {
+      console.log('ℹ️ Neo4j desabilitado (NEO4J_ENABLED=false).');
+    }
     
     server = app.listen(env.PORT, () => {
       console.log(`🚀 Servidor rodando na porta ${env.PORT}`);

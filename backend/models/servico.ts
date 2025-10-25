@@ -83,6 +83,14 @@ const ServicoTuristicoSchema = new Schema<IServico>(
   }
 );
 
+// Índice para busca textual
+ServicoTuristicoSchema.index({
+  nome: 'text',
+  descricao: 'text',
+  tipo_servico: 'text',
+  categoria: 'text',
+});
+
 // Exportações para compatibilidade
 export const ServicoTuristico = model<IServico>(
   "ServicoTuristico",

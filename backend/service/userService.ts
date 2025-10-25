@@ -2,7 +2,8 @@
 
 import { HydratedDocument, Types } from 'mongoose';
 import { z } from 'zod';
-import neo4j from 'neo4j-driver';
+// Neo4j opcional
+import { getNeo4jDriver } from '../database/neo4j';
 
 import { loginSchema, registerSchema } from '../validations/uservalidation';
 import { User, IUser } from '../models/user';
@@ -10,14 +11,17 @@ import { User, IUser } from '../models/user';
 // --- Tipagem do usuário público (sem senha) ---
 export type PublicUser = Omit<IUser, 'senha'>;
 
-// --- Configuração do Neo4j ---
-const driver = neo4j.driver(
-  process.env.NEO4J_URI || 'bolt://localhost:7687',
-  neo4j.auth.basic(
-    process.env.NEO4J_USER || 'neo4j',
-    process.env.NEO4J_PASSWORD || 'sua_senha'
-  )
-);
+// --- Helper: sessão Neo4j opcional ---
+const neo4jEnabled = (process.env.NEO4J_ENABLED || 'false').toLowerCase() === 'true';
+function getNeo4jSessionOrNull() {
+  if (!neo4jEnabled) return null;
+  try {
+    const driver = getNeo4jDriver();
+    return driver.session();
+  } catch {
+    return null;
+  }
+}
 
 // --- SERVIÇO DE REGISTRO ---
 type CreateUserInput = z.infer<typeof registerSchema>;
@@ -26,7 +30,7 @@ type LoginUserInput = z.infer<typeof loginSchema>;
 export const createUserService = async (
   input: CreateUserInput
 ): Promise<HydratedDocument<IUser>> => {
-  const session = driver.session();
+  const session = getNeo4jSessionOrNull();
   try {
     const { nome, email, senha, foto, role } = input;
 
@@ -40,15 +44,22 @@ export const createUserService = async (
     const newUser = new User({ nome, email, senha, foto, role });
     await newUser.save();
 
-    await session.run(
-      `MERGE (u:User {userId: $userId})
-       ON CREATE SET u.email = $email, u.nome = $nome, u.foto = $foto, u.role = $role`,
-      { userId: newUser._id.toString(), email: newUser.email, nome: newUser.nome, foto: newUser.foto || '', role: newUser.role }
-    );
+    if (session) {
+      try {
+        await session.run(
+          `MERGE (u:User {userId: $userId})
+           ON CREATE SET u.email = $email, u.nome = $nome, u.foto = $foto, u.role = $role`,
+          { userId: newUser._id.toString(), email: newUser.email, nome: newUser.nome, foto: newUser.foto || '', role: newUser.role }
+        );
+      } catch (e) {
+        // Falha no Neo4j não deve quebrar o fluxo principal
+        console.warn('Neo4j indisponível ao registrar usuário. Prosseguindo sem grafo.');
+      }
+    }
 
     return newUser;
   } finally {
-    await session.close();
+    if (session) await session.close();
   }
 };
 
@@ -76,7 +87,7 @@ export const loginUserService = async (
 
 // --- SERVIÇO DE ATUALIZAÇÃO ---
 export const updateUserService = async (id: string, updateData: IUser): Promise<IUser | null> => {
-  const session = driver.session();
+  const session = getNeo4jSessionOrNull();
   try {
     const updatedUser = await User.findByIdAndUpdate(
       id,
@@ -113,23 +124,27 @@ export const updateUserService = async (id: string, updateData: IUser): Promise<
     // Remove a vírgula extra no final da string
     setClause = setClause.slice(0, -2); 
 
-    if (setClause) {
-      await session.run(
-        `MATCH (u:User {userId: $userId}) 
-         SET ${setClause}`,
-        neo4jUpdateProps
-      );
+    if (setClause && session) {
+      try {
+        await session.run(
+          `MATCH (u:User {userId: $userId}) 
+           SET ${setClause}`,
+          neo4jUpdateProps
+        );
+      } catch {
+        console.warn('Neo4j indisponível ao atualizar usuário. Prosseguindo sem grafo.');
+      }
     }
     
     return updatedUser;
   } finally {
-    await session.close();
+    if (session) await session.close();
   }
 };
 
 // --- SERVIÇO DE DELETAR ---
 export const deleteUserService = async (id: string) => {
-  const session = driver.session();
+  const session = getNeo4jSessionOrNull();
   try {
     const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser) {
@@ -138,14 +153,20 @@ export const deleteUserService = async (id: string) => {
       throw error;
     }
 
-    await session.run(
-      `MATCH (u:User {userId: $userId}) DETACH DELETE u`,
-      { userId: id }
-    );
+    if (session) {
+      try {
+        await session.run(
+          `MATCH (u:User {userId: $userId}) DETACH DELETE u`,
+          { userId: id }
+        );
+      } catch {
+        console.warn('Neo4j indisponível ao deletar usuário. Prosseguindo sem grafo.');
+      }
+    }
 
     return { message: 'Usuário deletado com sucesso.' };
   } finally {
-    await session.close();
+    if (session) await session.close();
   }
 };
 
@@ -153,10 +174,17 @@ export const deleteUserService = async (id: string) => {
 export const findUsersService = async () => {
   const users = (await User.find()) as HydratedDocument<IUser>[];
 
-  const session = driver.session();
+  const session = getNeo4jSessionOrNull();
   try {
-    const result = await session.run(`MATCH (u:User) RETURN u LIMIT 100`);
-    const neo4jNodes = result.records.map(record => record.get('u').properties);
+    let neo4jNodes: any[] = [];
+    if (session) {
+      try {
+        const result = await session.run(`MATCH (u:User) RETURN u LIMIT 100`);
+        neo4jNodes = result.records.map(record => record.get('u').properties);
+      } catch {
+        console.warn('Neo4j indisponível ao listar usuários. Prosseguindo sem grafo.');
+      }
+    }
 
     const combinedUsers = users.map(mongoUser => {
       const userObject = mongoUser.toObject();
@@ -173,7 +201,7 @@ export const findUsersService = async () => {
 
     return combinedUsers;
   } finally {
-    await session.close();
+  if (session) await session.close();
   }
 };
 
@@ -183,24 +211,30 @@ export const findUserService = async (id: string) => {
 
   if (!mongoUser) return null;
 
-  const session = driver.session();
+  const session = getNeo4jSessionOrNull();
   try {
-    const neo4jNodeResult = await session.run(
-      `MATCH (u:User {userId: $userId}) RETURN u`,
-      { userId: mongoUser._id.toString() }
-    );
+    let neo4jNode: any = null;
+    if (session) {
+      try {
+        const neo4jNodeResult = await session.run(
+          `MATCH (u:User {userId: $userId}) RETURN u`,
+          { userId: mongoUser._id.toString() }
+        );
+        neo4jNode = neo4jNodeResult.records[0]
+          ? neo4jNodeResult.records[0].get('u').properties
+          : null;
+      } catch {
+        console.warn('Neo4j indisponível ao buscar usuário. Prosseguindo sem grafo.');
+      }
+    }
 
     const userObject = mongoUser.toObject();
-
-    const neo4jNode = neo4jNodeResult.records[0]
-      ? neo4jNodeResult.records[0].get('u').properties
-      : null;
 
     return {
       ...userObject,
       neo4jNode,
     };
   } finally {
-    await session.close();
+    if (session) await session.close();
   }
 };

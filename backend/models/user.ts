@@ -10,7 +10,7 @@ export interface IUser extends Document {
   nome: string;
   email: string;
   senha: string;
-  role: 'Turista' | 'Organizador';
+  role: 'Turista' | 'Admin';
   foto?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -44,7 +44,7 @@ const UserSchema = new Schema<IUser>(
     },
     role: {
       type: String,
-      enum: ['Turista', 'Organizador'],
+      enum: ['Turista', 'Admin'],
       default: 'Turista'
     },
     foto: {
@@ -75,6 +75,23 @@ UserSchema.pre<HydratedDocument<IUser>>('save', async function (next) {
     }
     return next(new Error('Erro ao criptografar a senha'));
   }
+});
+
+// Compatibilidade: ajustar valores legados de role antes de validar/salvar
+UserSchema.pre<HydratedDocument<IUser>>('validate', function (next) {
+  // Se vier "Organizador" de dados antigos, converte para "Admin"
+  // e aceita variações de caixa
+  const current: any = this as any;
+  if (typeof current.role === 'string') {
+    const raw = current.role.trim();
+    if (/^organizador$/i.test(raw) || /^organizer$/i.test(raw)) {
+      current.role = 'Admin';
+    }
+    if (/^user$/i.test(raw) || /^turista$/i.test(raw)) {
+      current.role = 'Turista';
+    }
+  }
+  next();
 });
 
 /**

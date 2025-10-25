@@ -9,13 +9,18 @@ import {
   UpdateServicoInput,
 } from "../validations/servicovalidation";
 
-const driver = getNeo4jDriver();
+let driver: any = null;
+try {
+  driver = getNeo4jDriver();
+} catch {
+  driver = null; // Neo4j desabilitado
+}
 
 export const createServico = async (
   input: CreateServicoInput,
   usuarioId: string
 ): Promise<HydratedDocument<IServico>> => {
-  const session = driver.session();
+  const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     const parsed = createServicoSchema.parse(input);
     const servico = await Servico.create({
@@ -57,7 +62,7 @@ export const createServico = async (
   } catch (error) {
     throw error;
   } finally {
-    await session.close();
+  await session.close();
   }
 };
 
@@ -76,7 +81,7 @@ export const updateServico = async (
   usuarioId: string,
   input: UpdateServicoInput
 ) => {
-  const session = driver.session();
+  const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     const parsed = updateServicoSchema.parse(input);
     const updatedServico = await Servico.findOneAndUpdate(
@@ -120,12 +125,12 @@ export const updateServico = async (
 
     return updatedServico;
   } finally {
-    await session.close();
+  await session.close();
   }
 };
 
 export const deleteServico = async (id: string, usuarioId: string) => {
-  const session = driver.session();
+  const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     const deletedServico = await Servico.findOneAndDelete({
       _id: id,
@@ -147,6 +152,97 @@ export const deleteServico = async (id: string, usuarioId: string) => {
 
     return { message: "Serviço deletado com sucesso." };
   } finally {
-    await session.close();
+  await session.close();
   }
+};
+
+export const searchServicos = async (q: string) => {
+  const query = (q || '').trim();
+  if (!query) return [];
+  const results = await Servico.find(
+    { $text: { $search: query } },
+    { score: { $meta: 'textScore' } }
+  )
+    .sort({ score: { $meta: 'textScore' }, createdAt: -1 })
+    .lean();
+  if (results.length > 0) return results;
+
+  // Fallback por regex (case-insensitive) quando o índice de texto não retorna itens
+  const accentMap: Record<string, string> = {
+    a: 'aàáâãäå',
+    c: 'cç',
+    e: 'eèéêë',
+    i: 'iìíîï',
+    n: 'nñ',
+    o: 'oòóôõö',
+    u: 'uùúûü',
+    y: 'yÿ',
+  };
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = escaped
+    .split('')
+    .map((ch) => {
+      const base = ch.toLowerCase();
+      if (accentMap[base]) {
+        return `[${accentMap[base]}]`;
+      }
+      return ch;
+    })
+    .join('');
+  const regex = new RegExp(pattern, 'i');
+  const alt = await Servico.find({
+    $or: [
+      { nome: regex },
+      { descricao: regex },
+      { categoria: regex },
+      { tipo_servico: regex },
+    ],
+  })
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .lean();
+  if (alt.length > 0) return alt;
+
+  // Fallback 2: dividir por termos e exigir todos (AND), mas cada termo pode casar em qualquer campo (OR)
+  const tokens = query.split(/\s+/).filter(Boolean);
+  if (tokens.length > 1) {
+    const tokenPatterns = tokens.map((t) => {
+      const esc = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const pat = esc
+        .split('')
+        .map((ch) => {
+          const base = ch.toLowerCase();
+          const accentMap: Record<string, string> = {
+            a: 'aàáâãäå',
+            c: 'cç',
+            e: 'eèéêë',
+            i: 'iìíîï',
+            n: 'nñ',
+            o: 'oòóôõö',
+            u: 'uùúûü',
+            y: 'yÿ',
+          };
+          return accentMap[base] ? `[${accentMap[base]}]` : ch;
+        })
+        .join('');
+      return new RegExp(pat, 'i');
+    });
+
+    const andClauses = tokenPatterns.map((rgx) => ({
+      $or: [
+        { nome: rgx },
+        { descricao: rgx },
+        { categoria: rgx },
+        { tipo_servico: rgx },
+      ],
+    }));
+
+    const alt2 = await Servico.find({ $and: andClauses })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+    return alt2;
+  }
+
+  return alt;
 };

@@ -234,13 +234,13 @@ class PontoService {
      */
     async buscarPontos(query) {
         try {
-            const response = await fetch(`${this.servicosUrl}?q=${encodeURIComponent(query)}`);
+            const response = await fetch(`${this.servicosUrl}/search?q=${encodeURIComponent(query)}`);
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Falha ao buscar os pontos.');
             }
             const data = await response.json();
-            return data.data; // Retorna a lista de dados.
+            return data; // endpoint retorna array direto
         } catch (error) {
             console.error('Erro no PontoService.buscarPontos:', error);
             throw error;

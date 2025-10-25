@@ -7,6 +7,13 @@ import { findAllAvaliacaoController } from "../controller/findAllAvaliacao";
 import { findAvaliacaoController } from "../controller/findAvaliacao";
 import { listarAvaliacoesPorReferenciaController } from "../controller/findAvaliacaoRefe";
 import { ensureAuth } from "../middleware/auth";
+import { handleValidation } from "../middleware/handleValidation";
+import {
+	idParamValidator,
+	referenciaParamsValidator,
+	createAvaliacaoValidator,
+	updateAvaliacaoValidator,
+} from "../validators/avaliacaoValidators";
 
 const router = Router();
 
@@ -14,18 +21,47 @@ const router = Router();
 router.get("/", asyncHandler(findAllAvaliacaoController));
 
 // Listar por referência (tipo + id) + estatísticas
-router.get("/referencia/:tipo/:id", asyncHandler(listarAvaliacoesPorReferenciaController));
+router.get(
+	"/referencia/:tipo/:id",
+	referenciaParamsValidator,
+	handleValidation,
+	asyncHandler(listarAvaliacoesPorReferenciaController)
+);
 
 // Criar (usuário autenticado)
-router.post("/", ensureAuth, asyncHandler(createAvaliacaoController));
+router.post(
+	"/",
+	ensureAuth,
+	createAvaliacaoValidator,
+	handleValidation,
+	asyncHandler(createAvaliacaoController)
+);
 
 // Buscar por ID
-router.get("/:id", asyncHandler(findAvaliacaoController));
+router.get(
+	"/:id",
+	idParamValidator,
+	handleValidation,
+	asyncHandler(findAvaliacaoController)
+);
 
 // Atualizar (dono)
-router.put("/:id", ensureAuth, asyncHandler(editAvaliacaoController));
+router.put(
+	"/:id",
+	ensureAuth,
+	idParamValidator,
+	updateAvaliacaoValidator,
+	handleValidation,
+	asyncHandler(editAvaliacaoController)
+);
 
 // Remover (dono)
-router.delete("/:id", ensureAuth, asyncHandler(removeAvaliacaoController));
+router.delete(
+	"/:id",
+	ensureAuth,
+	idParamValidator,
+	handleValidation,
+	asyncHandler(removeAvaliacaoController)
+);
 
 export default router;

@@ -19,25 +19,24 @@ class Ponto {
 
     validate() {
         const errors = [];
-        if (!this.nome || this.nome.trim() === '') {
-            errors.push('O nome do ponto é obrigatório.');
+        if (!this.nome || this.nome.trim().length < 3) {
+            errors.push({ field: 'inputNome', message: 'Nome é obrigatório (mín. 3 caracteres).' });
         }
-        if (!this.tipo || this.tipo.trim() === '') {
-            errors.push('O tipo do ponto é obrigatório.');
+        if (!this.tipo || this.tipo.trim().length === 0) {
+            errors.push({ field: 'inputTipo', message: 'Tipo é obrigatório.' });
         }
-        if (!this.localizacao || !this.localizacao.coordinates || this.localizacao.coordinates.length !== 2) {
-            errors.push('As coordenadas de localização são obrigatórias.');
+        if (!this.descricao || this.descricao.trim().length < 10) {
+            errors.push({ field: 'inputDescricao', message: 'Descrição é obrigatória (mín. 10 caracteres).' });
         }
-        
-        const [lng, lat] = this.localizacao.coordinates;
-        if (isNaN(lng) || isNaN(lat)) {
-            errors.push('As coordenadas devem ser números válidos.');
+        const coords = this.localizacao?.coordinates || [];
+        const [lng, lat] = coords;
+        if (typeof lat !== 'number' || isNaN(lat)) {
+            errors.push({ field: 'inputLatitude', message: 'Latitude inválida.' });
         }
-
-        return {
-            valid: errors.length === 0,
-            errors: errors
-        };
+        if (typeof lng !== 'number' || isNaN(lng)) {
+            errors.push({ field: 'inputLongitude', message: 'Longitude inválida.' });
+        }
+        return { valid: errors.length === 0, errors };
     }
 }
 

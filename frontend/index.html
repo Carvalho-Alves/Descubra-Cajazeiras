@@ -14,7 +14,7 @@
     
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        img-src 'self' data: https://*.tile.openstreetmap.org;
+        img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com https://cdn.jsdelivr.net;
         script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net;
         style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
         font-src 'self' https://cdnjs.cloudflare.com;
@@ -35,12 +35,12 @@
             <button class="btn btn-outline-light me-2" id="btnConhecaProjeto" data-bs-toggle="modal" data-bs-target="#modalSobreProjeto">
                 <i class="fas fa-info-circle me-1"></i> Conheça o Projeto
             </button>
-            <button class="btn btn-outline-light me-2" id="btnVerEventos" data-bs-toggle="modal" data-bs-target="#modalEventos">
+            <a class="btn btn-outline-light me-2" id="btnVerServicos" href="servicos.html">
+                <i class="fas fa-store me-1"></i> Serviços
+            </a>
+            <a class="btn btn-outline-light me-2" id="btnVerEventos" href="eventos.html">
                 <i class="fas fa-calendar-alt me-1"></i> Eventos
-            </button>
-            <button class="btn btn-outline-light me-2" id="btnNovoPonto" data-bs-toggle="modal" data-bs-target="#modalPonto">
-                <i class="fas fa-plus me-1"></i> Serviços
-            </button>
+            </a>
 
         </nav>
         <div class="usuario" id="usuario-area">
@@ -52,7 +52,18 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-md-4">
-                        <div class="card">
+                        <!-- Alternância da lista: Serviços | Eventos -->
+                        <div class="mb-2">
+                            <div class="btn-group btn-group-sm w-100" role="group" id="listaTipoGroup">
+                                <button type="button" id="btnListaServicos" class="btn btn-outline-secondary active">
+                                    <i class="fas fa-store me-1"></i>Serviços
+                                </button>
+                                <button type="button" id="btnListaEventos" class="btn btn-outline-secondary">
+                                    <i class="fas fa-calendar me-1"></i>Eventos
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card" id="cardServicos">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h5 class="mb-0">
@@ -84,6 +95,7 @@
                                         </label>
                                     </div>
                                 </div>
+                                
                                 <div class="input-group input-group-sm">
                                     <input type="text" class="form-control" id="inputBusca" placeholder="Buscar pontos...">
                                     <button class="btn btn-outline-secondary" type="button" id="btnBuscar">
@@ -105,6 +117,63 @@
                                 <div id="nenhumPonto" class="text-center p-4 text-muted" style="display: none;">
                                     <i class="fas fa-map-marker-alt fa-3x mb-3"></i>
                                     <p>Nenhum ponto cadastrado.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Eventos na Home -->
+                        <div class="card mt-3" id="cardEventosHome">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-calendar-alt me-2"></i>
+                                        Eventos
+                                    </h5>
+                                    <button class="btn btn-sm btn-outline-primary" id="btnAtualizarEventosHome" title="Atualizar eventos">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Eventos próximos e em andamento</small>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="loadingEventosHome" class="text-center p-4" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </div>
+                                <div class="p-3 pt-2">
+                                    <div class="btn-group w-100 mb-2" role="group" id="filtrosEventosHome">
+                                        <input type="radio" class="btn-check" name="filtroEventoHome" id="filtroEvTodos" value="" checked>
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvTodos">
+                                            <i class="fas fa-list me-1"></i>Todos
+                                        </label>
+                                        <input type="radio" class="btn-check" name="filtroEventoHome" id="filtroEvAtivo" value="ativo">
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvAtivo">
+                                            <i class="fas fa-check-circle me-1"></i>Ativo
+                                        </label>
+                                        <input type="radio" class="btn-check" name="filtroEventoHome" id="filtroEvCancelado" value="cancelado">
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvCancelado">
+                                            <i class="fas fa-times-circle me-1"></i>Cancelado
+                                        </label>
+                                        <input type="radio" class="btn-check" name="filtroEventoHome" id="filtroEvEncerrado" value="encerrado">
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvEncerrado">
+                                            <i class="fas fa-flag-checkered me-1"></i>Encerrado
+                                        </label>
+                                    </div>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control" id="inputBuscaEventosHome" placeholder="Buscar eventos...">
+                                        <button class="btn btn-outline-secondary" type="button" id="btnBuscarEventosHome">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary" type="button" id="btnLimparBuscaEventosHome" style="display: none;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="listaEventosHome" class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;"></div>
+                                <div id="nenhumEventoHome" class="text-center p-4 text-muted" style="display: none;">
+                                    <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                    <p>Nenhum evento encontrado.</p>
                                 </div>
                             </div>
                         </div>
@@ -391,32 +460,6 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalEventos" tabindex="-1" aria-labelledby="modalEventosLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalEventosLabel"><i class="fas fa-calendar-alt me-2"></i> Eventos em Cajazeiras</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="loadingEventos" class="text-center p-4" style="display: none;">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Carregando...</span>
-                        </div>
-                    </div>
-                    <div id="listaEventos">
-                    </div>
-                    <div id="nenhumEvento" class="text-center p-4 text-muted" style="display: none;">
-                        <i class="fas fa-calendar-times fa-3x mb-3"></i>
-                        <p>Nenhum evento futuro cadastrado</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -476,9 +519,8 @@
 
     <script type="module" src="./scripts/service/pontoService.js"></script>
 
-    <script type="module" src="./scripts/controller/pontoModel.js"></script>
-
+    <script type="module" src="./scripts/leafletSetup.js"></script>
+    <script type="module" src="./scripts/dashboard.js"></script>
     <script type="module" src="./scripts/index.js"></script>
-    <script src="./scripts/servicosPage.js"></script>
 </body>
 </html>

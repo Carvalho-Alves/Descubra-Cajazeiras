@@ -9,13 +9,18 @@ import {
   UpdateEventoInput,
 } from "../validations/eventovalidation";
 
-const driver = getNeo4jDriver();
+let driver: any = null;
+try {
+  driver = getNeo4jDriver();
+} catch {
+  driver = null; // Neo4j desabilitado
+}
 
 export const createEvento = async (
   input: CreateEventoInput,
   usuarioId: string
 ): Promise<HydratedDocument<IEvento>> => {
-  const session = driver.session();
+  const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     const parsed = createEventoSchema.parse(input);
     const evento = await Evento.create({
@@ -78,7 +83,7 @@ export const updateEvento = async (
   usuarioId: string,
   input: UpdateEventoInput
 ) => {
-  const session = driver.session();
+  const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     const parsed = updateEventoSchema.parse(input);
     const updatedEvento = await Evento.findOneAndUpdate(
@@ -124,13 +129,18 @@ export const updateEvento = async (
   }
 };
 
-export const deleteEvento = async (id: string, usuarioId: string) => {
-  const session = driver.session();
+export const deleteEvento = async (id: string, usuarioId: string, userRole?: string) => {
+  const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
-    const deletedEvento = await Evento.findOneAndDelete({
-      _id: id,
-      usuario: new Types.ObjectId(usuarioId),
-    });
+    let deletedEvento = null as any;
+    if (userRole === 'Admin') {
+      deletedEvento = await Evento.findByIdAndDelete(id);
+    } else {
+      deletedEvento = await Evento.findOneAndDelete({
+        _id: id,
+        usuario: new Types.ObjectId(usuarioId),
+      });
+    }
 
     if (!deletedEvento) {
       const error: any = new Error("Evento não encontrado ou operação não permitida.");
@@ -138,7 +148,7 @@ export const deleteEvento = async (id: string, usuarioId: string) => {
       throw error;
     }
 
-    await session.run(
+  await session.run(
       `MATCH (s:Evento {eventoId: $eventoId}) DETACH DELETE s`,
       { eventoId: id }
     );
@@ -147,4 +157,88 @@ export const deleteEvento = async (id: string, usuarioId: string) => {
   } finally {
     await session.close();
   }
+};
+
+export const searchEventos = async (q: string) => {
+  const query = (q || '').trim();
+  if (!query) return [];
+
+  // Busca por texto (se índice existir)
+  try {
+    const results = await Evento.find(
+      { $text: { $search: query } },
+      { score: { $meta: 'textScore' } }
+    )
+      .sort({ score: { $meta: 'textScore' }, createdAt: -1 })
+      .lean();
+    if (results.length > 0) return results;
+  } catch (_) {
+    // ignora se não houver índice de texto
+  }
+
+  // Fallback por regex com tolerância a acentos
+  const accentMap: Record<string, string> = {
+    a: 'aàáâãäå',
+    c: 'cç',
+    e: 'eèéêë',
+    i: 'iìíîï',
+    n: 'nñ',
+    o: 'oòóôõö',
+    u: 'uùúûü',
+    y: 'yÿ',
+  };
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = escaped
+    .split('')
+    .map((ch) => {
+      const base = ch.toLowerCase();
+      return accentMap[base] ? `[${accentMap[base]}]` : ch;
+    })
+    .join('');
+  const regex = new RegExp(pattern, 'i');
+
+  const alt = await Evento.find({
+    $or: [
+      { nome: regex },
+      { descricao: regex },
+      { status: regex },
+    ],
+  })
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .lean();
+  if (alt.length > 0) return alt;
+
+  // Fallback 2: tokens AND com OR de campos
+  const tokens = query.split(/\s+/).filter(Boolean);
+  if (tokens.length > 1) {
+    const tokenPatterns = tokens.map((t) => {
+      const esc = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const pat = esc
+        .split('')
+        .map((ch) => {
+          const base = ch.toLowerCase();
+          const m: Record<string, string> = {
+            a: 'aàáâãäå', c: 'cç', e: 'eèéêë', i: 'iìíîï', n: 'nñ', o: 'oòóôõö', u: 'uùúûü', y: 'yÿ',
+          };
+          return m[base] ? `[${m[base]}]` : ch;
+        })
+        .join('');
+      return new RegExp(pat, 'i');
+    });
+    const andClauses = tokenPatterns.map((rgx) => ({
+      $or: [
+        { nome: rgx },
+        { descricao: rgx },
+        { status: rgx },
+      ],
+    }));
+    const alt2 = await Evento.find({ $and: andClauses })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+    return alt2;
+  }
+
+  return alt;
 };

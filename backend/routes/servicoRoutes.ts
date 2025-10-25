@@ -4,12 +4,15 @@ import {deleteServicoController} from '../controller/deleteServico';
 import {editServicoController} from '../controller/editServico';
 import {findAllServicoController} from '../controller/findAllServico';
 import {findServicoController} from '../controller/findServico';
+import { searchServicoController } from '../controller/searchServico';
 import { asyncHandler } from '../utils/asyncHandler'; 
 import { ensureAuth } from '../middleware/auth';
 
 const router = Router();
 
 router.get('/', asyncHandler(findAllServicoController));
+
+router.get('/search', asyncHandler(searchServicoController));
 
 router.get('/:id', asyncHandler(findServicoController));
 

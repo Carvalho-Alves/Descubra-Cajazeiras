@@ -424,7 +424,7 @@ class PontoController {
         document.getElementById('inputLatitude').value = lat;
         document.getElementById('inputLongitude').value = lng;
 
-        const modal = new Modal(document.getElementById('modalPonto'));
+    const modal = new bootstrap.Modal(document.getElementById('modalPonto'));
         modal.show();
     }
 
@@ -473,7 +473,7 @@ class PontoController {
                 this.showAlert('Ponto criado com sucesso!', 'success');
             }
 
-            const modal = Modal.getInstance(document.getElementById('modalPonto'));
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalPonto'));
             modal.hide();
 
             await this.carregarPontos();
@@ -494,7 +494,7 @@ class PontoController {
         this.pontoSelecionado = ponto;
         document.getElementById('nomeExclusao').textContent = ponto.nome;
 
-        const modal = new Modal(document.getElementById('modalConfirmarExclusao'));
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmarExclusao'));
         modal.show();
     }
 
@@ -507,7 +507,7 @@ class PontoController {
         try {
             await pontoService.deletarPonto(this.pontoSelecionado._id);
 
-            const modal = Modal.getInstance(document.getElementById('modalConfirmarExclusao'));
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarExclusao'));
             modal.hide();
 
             this.showAlert('Ponto excluído com sucesso!', 'success');
@@ -629,7 +629,7 @@ class PontoController {
      * Abre modal do dashboard
      */
     async abrirDashboard() {
-        const modal = new Modal(document.getElementById('modalDashboard'));
+    const modal = new bootstrap.Modal(document.getElementById('modalDashboard'));
         modal.show();
         await this.atualizarDashboard();
     }
@@ -646,15 +646,19 @@ class PontoController {
                 throw new Error(resultado.message);
             }
 
-            const { pontosPorTipo, pontosPorMes, distribuicaoGeografica, totalPontos, pontosRecentes } = resultado.data;
+            const { pontosPorTipo, pontosPorMes, distribuicaoGeografica, totalPontos, totalEventos, pontosRecentes } = resultado.data;
 
-            document.getElementById('totalPontos').textContent = totalPontos;
+            const totalServicosEl = document.getElementById('totalServicos');
+            if (totalServicosEl) totalServicosEl.textContent = totalPontos ?? 0;
+            const totalEventosEl = document.getElementById('totalEventos');
+            if (totalEventosEl) totalEventosEl.textContent = totalEventos ?? 0;
             document.getElementById('tipoMaisComum').textContent = pontosPorTipo[0]?.total ? `${pontosPorTipo[0]._id} (${pontosPorTipo[0].total})` : 'N/A';
             document.getElementById('regiaoMaior').textContent = distribuicaoGeografica[0]?.total ? `${distribuicaoGeografica[0]._id} (${distribuicaoGeografica[0].total})` : 'N/A';
             
             const mesAtual = new Date().getMonth() + 1;
             const anoAtual = new Date().getFullYear();
-            const crescimentoMesAtual = pontosPorMes.find(item => item._id.mes === mesAtual && item._id.ano === anoAtual);
+            const ym = `${anoAtual}-${String(mesAtual).padStart(2, '0')}`;
+            const crescimentoMesAtual = pontosPorMes.find(item => item._id === ym);
             document.getElementById('crescimentoMes').textContent = crescimentoMesAtual?.total || 0;
 
             this.renderizarGraficos(pontosPorTipo, distribuicaoGeografica, pontosPorMes);
@@ -680,8 +684,10 @@ class PontoController {
             this.chartCrescimento.destroy();
         }
 
-        const ctxTipo = document.getElementById('graficoPorTipo').getContext('2d');
-        this.chartPorTipo = new Chart(ctxTipo, {
+        const elTipo = document.getElementById('graficoServicosPorTipo');
+        if (elTipo) {
+            const ctxTipo = elTipo.getContext('2d');
+            this.chartPorTipo = new Chart(ctxTipo, {
             type: 'doughnut',
             data: {
                 labels: pontosPorTipo.map(item => item._id),
@@ -689,20 +695,17 @@ class PontoController {
                     data: pontosPorTipo.map(item => item.total),
                     backgroundColor: [
                         '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-                        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                        '#9966FF', '#FF9F40', '#C9CBCF'
                     ]
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
+                plugins: { legend: { position: 'bottom' } }
             }
-        });
+            });
+        }
 
         const ctxGeo = document.getElementById('graficoGeografico').getContext('2d');
         this.chartGeografico = new Chart(ctxGeo, {
@@ -726,13 +729,13 @@ class PontoController {
             }
         });
 
-        const ctxCrescimento = document.getElementById('graficoCrescimento').getContext('2d');
-        const mesesOrdenados = pontosPorMes.reverse();
+    const ctxCrescimento = document.getElementById('graficoCrescimento').getContext('2d');
+    const mesesOrdenados = [...pontosPorMes].sort((a, b) => a._id.localeCompare(b._id));
         
         this.chartCrescimento = new Chart(ctxCrescimento, {
             type: 'line',
             data: {
-                labels: mesesOrdenados.map(item => `${item._id.mes}/${item._id.ano}`),
+                labels: mesesOrdenados.map(item => item._id),
                 datasets: [{
                     label: 'Pontos Cadastrados',
                     data: mesesOrdenados.map(item => item.total),
@@ -757,7 +760,7 @@ class PontoController {
      * Renderiza lista de pontos recentes
      */
     renderizarPontosRecentes(pontosRecentes) {
-        const container = document.getElementById('pontosRecentes');
+    const container = document.getElementById('servicosRecentes');
         
         if (pontosRecentes.length === 0) {
             container.innerHTML = '<div class="text-center text-muted p-3">Nenhum ponto cadastrado ainda</div>';

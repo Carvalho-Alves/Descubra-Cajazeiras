@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { deleteEvento } from '../service/eventoService';
 
-export const deleteEventoController = async (req: Request, res: Response, next: NextFunction) => {
-    const usuarioId = req.user.sub;
-    const removerEvento = await deleteEvento(req.body, usuarioId);
+export const deleteEventoController = async (req: Request, res: Response, _next: NextFunction) => {
+    const usuarioId = req.userId as string;
+    const eventoId = req.params.id;
+
+        const userRole = req.user?.role as string | undefined;
+        const removerEvento = await deleteEvento(eventoId, usuarioId, userRole);
 
     if (!removerEvento) {
         const error: any = new Error('Evento não encontrado.');

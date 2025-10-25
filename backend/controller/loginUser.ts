@@ -9,7 +9,8 @@ export const loginController = async (req: Request, res: Response, next: NextFun
     const user = await loginUserService(validatedBody);
     const payload = {
         sub: user._id.toString(),
-        email: user.email
+        email: user.email,
+        role: user.role
     };
     const secret = (env as any).JWT_ACCESS_SECRET || 'dev-secret';
     const token = jwt.sign(payload, secret, {
@@ -20,7 +21,8 @@ export const loginController = async (req: Request, res: Response, next: NextFun
         user: {
             _id: user._id,
             email: user.email,
-            nome: user.nome
+            nome: user.nome,
+            role: user.role
         },
         token: token
     });

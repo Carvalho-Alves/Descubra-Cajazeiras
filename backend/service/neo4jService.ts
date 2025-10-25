@@ -1,7 +1,9 @@
 import { getNeo4jDriver } from '../database/neo4j';
 
 export async function criarNoLocal(localId: string, titulo: string) {
-  const session = getNeo4jDriver().session();
+  let driver: any = null;
+  try { driver = getNeo4jDriver(); } catch { driver = null; }
+  const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     await session.run('CREATE (l:Local {id:$id, titulo:$titulo})', { id: localId, titulo });
   } finally {
@@ -10,7 +12,9 @@ export async function criarNoLocal(localId: string, titulo: string) {
 }
 
 export async function criarNoCategoria(categoriaId: string, nome: string) {
-  const session = getNeo4jDriver().session();
+  let driver: any = null;
+  try { driver = getNeo4jDriver(); } catch { driver = null; }
+  const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     await session.run('CREATE (c:Categoria {id:$id, nome:$nome})', { id: categoriaId, nome });
   } finally {
@@ -19,7 +23,9 @@ export async function criarNoCategoria(categoriaId: string, nome: string) {
 }
 
 export async function relacionarLocalCategoria(localId: string, categoriaId: string) {
-  const session = getNeo4jDriver().session();
+  let driver: any = null;
+  try { driver = getNeo4jDriver(); } catch { driver = null; }
+  const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     await session.run('MATCH (l:Local {id:$localId}), (c:Categoria {id:$categoriaId}) MERGE (l)-[:PERTENCE_A]->(c)', { localId, categoriaId });
   } finally {

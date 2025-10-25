@@ -26,3 +26,171 @@ paths:
       responses:
         "200":
           description: tokens
+  /servicos:
+    get:
+      summary: Lista todos os serviços
+      responses:
+        "200":
+          description: Lista de serviços
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Servico'
+    post:
+      summary: Cria um novo serviço
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServicoCreate'
+      responses:
+        "201":
+          description: Serviço criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Servico'
+  /servicos/{id}:
+    get:
+      summary: Busca um serviço por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Serviço encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Servico'
+    put:
+      summary: Atualiza um serviço por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServicoCreate'
+      responses:
+        "200":
+          description: Serviço atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Servico'
+    delete:
+      summary: Remove um serviço por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Serviço removido
+  /servicos/search:
+    get:
+      summary: Busca serviços por texto
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+          required: true
+          description: Termo de busca (suporta acentos e múltiplas palavras)
+      responses:
+        "200":
+          description: Resultados da busca
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Servico'
+  /estatisticas:
+    get:
+      summary: Estatísticas gerais do sistema
+      responses:
+        "200":
+          description: Estatísticas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    $ref: '#/components/schemas/EstatisticasResposta'
+
+components:
+  schemas:
+    LocalizacaoObj:
+      type: object
+      properties:
+        latitude: { type: number }
+        longitude: { type: number }
+    LocalizacaoGeoJSON:
+      type: object
+      properties:
+        type: { type: string, enum: [Point] }
+        coordinates:
+          type: array
+          items: { type: number }
+          description: [longitude, latitude]
+    Servico:
+      type: object
+      properties:
+        _id: { type: string }
+        nome: { type: string }
+        descricao: { type: string }
+        tipo_servico: { type: string }
+        categoria: { type: string }
+        localizacao:
+          oneOf:
+            - $ref: '#/components/schemas/LocalizacaoObj'
+            - $ref: '#/components/schemas/LocalizacaoGeoJSON'
+        createdAt: { type: string, format: date-time }
+    ServicoCreate:
+      type: object
+      required: [nome, tipo_servico]
+      properties:
+        nome: { type: string }
+        descricao: { type: string }
+        tipo_servico: { type: string, description: "Ex.: Hospedagem, Alimentação/Lazer, Ponto Turístico" }
+        categoria: { type: string }
+        localizacao:
+          oneOf:
+            - $ref: '#/components/schemas/LocalizacaoObj'
+            - $ref: '#/components/schemas/LocalizacaoGeoJSON'
+    EstatisticasResposta:
+      type: object
+      properties:
+        totalPontos: { type: integer }
+        totalEventos: { type: integer }
+        pontosPorTipo:
+          type: array
+          items:
+            type: object
+            properties:
+              _id: { type: string }
+              total: { type: integer }
+        pontosPorMes:
+          type: array
+          items:
+            type: object
+            properties:
+              _id: { type: string, description: "YYYY-MM" }
+              total: { type: integer }
+        pontosRecentes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Servico'
