@@ -8,7 +8,8 @@ export const createEventoSchema = z.object({
     local: z.string().optional(),
     latitude: z.number().optional(),
     longitude: z.number().optional(),
-    imagem: z.string().url("O campo imagem deve ser uma URL válida.").optional(),
+    // Aceita URL ou caminho local (ex.: /uploads/abc123)
+    imagem: z.string().optional(),
 });
 
 export const updateEventoSchema = createEventoSchema.partial();

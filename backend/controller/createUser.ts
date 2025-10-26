@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../database/env';
 
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
-    const foto = req.file ? req.file.path : undefined;
+    const foto = req.file ? `/uploads/${(req as any).file.filename}` : undefined;
     const userData = { ...req.body, foto };
     const validatedBody = registerSchema.parse(userData);
     const newUser = await createUserService(validatedBody);

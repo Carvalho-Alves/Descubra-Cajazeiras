@@ -9,7 +9,7 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
     const updateData: Partial<IUser> = { ...validatedData };
 
     if (req.file) {
-        updateData.foto = req.file.path;
+        updateData.foto = `/uploads/${(req as any).file.filename}`;
     }
 
     if (Object.keys(updateData).length === 0) {

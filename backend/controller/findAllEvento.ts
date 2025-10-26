@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { Evento } from '../models/evento';
+import { listEvento } from '../service/eventoService';
 
 export const findAllEventoController = async (req: Request, res: Response, next: NextFunction) => {
-    const eventos = await Evento.find();
+    const eventos = await listEvento();
 
     if (!eventos) {
         const error: any = new Error('Eventos não encontrados.');
@@ -10,5 +10,11 @@ export const findAllEventoController = async (req: Request, res: Response, next:
         throw error;
     };
 
-    res.status(200).json(eventos);
+    // Ordena por criação mais recente primeiro para facilitar ver novos itens no topo
+    const ordenados = [...eventos].sort((a: any, b: any) => {
+      const ta = new Date(a.createdAt || 0).getTime();
+      const tb = new Date(b.createdAt || 0).getTime();
+      return tb - ta;
+    });
+    res.status(200).json(ordenados);
 };

@@ -58,6 +58,12 @@ const EventoSchema = new Schema<IEvento>({
   imagem: {
     type: String
   },
+  usuario: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true,
+  },
   status: {
     type: String,
     enum: ['ativo', 'cancelado', 'encerrado'],

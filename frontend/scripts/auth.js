@@ -24,6 +24,10 @@ class AuthManager {
         this.registerEmail = document.getElementById('registerEmail');
         this.registerSenha = document.getElementById('registerSenha');
         this.registerConfirmarSenha = document.getElementById('registerConfirmarSenha');
+    this.registerFoto = document.getElementById('registerFoto');
+    this.registerFotoPreview = document.getElementById('registerFotoPreview');
+    this.previewWrapper = document.getElementById('previewWrapper');
+    this.btnLimparFoto = document.getElementById('btnLimparFoto');
         
         // Alert container
         this.alertContainer = document.getElementById('alertContainer');
@@ -42,6 +46,14 @@ class AuthManager {
         this.registerConfirmarSenha.addEventListener('blur', () => this.validatePasswordMatch());
         this.registerEmail.addEventListener('blur', () => this.validateEmail(this.registerEmail));
         this.loginEmail.addEventListener('blur', () => this.validateEmail(this.loginEmail));
+
+        // Preview e limpeza da foto
+        if (this.registerFoto) {
+            this.registerFoto.addEventListener('change', (e) => this.handleFotoChange(e));
+        }
+        if (this.btnLimparFoto) {
+            this.btnLimparFoto.addEventListener('click', () => this.clearFoto());
+        }
     }
 
     checkExistingAuth() {
@@ -109,14 +121,18 @@ class AuthManager {
         
         try {
             console.log('Tentando cadastrar usuário...');
-            
-            // Usar o método correto do pontoService
+            // Monta FormData para suportar foto opcional
+            const formData = new FormData();
+            formData.append('nome', nome);
+            formData.append('email', email);
+            formData.append('senha', senha);
+            if (this.registerFoto && this.registerFoto.files && this.registerFoto.files[0]) {
+                formData.append('foto', this.registerFoto.files[0]);
+            }
+
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ nome, email, senha })
+                body: formData
             });
             
             if (!response.ok) {
@@ -151,6 +167,30 @@ class AuthManager {
         } finally {
             this.setLoadingState(this.registerForm, false);
         }
+    }
+
+    handleFotoChange(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) { this.clearFoto(); return; }
+        // Validação simples de tamanho (até ~5MB)
+        const maxBytes = 5 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            this.showAlert('A imagem excede 5MB. Escolha um arquivo menor.', 'warning');
+            this.clearFoto();
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (this.registerFotoPreview) this.registerFotoPreview.src = reader.result;
+            if (this.previewWrapper) this.previewWrapper.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    clearFoto() {
+        if (this.registerFoto) this.registerFoto.value = '';
+        if (this.registerFotoPreview) this.registerFotoPreview.src = '';
+        if (this.previewWrapper) this.previewWrapper.classList.add('d-none');
     }
 
     validateLoginForm(email, senha) {

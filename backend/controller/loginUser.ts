@@ -22,7 +22,16 @@ export const loginController = async (req: Request, res: Response, next: NextFun
             _id: user._id,
             email: user.email,
             nome: user.nome,
-            role: user.role
+            role: user.role,
+            foto: ((): string | undefined => {
+                const f = (user as any).foto as string | undefined;
+                if (!f) return undefined;
+                // Normaliza separadores e recorta a partir de '/uploads/' se existir
+                const normalized = f.replace(/\\\\/g, '/');
+                const idx = normalized.lastIndexOf('/uploads/');
+                const url = idx >= 0 ? normalized.substring(idx) : normalized;
+                return url.startsWith('/') ? url : `/${url}`;
+            })()
         },
         token: token
     });

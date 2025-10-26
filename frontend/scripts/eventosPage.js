@@ -55,6 +55,9 @@ class EventosPageManager {
     this.inputEndereco = document.getElementById('inputEnderecoEvento');
     this.dropdownEnd = document.getElementById('resultadosBuscaEvento');
     this.btnBuscarEndereco = document.getElementById('btnBuscarEnderecoEvento');
+  this.inputImagem = document.getElementById('inputImagemEvento');
+  this.previewImagem = document.getElementById('previewImagemEvento');
+  this.btnLimparImagem = document.getElementById('btnLimparImagemEvento');
   }
 
   setupMap() {
@@ -95,6 +98,10 @@ class EventosPageManager {
     this.inputLat.addEventListener('change', () => this.refreshMini());
     this.inputLng.addEventListener('change', () => this.refreshMini());
 
+    // Imagem: preview e limpar
+    this.inputImagem?.addEventListener('change', () => this.atualizarPreviewImagem());
+    this.btnLimparImagem?.addEventListener('click', () => this.limparImagem());
+
     // Busca de endereço
     this.btnBuscarEndereco?.addEventListener('click', () => this.buscarEndereco());
     this.inputEndereco?.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ e.preventDefault(); this.buscarEndereco(); } });
@@ -115,10 +122,30 @@ class EventosPageManager {
     const usuarioLogado = usuario !== null && token !== null;
     if (usuarioLogado) {
       const nomeUsuario = usuario.user?.nome || usuario.nome || 'Usuário';
+      const fotoRaw = usuario.user?.foto || usuario.foto || '';
+  let avatarUrl = 'assets/images/default-avatar.svg';
+      if (fotoRaw) {
+        if (typeof fotoRaw === 'string' && (fotoRaw.startsWith('http') || fotoRaw.startsWith('/'))) {
+          avatarUrl = fotoRaw;
+        } else {
+          const m = String(fotoRaw).match(/uploads[\\/].*$/i);
+          if (m) avatarUrl = '/' + m[0].replace(/\\/g, '/');
+        }
+      }
+      // Cache-buster baseado em updatedAt armazenado no objeto ou em flag local
+      try {
+        const storedVersion = localStorage.getItem('avatarVersion');
+        const updatedAtRaw = (usuario.user?.updatedAt || usuario.updatedAt);
+        const version = storedVersion || (updatedAtRaw ? String(new Date(updatedAtRaw).getTime()) : '');
+        if (version && avatarUrl && !avatarUrl.startsWith('assets/')) {
+          const joinChar = avatarUrl.includes('?') ? '&' : '?';
+          avatarUrl = `${avatarUrl}${joinChar}v=${encodeURIComponent(version)}`;
+        }
+      } catch {}
       this.usuarioArea.innerHTML = `
         <div class="dropdown">
-          <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            <i class="fas fa-user-circle me-2"></i> ${nomeUsuario}
+          <button class="btn btn-primary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+            <img src="${avatarUrl}" alt="Avatar" class="avatar-img rounded-circle me-2" style="width:28px;height:28px;object-fit:cover;" onerror="this.onerror=null;this.src='assets/images/default-avatar.svg';this.classList.add('loaded');" onload="this.classList.add('loaded')"> ${nomeUsuario}
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="index.html"><i class="fas fa-map me-2"></i>Voltar ao Mapa</a></li>
@@ -141,7 +168,15 @@ class EventosPageManager {
   async carregarEventos() {
     this.loading.style.display = 'block';
     try {
-      const res = await fetch('/api/eventos');
+      const token = localStorage.getItem('authToken');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch('/api/eventos/mine', { headers });
+      if (res.status === 401) {
+        this.showAlert('Faça login para visualizar seus eventos.', 'warning');
+        setTimeout(()=> window.location.href = 'auth.html', 1000);
+        this.loading.style.display = 'none';
+        return;
+      }
       if (!res.ok) throw new Error('Falha ao buscar eventos');
       this.eventos = await res.json();
       this.aplicarBuscaEFiltro();
@@ -155,8 +190,16 @@ class EventosPageManager {
 
   aplicarBuscaEFiltro() {
     const q = (this.inputBusca?.value || '').toLowerCase();
-    let lista = [...this.eventos];
-    if (this.filtroAtivo) lista = lista.filter(e => (e.status || 'ativo') === this.filtroAtivo);
+    const getStatus = (ev) => {
+      const raw = (ev.status || 'ativo').toLowerCase();
+      if (raw === 'cancelado') return 'cancelado';
+      if (raw === 'encerrado') return 'encerrado';
+      const d = ev.data ? new Date(ev.data) : null;
+      if (d && !Number.isNaN(d.getTime()) && d.getTime() < Date.now()) return 'encerrado';
+      return 'ativo';
+    };
+    let lista = this.eventos.map(ev => ({...ev, _statusComp: getStatus(ev)}));
+    if (this.filtroAtivo) lista = lista.filter(e => e._statusComp === this.filtroAtivo);
     if (q) lista = lista.filter(e => (e.nome||'').toLowerCase().includes(q) || (e.descricao||'').toLowerCase().includes(q));
     this.renderList(lista);
     this.renderMarkers(lista);
@@ -168,11 +211,15 @@ class EventosPageManager {
     items.forEach(ev => {
       const el = document.createElement('div');
       el.className = 'list-group-item list-group-item-action';
+      const badgeClass = (ev._statusComp || 'ativo') === 'ativo' ? 'bg-success' : ((ev._statusComp || '') === 'cancelado' ? 'bg-danger' : 'bg-secondary');
       el.innerHTML = `
         <div class="d-flex justify-content-between align-items-start">
           <div class="flex-grow-1">
             <h6 class="mb-1">${ev.nome}</h6>
-            <small class="text-muted"><i class="fas fa-calendar me-1"></i>${ev.data ? new Date(ev.data).toLocaleDateString('pt-BR') : ''} • ${ev.status || 'ativo'}</small>
+            <small class="text-muted">
+              <i class="fas fa-calendar me-1"></i>${ev.data ? new Date(ev.data).toLocaleDateString('pt-BR') : ''}
+              <span class="badge ${badgeClass} text-uppercase ms-2">${ev._statusComp || ev.status || 'ativo'}</span>
+            </small>
             <p class="mb-0">${ev.descricao ? ev.descricao.substring(0,80)+'...' : ''}</p>
           </div>
           <div class="btn-group-vertical btn-group-sm">
@@ -228,14 +275,24 @@ class EventosPageManager {
       const ll = this.normalizeLatLng(ev);
       if (!ll) return;
       const m = L.marker(ll, { icon: this.criarIcone() });
+      const badgeClass = (ev._statusComp || 'ativo') === 'ativo' ? 'bg-success' : ((ev._statusComp || '') === 'cancelado' ? 'bg-danger' : 'bg-secondary');
+      const img = this.normalizeImageUrl(ev.imagem);
+      const imgHtml = img ? `<div class="mb-2 text-center"><img src="${img}" alt="Imagem do evento" style="max-width:200px;max-height:120px;object-fit:cover;border-radius:6px;" onerror="this.style.display='none';"></div>` : '';
       m.bindPopup(`
         <div class='popup-servico'>
           <h6>${ev.nome}</h6>
-          <small>${ev.status||'ativo'} • ${ev.data ? new Date(ev.data).toLocaleDateString('pt-BR'):''}</small>
+          <small>
+            <span class="badge ${badgeClass} text-uppercase me-2">${ev._statusComp || ev.status||'ativo'}</span>
+            ${ev.data ? new Date(ev.data).toLocaleDateString('pt-BR'):''}
+          </small>
+          ${imgHtml}
           <p>${ev.descricao?ev.descricao.substring(0,100)+'...':''}</p>
           <div class='btn-group btn-group-sm w-100'>
             <button class='btn btn-warning' onclick='eventosPage.editarEvento("${ev._id}")'><i class="fas fa-edit me-1"></i>Editar</button>
             <button class='btn btn-danger' onclick='eventosPage.excluirEvento("${ev._id}")'><i class="fas fa-trash me-1"></i>Excluir</button>
+          </div>
+          <div class='btn-group btn-group-sm w-100 mt-1'>
+            <button class='btn btn-outline-secondary' onclick='avaliacoesUI.abrir("evento", "${ev._id}", ${JSON.stringify(ev.nome||'Evento')})'><i class="fas fa-star me-1"></i>Avaliações</button>
           </div>
         </div>`);
       this.cluster.addLayer(m);
@@ -243,10 +300,27 @@ class EventosPageManager {
     this.map.addLayer(this.cluster);
   }
 
+  normalizeImageUrl(raw) {
+    if (!raw) return '';
+    if (typeof raw !== 'string') return '';
+    if (raw.startsWith('http') || raw.startsWith('/')) return raw;
+    const m = raw.match(/uploads[\\/].*$/i);
+    if (m) return '/' + m[0].replace(/\\/g, '/');
+    return '';
+  }
+
   atualizarEstatisticas() {
+    const getStatus = (ev) => {
+      const raw = (ev.status || 'ativo').toLowerCase();
+      if (raw === 'cancelado') return 'cancelado';
+      if (raw === 'encerrado') return 'encerrado';
+      const d = ev.data ? new Date(ev.data) : null;
+      if (d && !Number.isNaN(d.getTime()) && d.getTime() < Date.now()) return 'encerrado';
+      return 'ativo';
+    };
     const total = this.eventos.length;
-    const ativos = this.eventos.filter(e => (e.status||'ativo') === 'ativo').length;
-    const encerrados = this.eventos.filter(e => (e.status||'ativo') === 'encerrado').length;
+    const ativos = this.eventos.filter(e => getStatus(e) === 'ativo').length;
+    const encerrados = this.eventos.filter(e => getStatus(e) === 'encerrado').length;
     this.total.textContent = total;
     this.ativos.textContent = ativos;
     if (this.encerrados) this.encerrados.textContent = encerrados;
@@ -337,17 +411,20 @@ class EventosPageManager {
     e.preventDefault();
     try {
       const token = localStorage.getItem('authToken');
-      const body = {
-        nome: this.inputNome.value.trim(),
-        data: this.inputData.value ? new Date(this.inputData.value).toISOString() : new Date().toISOString(),
-        horario: this.inputHorario.value.trim(),
-        descricao: this.inputDescricao.value.trim(),
-        status: this.inputStatus.value,
-        localizacao: { latitude: parseFloat(this.inputLat.value), longitude: parseFloat(this.inputLng.value) },
-      };
+      const formData = new FormData();
+      formData.append('nome', this.inputNome.value.trim());
+      formData.append('data', this.inputData.value ? new Date(this.inputData.value).toISOString() : new Date().toISOString());
+      if (this.inputHorario.value.trim()) formData.append('horario', this.inputHorario.value.trim());
+      if (this.inputDescricao.value.trim()) formData.append('descricao', this.inputDescricao.value.trim());
+      if (this.inputStatus.value) formData.append('status', this.inputStatus.value);
+      // Para eventos, backend aceita latitude/longitude no topo do body
+      formData.append('latitude', String(parseFloat(this.inputLat.value)));
+      formData.append('longitude', String(parseFloat(this.inputLng.value)));
+      if (this.inputImagem?.files?.[0]) formData.append('imagem', this.inputImagem.files[0]);
       const url = this.eventoAtualId ? `/api/eventos/${this.eventoAtualId}` : '/api/eventos';
       const method = this.eventoAtualId ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(token? { Authorization: `Bearer ${token}` }: {}) }, body: JSON.stringify(body) });
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(url, { method, headers, body: formData });
       if (res.status === 401) {
         this.showAlert('Faça login para salvar eventos.', 'warning');
         setTimeout(()=> window.location.href = 'auth.html', 1200);
@@ -366,10 +443,30 @@ class EventosPageManager {
     this.form.reset();
     this.eventoAtualId = null;
     if (this.alert) this.alert.innerHTML = '';
+  if (this.previewImagem) this.previewImagem.src = 'assets/images/favicon.png';
+    if (this.inputImagem) this.inputImagem.value = '';
     if (this.miniMarker) {
       this.mini.removeLayer(this.miniMarker);
       this.miniMarker = null;
     }
+  }
+
+  atualizarPreviewImagem() {
+    const file = this.inputImagem?.files?.[0];
+    if (!file) return this.limparImagem();
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 5MB.');
+      this.limparImagem();
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => { if (this.previewImagem) this.previewImagem.src = reader.result; };
+    reader.readAsDataURL(file);
+  }
+
+  limparImagem() {
+  if (this.inputImagem) this.inputImagem.value = '';
+  if (this.previewImagem) this.previewImagem.src = 'assets/images/favicon.png';
   }
 
   async buscarEndereco() {

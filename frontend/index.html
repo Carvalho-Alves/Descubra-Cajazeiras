@@ -14,18 +14,18 @@
     
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com https://cdn.jsdelivr.net;
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net;
+        img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+        script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
         style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
         font-src 'self' https://cdnjs.cloudflare.com;
-        connect-src 'self' https://nominatim.openstreetmap.org;
+        connect-src 'self' https://nominatim.openstreetmap.org https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
     ">
 </head>
 <body>
     <header>
         <div class="logo">
             <a class="navbar-brand" href="#">
-                <img src="assets/images/logotipo.png" alt="Logo Descubra+ Cajazeiras" height="70">
+                <img src="assets/images/logotipo.png" alt="Logo Descubra+ Cajazeiras">
             </a>
         </div>
         <nav class="menu-centro">
@@ -66,7 +66,7 @@
                         <div class="card" id="cardServicos">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h5 class="mb-0">
+                                    <h5 class="mb-0 titulo-servicos-eventos">
                                         <i class="fas fa-store me-2"></i>
                                         Serviços Turísticos
                                     </h5>
@@ -125,7 +125,7 @@
                         <div class="card mt-3" id="cardEventosHome">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h5 class="mb-0">
+                                    <h5 class="mb-0 titulo-servicos-eventos">
                                         <i class="fas fa-calendar-alt me-2"></i>
                                         Eventos
                                     </h5>
@@ -170,7 +170,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div id="listaEventosHome" class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;"></div>
+                                <div id="listaEventosHome" class="list-group list-group-flush" style="max-height: 600px; overflow-y: auto;"></div>
                                 <div id="nenhumEventoHome" class="text-center p-4 text-muted" style="display: none;">
                                     <i class="fas fa-calendar-times fa-2x mb-2"></i>
                                     <p>Nenhum evento encontrado.</p>
@@ -460,6 +460,49 @@
         </div>
     </div>
 
+        <!-- Modal Avaliações (reutilizável) -->
+        <div class="modal fade" id="modalAvaliacoes" tabindex="-1" aria-labelledby="avaliacoesLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="avaliacoes-titulo"><i class="fas fa-star me-2 text-warning"></i>Avaliações</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="avaliacoes-stats" class="mb-2"></div>
+                        <div id="avaliacoes-lista" class="list-group list-group-flush"></div>
+                        <div id="avaliacoes-vazio" class="text-center text-muted py-3" style="display:none;">
+                            <i class="fas fa-comment-slash fa-2x mb-2"></i>
+                            <p>Seja o primeiro a avaliar.</p>
+                        </div>
+                        <hr/>
+                        <form id="avaliacao-form" style="display:none;">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-sm-3">
+                                    <label class="form-label">Sua Nota</label>
+                                    <div id="avaliacao-estrelas" class="d-flex align-items-center gap-1" role="radiogroup" aria-label="Sua Nota">
+                                        <button type="button" class="btn btn-link p-0 fs-4 text-warning avaliacao-estrela" data-value="1" aria-label="1 estrela"><i class="far fa-star"></i></button>
+                                        <button type="button" class="btn btn-link p-0 fs-4 text-warning avaliacao-estrela" data-value="2" aria-label="2 estrelas"><i class="far fa-star"></i></button>
+                                        <button type="button" class="btn btn-link p-0 fs-4 text-warning avaliacao-estrela" data-value="3" aria-label="3 estrelas"><i class="far fa-star"></i></button>
+                                        <button type="button" class="btn btn-link p-0 fs-4 text-warning avaliacao-estrela" data-value="4" aria-label="4 estrelas"><i class="far fa-star"></i></button>
+                                        <button type="button" class="btn btn-link p-0 fs-4 text-warning avaliacao-estrela" data-value="5" aria-label="5 estrelas"><i class="far fa-star"></i></button>
+                                    </div>
+                                    <input type="hidden" id="avaliacao-nota" value="5" />
+                                </div>
+                                <div class="col-sm-9">
+                                    <label class="form-label">Comentário (opcional)</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="avaliacao-comentario" placeholder="Escreva um comentário" maxlength="400"/>
+                                        <button class="btn btn-primary" id="avaliacao-submit" type="submit"><i class="fas fa-paper-plane me-2"></i>Enviar Avaliação</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
     <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -474,7 +517,7 @@
                         <input type="hidden" id="edit-userId">
 
                         <div class="text-center mb-3">
-                            <img id="edit-foto-preview" src="assets/images/default-avatar.png" class="rounded-circle" alt="Foto de Perfil" width="100" height="100">
+                            <img id="edit-foto-preview" src="assets/images/default-avatar.svg" class="avatar-img rounded-circle" alt="Foto de Perfil" width="100" height="100" onerror="this.onerror=null;this.src='assets/images/default-avatar.svg';this.classList.add('loaded');" onload="this.classList.add('loaded')">
                         </div>
 
                         <div class="mb-3">
@@ -520,6 +563,7 @@
     <script type="module" src="./scripts/service/pontoService.js"></script>
 
     <script type="module" src="./scripts/leafletSetup.js"></script>
+    <script src="./scripts/avaliacoesUI.js"></script>
     <script type="module" src="./scripts/dashboard.js"></script>
     <script type="module" src="./scripts/index.js"></script>
 </body>

@@ -39,6 +39,18 @@ header {
   flex-wrap: wrap;
 }
 
+/* Tamanho do logo no header */
+header .navbar-brand img {
+  height: auto !important;
+  max-height: 56px;
+  width: auto;
+}
+
+/* Título ao lado da logo (ex.: auth.html) */
+header .brand-title {
+  font-size: 1.1rem;
+}
+
 header .logo h1 {
   font-family: var(--font-heading);
   font-size: 2.2em;
@@ -155,6 +167,22 @@ h2 {
   border-right: none;
   padding: 1rem;
   transition: background-color 0.15s ease-in-out;
+}
+
+/* Evitar que botões de ação sejam "amassados" nas listas da Home */
+.list-group-item .flex-grow-1 { min-width: 0; }
+.list-group-item .flex-grow-1 h6,
+.list-group-item .flex-grow-1 p,
+.list-group-item .flex-grow-1 small {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.list-group-item .item-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
 }
 
 .list-group-item:hover {
@@ -401,6 +429,15 @@ h2 {
     margin-right: 10px;
 }
 
+/* Avatar genérico com transição suave */
+.avatar-img {
+  opacity: 0;
+  transition: opacity .25s ease-in;
+}
+.avatar-img.loaded {
+  opacity: 1;
+}
+
 .area-usuario button {
     margin-left: 10px;
 }
@@ -488,7 +525,7 @@ h2 {
 }
 
 .popup-servico h6 {
-    color: var(--primary-color);
+  color: #212528;
     margin-bottom: 0.5rem;
 }
 
@@ -592,6 +629,11 @@ h2 {
     background-color: rgba(13, 202, 240, 0.8) !important;
 }
 
+/* Títulos específicos (Serviços e Eventos) */
+.titulo-servicos-eventos {
+  color: #212528;
+}
+
 /* Ajustes para mobile */
 @media (max-width: 768px) {
     #btnAdicionarNoMapa {
@@ -676,4 +718,129 @@ h2 {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ========================= */
+/*  Responsividade avançada  */
+/* ========================= */
+
+/* Mídia geral */
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Header responsivo */
+header {
+  gap: 10px;
+}
+
+@media (max-width: 992px) {
+  header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .menu-centro {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  header {
+    padding: 1em;
+  }
+  .menu-centro .btn {
+    padding: 0.5em 1em;
+    font-size: 0.9rem;
+  }
+  header .navbar-brand img {
+    max-height: 40px;
+  }
+  header .brand-title {
+    font-size: 0.95rem;
+  }
+}
+
+/* Grupos de botões podem quebrar linha em telas estreitas */
+.btn-group,
+.btn-group-vertical {
+  flex-wrap: wrap;
+}
+
+/* Mapas: alturas adaptativas por breakpoint */
+#mapa,
+#mapaServicos,
+#mapaEventos {
+  height: 600px;
+}
+
+@media (max-width: 1400px) {
+  #mapa,
+  #mapaServicos,
+  #mapaEventos { height: 560px !important; }
+}
+
+@media (max-width: 1200px) {
+  #mapa,
+  #mapaServicos,
+  #mapaEventos { height: 520px !important; }
+}
+
+@media (max-width: 992px) {
+  #mapa,
+  #mapaServicos,
+  #mapaEventos { height: 480px !important; }
+}
+
+@media (max-width: 768px) {
+  #mapa,
+  #mapaServicos,
+  #mapaEventos { height: 55vh !important; min-height: 320px; }
+}
+
+@media (max-width: 576px) {
+  #mapa,
+  #mapaServicos,
+  #mapaEventos { height: 50vh !important; min-height: 300px; }
+}
+
+/* Mini mapas das modais */
+#miniMapa,
+#miniMapaServico,
+#miniMapaEvento {
+  height: 200px;
+}
+
+@media (max-width: 576px) {
+  #miniMapa,
+  #miniMapaServico,
+  #miniMapaEvento { height: 180px; }
+}
+
+/* Listas laterais: usar viewport para evitar overflow em telas pequenas */
+#listaPontos,
+#listaEventosHome,
+#listaServicos,
+#listaEventosPagina {
+  max-height: 600px;
+}
+
+@media (max-width: 992px) {
+  #listaPontos,
+  #listaEventosHome,
+  #listaServicos,
+  #listaEventosPagina { max-height: 60vh !important; }
+}
+
+@media (max-width: 576px) {
+  #listaPontos,
+  #listaEventosHome,
+  #listaServicos,
+  #listaEventosPagina { max-height: 50vh !important; }
+}
+
+/* Títulos menores em telas muito pequenas */
+@media (max-width: 576px) {
+  h5.titulo-servicos-eventos { font-size: 1rem; }
 }

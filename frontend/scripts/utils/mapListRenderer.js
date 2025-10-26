@@ -36,22 +36,30 @@ export function renderizarLista(servicos, containerEl) {
     const tipo = normalizarTipo(servico);
     const { fa, color } = iconConfigPorTipo(tipo);
     const desc = servico.descricao ? String(servico.descricao).substring(0, 80) + '...' : '';
+    const nomeSafe = servico.nome || servico.titulo || 'Serviço';
     a.innerHTML = `
       <div class="d-flex justify-content-between align-items-start">
         <div class="flex-grow-1">
           <h6 class="mb-1">
             <i class="fas ${fa} me-2" style="color:${color}"></i>
-            ${servico.nome || servico.titulo || 'Sem nome'}
+            ${nomeSafe}
           </h6>
           <small class="text-muted">${tipo}</small>
           <p class="mb-0">${desc}</p>
+        </div>
+          <div class="ms-2 d-flex align-items-start item-actions">
+          ${servico._id ? `
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick='event.stopPropagation();event.preventDefault();avaliacoesUI.abrir("servico", "${String(servico._id)}", ${JSON.stringify(nomeSafe)})'>
+              <i class="fas fa-star me-1"></i>Avaliações
+            </button>
+          ` : ''}
         </div>
       </div>`;
     containerEl.appendChild(a);
   });
 }
 
-export function renderizarMarcadores(map, layerGroup, servicos, { onMarkerClick } = {}) {
+export function renderizarMarcadores(map, layerGroup, servicos, { onMarkerClick, buildPopup } = {}) {
   layerGroup.clearLayers();
   const markersById = new Map();
   servicos.forEach(s => {
@@ -67,12 +75,27 @@ export function renderizarMarcadores(map, layerGroup, servicos, { onMarkerClick 
       popupAnchor: [0, -32]
     });
     const m = L.marker(latlng, { icon });
-    m.bindPopup(`
-      <div>
-        <strong>${s.nome || s.titulo || 'Sem nome'}</strong><br/>
-        <small>${tipo}</small>
-      </div>
-    `);
+    // Pop-up customizável a partir do chamador
+    if (typeof buildPopup === 'function') {
+      try {
+        const html = buildPopup(s);
+        m.bindPopup(html || '');
+      } catch {
+        m.bindPopup(`
+          <div>
+            <strong>${s.nome || s.titulo || 'Sem nome'}</strong><br/>
+            <small>${tipo}</small>
+          </div>
+        `);
+      }
+    } else {
+      m.bindPopup(`
+        <div>
+          <strong>${s.nome || s.titulo || 'Sem nome'}</strong><br/>
+          <small>${tipo}</small>
+        </div>
+      `);
+    }
     if (typeof onMarkerClick === 'function') {
       m.on('click', () => onMarkerClick(s));
     }

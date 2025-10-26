@@ -23,8 +23,11 @@ export const createServico = async (
   const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     const parsed = createServicoSchema.parse(input);
+    const imagensArr = Array.isArray((parsed as any).imagens) ? (parsed as any).imagens : [];
+    const { imagens, ...rest } = parsed as any;
     const servico = await Servico.create({
-      ...parsed,
+      ...rest,
+      imagem: imagensArr,
       usuario: new Types.ObjectId(usuarioId),
     });
 
@@ -52,7 +55,7 @@ export const createServico = async (
         descricao: servico.descricao,
         tipo_servico: servico.tipo_servico,
         categoria: categoria,
-        imagem: servico.imagem,
+  imagem: servico.imagem,
         latitude: latitude,
         longitude: longitude,
       }
@@ -84,9 +87,14 @@ export const updateServico = async (
   const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
     const parsed = updateServicoSchema.parse(input);
+    const imagensArr = Array.isArray((parsed as any).imagens) ? (parsed as any).imagens : undefined;
+    const { imagens, ...rest } = parsed as any;
+    const updateDoc: any = { ...rest };
+    if (imagensArr !== undefined) updateDoc.imagem = imagensArr;
+
     const updatedServico = await Servico.findOneAndUpdate(
       { _id: id, usuario: new Types.ObjectId(usuarioId) },
-      { ...parsed },
+      updateDoc,
       { new: true, runValidators: true }
     );
 
@@ -117,7 +125,7 @@ export const updateServico = async (
         descricao: updatedServico.descricao,
         tipo_servico: updatedServico.tipo_servico,
         categoria: categoria,
-        imagem: updatedServico.imagem,
+  imagem: updatedServico.imagem,
         latitude: latitude,
         longitude: longitude,
       }

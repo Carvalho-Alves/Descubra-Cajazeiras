@@ -12,15 +12,11 @@ export const referenciaParamsValidator = [
 ];
 
 export const createAvaliacaoValidator = [
-  body('referencia')
-    .isObject().withMessage('referencia é obrigatório.')
-    .custom((v) => v && typeof v.tipo === 'string' && typeof v.id === 'string')
-    .withMessage('referencia deve conter { tipo, id }.'),
-  body('referencia.tipo')
+  body('tipo')
     .isIn(['servico', 'evento'])
-    .withMessage("referencia.tipo deve ser 'servico' ou 'evento'."),
-  body('referencia.id')
-    .isMongoId().withMessage('referencia.id inválido.'),
+    .withMessage("tipo deve ser 'servico' ou 'evento'."),
+  body('referenciaId')
+    .isMongoId().withMessage('referenciaId inválido.'),
   body('nota')
     .isInt({ min: 1, max: 5 })
     .withMessage('nota deve ser um inteiro entre 1 e 5.'),

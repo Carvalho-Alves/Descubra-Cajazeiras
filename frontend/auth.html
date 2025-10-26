@@ -16,8 +16,10 @@
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
-                    <img src="assets/images/logotipo.png" alt="Logo Descubra+ Cajazeiras" height="50" class="me-3">
-                    <h4 class="mb-0 text-dark">Descubra+ Cajazeiras</h4>
+                    <a class="navbar-brand" href="#" aria-label="Descubra+ Cajazeiras">
+                        <img src="assets/images/logotipo.png" alt="Logo Descubra+ Cajazeiras" class="me-2">
+                    </a>
+                    <span class="brand-title text-dark fw-semibold">Descubra+ Cajazeiras</span>
                 </div>
                 <a href="index.html" class="btn btn-outline-dark">
                     <i class="fas fa-arrow-left me-2"></i>Voltar ao Mapa
@@ -101,6 +103,23 @@
                                             <i class="fas fa-envelope me-2"></i>E-mail
                                         </label>
                                         <input type="email" class="form-control form-control-lg" id="registerEmail" required>
+                                    </div>
+
+                                    <!-- Foto de perfil (opcional) -->
+                                    <div class="mb-3">
+                                        <label for="registerFoto" class="form-label">
+                                            <i class="fas fa-image me-2"></i>Foto de perfil (opcional)
+                                        </label>
+                                        <input type="file" class="form-control form-control-lg" id="registerFoto" accept="image/*">
+                                        <div class="form-text">Formatos aceitos: JPG, PNG, GIF. Tamanho recomendado até 5MB.</div>
+                                        <div id="previewWrapper" class="mt-3 d-none">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <img id="registerFotoPreview" src="" alt="Pré-visualização" class="avatar-img" style="width: 72px; height:72px; object-fit: cover; border-radius: 50%; border: 2px solid #eee;" onerror="this.onerror=null;this.src='assets/images/default-avatar.svg';this.classList.add('loaded');" onload="this.classList.add('loaded')"/>
+                                                <button type="button" id="btnLimparFoto" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-times me-1"></i>Remover foto
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="mb-3">

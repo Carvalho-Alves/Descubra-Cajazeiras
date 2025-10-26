@@ -35,6 +35,9 @@ class ServicosPageManager {
         this.inputInstagram = document.getElementById('inputInstagramServico');
         this.inputServicoId = document.getElementById('inputServicoIdModal');
         this.camposDinamicos = document.getElementById('camposDinamicosServico');
+    this.inputImagem = document.getElementById('inputImagemServico');
+    this.previewImagem = document.getElementById('previewImagemServico');
+    this.btnLimparImagem = document.getElementById('btnLimparImagemServico');
         
         // Page elements
         this.listaServicos = document.getElementById('listaServicos');
@@ -100,9 +103,25 @@ class ServicosPageManager {
             this.setupMiniMapa();
         });
         
+        // Busca
+        this.inputBusca = document.getElementById('inputBuscaServicos');
+        this.btnBuscar = document.getElementById('btnBuscarServicos');
+        if (this.btnBuscar) this.btnBuscar.addEventListener('click', () => this.aplicarBuscaEFiltro());
+        if (this.inputBusca) {
+            this.inputBusca.addEventListener('input', () => this.aplicarBuscaEFiltro());
+            this.inputBusca.addEventListener('keydown', (e) => { if (e.key === 'Enter'){ e.preventDefault(); this.aplicarBuscaEFiltro(); }});
+        }
         document.getElementById('modalServico').addEventListener('hidden.bs.modal', () => {
             this.limparFormulario();
         });
+
+        // Imagem: preview e limpar
+        if (this.inputImagem) {
+            this.inputImagem.addEventListener('change', () => this.atualizarPreviewImagem());
+        }
+        if (this.btnLimparImagem) {
+            this.btnLimparImagem.addEventListener('click', () => this.limparImagem());
+        }
     }
 
     checkAuthentication() {
@@ -112,10 +131,30 @@ class ServicosPageManager {
 
         if (usuarioLogado) {
             const nomeUsuario = usuario.user?.nome || usuario.nome || "Usuário";
+            const fotoRaw = usuario.user?.foto || usuario.foto || '';
+            let avatarUrl = 'assets/images/default-avatar.svg';
+            if (fotoRaw) {
+                if (typeof fotoRaw === 'string' && (fotoRaw.startsWith('http') || fotoRaw.startsWith('/'))) {
+                    avatarUrl = fotoRaw;
+                } else {
+                    const m = String(fotoRaw).match(/uploads[\\/].*$/i);
+                    if (m) avatarUrl = '/' + m[0].replace(/\\/g, '/');
+                }
+            }
+            // Cache-buster baseado em updatedAt armazenado no objeto ou em flag local
+            try {
+                const storedVersion = localStorage.getItem('avatarVersion');
+                const updatedAtRaw = (usuario.user?.updatedAt || usuario.updatedAt);
+                const version = storedVersion || (updatedAtRaw ? String(new Date(updatedAtRaw).getTime()) : '');
+                if (version && avatarUrl && !avatarUrl.startsWith('assets/')) {
+                    const joinChar = avatarUrl.includes('?') ? '&' : '?';
+                    avatarUrl = `${avatarUrl}${joinChar}v=${encodeURIComponent(version)}`;
+                }
+            } catch {}
             this.usuarioArea.innerHTML = `
                 <div class="dropdown">
-                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-2"></i> ${nomeUsuario}
+                    <button class="btn btn-primary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+                        <img src="${avatarUrl}" alt="Avatar" class="avatar-img rounded-circle me-2" style="width:28px;height:28px;object-fit:cover;" onerror="this.onerror=null;this.src='assets/images/default-avatar.svg';this.classList.add('loaded');" onload="this.classList.add('loaded')"> ${nomeUsuario}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="index.html">
@@ -153,6 +192,25 @@ class ServicosPageManager {
         }
     }
 
+    getServicosFiltrados() {
+        const q = (this.inputBusca?.value || '').toLowerCase().trim();
+        let lista = this.servicos;
+        if (this.filtroAtivo) lista = lista.filter(s => (s.tipo_servico || '') === this.filtroAtivo);
+        if (q) {
+            lista = lista.filter(s =>
+                (s.nome || '').toLowerCase().includes(q) ||
+                (s.descricao || '').toLowerCase().includes(q)
+            );
+        }
+        return lista;
+    }
+
+    aplicarBuscaEFiltro() {
+        const servicosFiltrados = this.getServicosFiltrados();
+        this.renderizarServicos(servicosFiltrados);
+        this.adicionarMarcadoresNoMapa(servicosFiltrados);
+    }
+
     logout() {
         localStorage.removeItem('usuarioAutenticado');
         localStorage.removeItem('authToken');
@@ -187,8 +245,6 @@ class ServicosPageManager {
             if (this.miniMapaMarcador) {
                 this.miniMapa.removeLayer(this.miniMapaMarcador);
             }
-            
-            this.miniMapaMarcador = L.marker([lat, lng]).addTo(this.miniMapa);
             this.miniMapa.setView([lat, lng], 16);
         }
     }
@@ -293,12 +349,19 @@ class ServicosPageManager {
         this.nenhumServico.style.display = 'none';
         
         try {
-            const response = await fetch('/api/servicos');
+            const token = localStorage.getItem('authToken');
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const response = await fetch('/api/servicos/mine', { headers });
+            if (response.status === 401) {
+                this.mostrarAlerta('Faça login para visualizar seus serviços.', 'warning');
+                setTimeout(()=> window.location.href = 'auth.html', 1000);
+                this.loadingServicos.style.display = 'none';
+                return;
+            }
             if (!response.ok) throw new Error('Falha ao buscar serviços.');
             
             this.servicos = await response.json();
-            this.renderizarServicos();
-            this.adicionarMarcadoresNoMapa();
+            this.aplicarBuscaEFiltro();
             this.atualizarEstatisticas();
         } catch (error) {
             console.error('Erro ao carregar serviços:', error);
@@ -308,10 +371,8 @@ class ServicosPageManager {
         }
     }
 
-    renderizarServicos() {
-        const servicosFiltrados = this.filtroAtivo 
-            ? this.servicos.filter(s => s.tipo_servico === this.filtroAtivo)
-            : this.servicos;
+    renderizarServicos(servicosFiltrados = null) {
+        if (!servicosFiltrados) servicosFiltrados = this.getServicosFiltrados();
 
         this.listaServicos.innerHTML = '';
         this.nenhumServico.style.display = servicosFiltrados.length === 0 ? 'block' : 'none';
@@ -349,11 +410,12 @@ class ServicosPageManager {
         });
     }
 
-    adicionarMarcadoresNoMapa() {
+    adicionarMarcadoresNoMapa(servicosFiltrados = null) {
+        if (!servicosFiltrados) servicosFiltrados = this.getServicosFiltrados();
         this.map.removeLayer(this.marcadores);
         this.marcadores = new L.MarkerClusterGroup();
         
-        this.servicos.forEach(servico => {
+        servicosFiltrados.forEach(servico => {
             if (servico.localizacao && servico.localizacao.latitude && servico.localizacao.longitude) {
                 const marcador = L.marker([servico.localizacao.latitude, servico.localizacao.longitude], {
                     icon: this.criarIconePorTipo(servico.tipo_servico)
@@ -370,6 +432,11 @@ class ServicosPageManager {
                             </button>
                             <button class="btn btn-danger" onclick="servicosPage.excluirServico('${servico._id}')">
                                 <i class="fas fa-trash me-1"></i>Excluir
+                            </button>
+                        </div>
+                        <div class="btn-group btn-group-sm w-100 mt-1">
+                            <button class="btn btn-outline-secondary" onclick="avaliacoesUI.abrir('servico','${servico._id}', ${JSON.stringify(servico.nome||'Serviço')})">
+                                <i class="fas fa-star me-1"></i>Avaliações
                             </button>
                         </div>
                     </div>
@@ -436,7 +503,7 @@ class ServicosPageManager {
 
     aplicarFiltro(tipo) {
         this.filtroAtivo = tipo;
-        this.renderizarServicos();
+        this.aplicarBuscaEFiltro();
     }
 
     abrirModalCriacao(coordenadas = null) {
@@ -513,6 +580,13 @@ class ServicosPageManager {
         this.inputServicoId.value = '';
         this.camposDinamicos.innerHTML = '';
         this.alertContainer.innerHTML = '';
+        // Reset preview imagem
+        if (this.previewImagem) {
+            this.previewImagem.src = 'assets/images/favicon.png';
+        }
+        if (this.inputImagem) {
+            this.inputImagem.value = '';
+        }
         
         if (this.miniMapaMarcador) {
             this.miniMapa.removeLayer(this.miniMapaMarcador);
@@ -530,19 +604,27 @@ class ServicosPageManager {
         try {
             const url = isEdicao ? `/api/servicos/${this.inputServicoId.value}` : '/api/servicos';
             const method = isEdicao ? 'PUT' : 'POST';
-            
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
+            // Usa FormData para suportar upload de imagem
+            const formData = new FormData();
+            formData.append('nome', dadosServico.nome);
+            formData.append('tipo_servico', dadosServico.tipo_servico);
+            if (dadosServico.descricao) formData.append('descricao', dadosServico.descricao);
+            formData.append('localizacao', JSON.stringify(dadosServico.localizacao));
+            if (dadosServico.contato && (dadosServico.contato.telefone || dadosServico.contato.instagram)) {
+                formData.append('contato', JSON.stringify(dadosServico.contato));
             }
+            if (dadosServico.categoria) formData.append('categoria', dadosServico.categoria);
+            if (this.inputImagem && this.inputImagem.files && this.inputImagem.files[0]) {
+                formData.append('imagem', this.inputImagem.files[0]);
+            }
+
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             
             const response = await fetch(url, {
-                method: method,
-                headers: headers,
-                body: JSON.stringify(dadosServico)
+                method,
+                headers,
+                body: formData
             });
             
             if (!response.ok) {
@@ -561,6 +643,26 @@ class ServicosPageManager {
             console.error('Erro ao salvar serviço:', error);
             this.mostrarAlerta('Erro ao salvar serviço: ' + error.message, 'danger');
         }
+    }
+
+    atualizarPreviewImagem() {
+        const file = this.inputImagem?.files?.[0];
+        if (!file) return this.limparImagem();
+        if (file.size > 5 * 1024 * 1024) {
+            alert('A imagem deve ter no máximo 5MB.');
+            this.limparImagem();
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (this.previewImagem) this.previewImagem.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    limparImagem() {
+    if (this.inputImagem) this.inputImagem.value = '';
+    if (this.previewImagem) this.previewImagem.src = 'assets/images/favicon.png';
     }
 
     coletarDadosFormulario() {

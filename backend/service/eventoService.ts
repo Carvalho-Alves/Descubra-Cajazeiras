@@ -22,14 +22,16 @@ export const createEvento = async (
 ): Promise<HydratedDocument<IEvento>> => {
   const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
-    const parsed = createEventoSchema.parse(input);
+    const parsed: any = createEventoSchema.parse(input);
+    const { latitude, longitude, ...rest } = parsed;
     const evento = await Evento.create({
-      ...parsed,
+      ...rest,
+      localizacao: (typeof latitude === 'number' && typeof longitude === 'number') ? { latitude, longitude } : undefined,
       usuario: new Types.ObjectId(usuarioId),
     });
 
-    const latitude = evento.localizacao?.latitude ?? null;
-    const longitude = evento.localizacao?.longitude ?? null;
+  const latNeo = evento.localizacao?.latitude ?? null;
+  const lonNeo = evento.localizacao?.longitude ?? null;
 
     // Converte o objeto Date para uma string ISO
     const dataString = evento.data ? evento.data.toISOString() : null;
@@ -55,8 +57,8 @@ export const createEvento = async (
         data: dataString,
         horario: evento.horario,
         imagem: evento.imagem,
-        latitude: latitude,
-        longitude: longitude,
+        latitude: latNeo,
+        longitude: lonNeo,
       }
     );
 
@@ -85,10 +87,15 @@ export const updateEvento = async (
 ) => {
   const session = driver ? driver.session() : { run: async () => {}, close: async () => {} } as any;
   try {
-    const parsed = updateEventoSchema.parse(input);
+    const parsed: any = updateEventoSchema.parse(input);
+    const { latitude, longitude, ...rest } = parsed;
+    const updateDoc: any = { ...rest };
+    if (typeof latitude === 'number' && typeof longitude === 'number') {
+      updateDoc.localizacao = { latitude, longitude };
+    }
     const updatedEvento = await Evento.findOneAndUpdate(
       { _id: id, usuario: new Types.ObjectId(usuarioId) },
-      { ...parsed },
+      updateDoc,
       { new: true, runValidators: true }
     );
 
@@ -99,8 +106,8 @@ export const updateEvento = async (
     }
 
     // Extrai latitude e longitude para a atualização
-    const latitude = updatedEvento.localizacao?.latitude ?? null;
-    const longitude = updatedEvento.localizacao?.longitude ?? null;
+  const latNeo = updatedEvento.localizacao?.latitude ?? null;
+  const lonNeo = updatedEvento.localizacao?.longitude ?? null;
     
     await session.run(
       `MATCH (s:Evento {eventoId: $eventoId})
@@ -118,8 +125,8 @@ export const updateEvento = async (
         data: updatedEvento.data,
         horario: updatedEvento.horario,
         imagem: updatedEvento.imagem,
-        latitude: latitude,
-        longitude: longitude,
+        latitude: latNeo,
+        longitude: lonNeo,
       }
     );
 

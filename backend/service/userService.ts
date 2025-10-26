@@ -86,7 +86,7 @@ export const loginUserService = async (
 };
 
 // --- SERVIÇO DE ATUALIZAÇÃO ---
-export const updateUserService = async (id: string, updateData: IUser): Promise<IUser | null> => {
+export const updateUserService = async (id: string, updateData: Partial<IUser>): Promise<IUser | null> => {
   const session = getNeo4jSessionOrNull();
   try {
     const updatedUser = await User.findByIdAndUpdate(
