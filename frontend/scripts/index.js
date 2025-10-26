@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const usuarioArea = document.getElementById('usuario-area');
     const btnNovoPonto = document.getElementById('btnNovoPonto');
     const btnDashboard = document.getElementById('btnDashboard');
+    const btnVerServicosTop = document.getElementById('btnVerServicos');
+    const btnVerEventosTop = document.getElementById('btnVerEventos');
     const btnAtualizarLista = document.getElementById('btnAtualizarLista');
     const btnCentralizarLocalizacao = document.getElementById('btnCentralizarLocalizacao');
     const inputBusca = document.getElementById('inputBusca');
@@ -84,7 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </ul>
                 </div>`;
             if (btnNovoPonto) btnNovoPonto.style.display = 'inline-block';
-            btnDashboard.style.display = 'inline-block';
+            if (btnDashboard) btnDashboard.style.display = 'inline-block';
+            if (btnVerServicosTop) btnVerServicosTop.style.display = 'inline-block';
+            if (btnVerEventosTop) btnVerEventosTop.style.display = 'inline-block';
             document.getElementById('btnSair')?.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (confirm('Deseja realmente sair?')) pontoService.logoutUsuario();
@@ -96,7 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             usuarioArea.innerHTML = `<a href="auth.html" class="btn btn-primary"><i class="fas fa-sign-in-alt me-2"></i>Entrar</a>`;
             if (btnNovoPonto) btnNovoPonto.style.display = 'none';
-            btnDashboard.style.display = 'none';
+            if (btnDashboard) btnDashboard.style.display = 'none';
+            if (btnVerServicosTop) btnVerServicosTop.style.display = 'none';
+            if (btnVerEventosTop) btnVerEventosTop.style.display = 'none';
         }
     }
 
