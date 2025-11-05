@@ -5,6 +5,7 @@ body {
   justify-content: center;
   min-height: 100vh;
   background-color: #f0f8ff; /* Usando a variável --light-color do seu index.css */
+  padding: 1rem;
 }
 
 /* Define a largura do card de autenticação */
@@ -14,4 +15,33 @@ body {
   border: none;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   border-radius: 0.75rem;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 576px) {
+  body {
+    padding: 0.5rem;
+  }
+
+  .auth-card {
+    max-width: 100%;
+    border-radius: 0.5rem;
+  }
+
+  .auth-card .card-body {
+    padding: 1.5rem !important;
+  }
+
+  .auth-card img {
+    height: 50px !important;
+  }
+
+  .auth-card h3 {
+    font-size: 1.5rem;
+  }
+
+  .auth-card .btn-lg {
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+  }
 }

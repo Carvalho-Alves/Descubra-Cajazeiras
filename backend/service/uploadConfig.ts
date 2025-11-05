@@ -6,7 +6,7 @@ export default {
   upload(folder: string) {
     return {
       storage: multer.diskStorage({
-        destination: resolve(__dirname, "..", folder),
+        destination: resolve(process.cwd(), folder),
         filename: (_req, file, callback) => {
           const fileHash = crypto.randomBytes(16).toString('hex');
           const original = basename(file.originalname || 'arquivo');

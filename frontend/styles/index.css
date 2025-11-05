@@ -161,37 +161,63 @@ h2 {
   font-weight: 600;
 }
 
-/* Lista de pontos */
+/* Listas responsivas */
 .list-group-item {
-  border-left: none;
-  border-right: none;
   padding: 1rem;
-  transition: background-color 0.15s ease-in-out;
 }
 
-/* Evitar que botões de ação sejam "amassados" nas listas da Home */
-.list-group-item .flex-grow-1 { min-width: 0; }
-.list-group-item .flex-grow-1 h6,
-.list-group-item .flex-grow-1 p,
-.list-group-item .flex-grow-1 small {
-  white-space: normal;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-.list-group-item .item-actions {
-  flex-shrink: 0;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.25rem;
-}
-
-.list-group-item:hover {
-  background-color: rgba(13, 110, 253, 0.05);
+@media (max-width: 576px) {
+  .list-group-item {
+    padding: 0.75rem;
+  }
+  .list-group-item h6 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+  .list-group-item p {
+    font-size: 0.875rem;
+  }
+  .list-group-item small {
+    font-size: 0.75rem;
+  }
 }
 
-.list-group-item.active {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+/* Cards responsivos */
+.card {
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  padding: 1rem;
+}
+
+@media (max-width: 576px) {
+  .card-header {
+    padding: 0.75rem;
+  }
+  .card-body {
+    padding: 0.75rem;
+  }
+}
+
+/* Estatísticas responsivas */
+.row.text-center.mb-3 .col-4 {
+  padding: 0.5rem;
+}
+
+@media (max-width: 576px) {
+  .row.text-center.mb-3 .col-4 {
+    padding: 0.25rem;
+  }
+  .row.text-center.mb-3 .border.rounded.p-2 {
+    padding: 0.5rem !important;
+  }
+  .row.text-center.mb-3 small {
+    font-size: 0.75rem;
+  }
+  .row.text-center.mb-3 .fw-bold {
+    font-size: 1.1rem;
+  }
 }
 
 .ponto-item {
@@ -292,33 +318,109 @@ h2 {
   font-size: 0.75rem;
 }
 
-/* Modal customizado */
-.modal-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+/* Modais responsivos */
+.modal-lg {
+  max-width: 900px;
 }
 
-.modal-footer {
-  border-top: 1px solid rgba(0, 0, 0, 0.125);
+@media (max-width: 992px) {
+  .modal-lg {
+    max-width: 95%;
+  }
 }
 
-/* Formulário */
-.form-label {
-  font-weight: 600;
-  color: var(--dark-color);
+@media (max-width: 576px) {
+  .modal-lg {
+    max-width: 100%;
+    margin: 0.5rem;
+  }
+  .modal-dialog {
+    margin: 0;
+  }
+  .modal-content {
+    border-radius: 0;
+  }
 }
 
-.form-control:focus,
-.form-select:focus {
-  border-color: rgba(13, 110, 253, 0.5);
-  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+/* Formulários responsivos */
+.form-control,
+.form-select {
+  font-size: 1rem;
 }
 
-.is-invalid {
-  border-color: var(--danger-color);
+@media (max-width: 576px) {
+  .form-control,
+  .form-select {
+    font-size: 0.9rem;
+  }
+  .form-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
 }
 
-.invalid-feedback {
-  display: block;
+/* Botões responsivos */
+.btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+  .btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+  .btn-sm {
+    font-size: 0.8rem;
+    padding: 0.375rem 0.75rem;
+  }
+}
+
+/* Grupos de botões responsivos */
+.btn-group {
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.btn-group .btn {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 576px) {
+  .btn-group .btn {
+    flex: none;
+    width: 100%;
+    white-space: normal;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  /* Ajustes específicos para filtros */
+  #filtrosServicos .btn,
+  #filtrosEventos .btn,
+  #filtrosEventosHome .btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+  
+  /* Ocultar texto em telas muito pequenas e mostrar apenas ícones */
+  @media (max-width: 480px) {
+    #filtrosServicos .btn span:not(.visually-hidden),
+    #filtrosEventos .btn span:not(.visually-hidden),
+    #filtrosEventosHome .btn span:not(.visually-hidden) {
+      display: none;
+    }
+    
+    #filtrosServicos .btn::before,
+    #filtrosEventos .btn::before,
+    #filtrosEventosHome .btn::before {
+      content: attr(data-short-text);
+      font-size: 0.75rem;
+    }
+  }
 }
 
 /* Alertas customizados */
@@ -603,6 +705,21 @@ h2 {
     .list-group-item .btn-group-vertical {
         opacity: 1;
     }
+    
+    /* Ajustes para filtros de serviços e eventos */
+    #filtrosServicos,
+    #filtrosEventos,
+    #filtrosEventosHome {
+        gap: 0.125rem;
+    }
+    
+    #filtrosServicos .btn,
+    #filtrosEventos .btn,
+    #filtrosEventosHome .btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.5rem;
+        min-height: 2.5rem;
+    }
 }
 
 /* Botão flutuante no mapa */
@@ -720,6 +837,25 @@ h2 {
     }
 }
 
+/* Estrelas de avaliação com animação */
+.avaliacao-estrela {
+    color: var(--warning-color) !important;
+    transition: transform 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.avaliacao-estrela:hover {
+    color: rgb(3, 59, 225) !important;
+    transform: scale(1.2);
+}
+
+.avaliacao-estrela i {
+    transition: transform 0.2s ease-in-out;
+}
+
+.avaliacao-estrela:hover i {
+    transform: scale(1.2);
+}
+
 /* ========================= */
 /*  Responsividade avançada  */
 /* ========================= */
@@ -734,31 +870,48 @@ video {
 /* Header responsivo */
 header {
   gap: 10px;
+  position: relative;
+}
+
+header .navbar-brand img {
+  max-height: 50px;
 }
 
 @media (max-width: 992px) {
   header {
     flex-direction: column;
     align-items: stretch;
+    text-align: center;
   }
   .menu-centro {
     justify-content: center;
+    margin: 10px 0;
+  }
+  .usuario {
+    position: absolute;
+    top: 10px;
+    right: 10px;
   }
 }
 
 @media (max-width: 576px) {
   header {
-    padding: 1em;
+    padding: 1em 0.5em;
   }
   .menu-centro .btn {
     padding: 0.5em 1em;
     font-size: 0.9rem;
+    margin: 2px;
   }
   header .navbar-brand img {
     max-height: 40px;
   }
   header .brand-title {
     font-size: 0.95rem;
+  }
+  .usuario button {
+    padding: 0.4em 0.8em;
+    font-size: 0.85rem;
   }
 }
 
@@ -768,11 +921,53 @@ header {
   flex-wrap: wrap;
 }
 
+/* Layout principal responsivo */
+main {
+  padding: 1em;
+}
+
+@media (max-width: 768px) {
+  main {
+    padding: 0.5em;
+  }
+}
+
+/* Container responsivo */
+.container-fluid {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+@media (max-width: 576px) {
+  .container-fluid {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+}
+
+/* Grid responsivo */
+.row {
+  margin-left: -0.25rem;
+  margin-right: -0.25rem;
+}
+
+.col-md-4,
+.col-md-8,
+.col-lg-6,
+.col-lg-4,
+.col-lg-3,
+.col-md-3,
+.col-md-6 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
 /* Mapas: alturas adaptativas por breakpoint */
 #mapa,
 #mapaServicos,
 #mapaEventos {
   height: 600px;
+  border-radius: 0.5rem;
 }
 
 @media (max-width: 1400px) {
@@ -810,6 +1005,7 @@ header {
 #miniMapaServico,
 #miniMapaEvento {
   height: 200px;
+  border: 2px solid var(--border-color);
 }
 
 @media (max-width: 576px) {
@@ -840,7 +1036,106 @@ header {
   #listaEventosPagina { max-height: 50vh !important; }
 }
 
-/* Títulos menores em telas muito pequenas */
+/* Gradientes para o modal Sobre */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark-color) 100%);
+}
+
+/* Cards do modal Sobre */
+.modal .card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.modal .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Responsividade do modal Sobre */
+@media (max-width: 768px) {
+  #modalSobreProjeto .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  #modalSobreProjeto .row.g-3 .col-md-4 {
+    margin-bottom: 1rem;
+  }
+  
+  #modalSobreProjeto .d-flex.justify-content-center.gap-2 {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  #modalSobreProjeto .d-flex.justify-content-center.gap-2 .btn {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Dashboard responsivo e compacto */
+#modalDashboard .modal-dialog {
+  max-width: 95vw;
+}
+
+@media (max-width: 1200px) {
+  #modalDashboard .modal-dialog {
+    max-width: 98vw;
+  }
+}
+
+@media (max-width: 768px) {
+  #modalDashboard .modal-dialog {
+    margin: 0.25rem;
+    max-width: calc(100vw - 0.5rem);
+  }
+  
+  #modalDashboard .card-body {
+    padding: 0.75rem;
+  }
+  
+  #modalDashboard .card-header h6 {
+    font-size: 0.9rem;
+  }
+}
+
+/* Cards do dashboard com altura controlada */
+#modalDashboard .card {
+  margin-bottom: 1rem;
+}
+
+#modalDashboard .card-body {
+  padding: 1rem;
+}
+
+#modalDashboard .list-group-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+#modalDashboard .list-group-item small {
+  font-size: 0.75rem;
+}
+
+/* Estatísticas do dashboard */
+#modalDashboard .card.card-body {
+  padding: 1.25rem 0.75rem;
+}
+
+#modalDashboard .card.card-body h6 {
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+#modalDashboard .card.card-body .h2 {
+  font-size: 2rem;
+  line-height: 1;
+}
+
 @media (max-width: 576px) {
-  h5.titulo-servicos-eventos { font-size: 1rem; }
+  #modalDashboard .card.card-body .h2 {
+    font-size: 1.5rem;
+  }
+  
+  #modalDashboard .card.card-body h6 {
+    font-size: 0.75rem;
+  }
 }

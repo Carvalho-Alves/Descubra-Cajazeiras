@@ -49,9 +49,7 @@ const AvaliacaoSchema = new Schema<IAvaliacao>(
 /**
  * Índices úteis
  * - Busca cronológica por item avaliado
- * - Evitar avaliações duplicadas do mesmo usuário no mesmo item
  */
 AvaliacaoSchema.index({ tipo: 1, referenciaId: 1, criadoEm: -1 });
-AvaliacaoSchema.index({ tipo: 1, referenciaId: 1, usuarioId: 1 }, { unique: true });
 
 export const Avaliacao = model<IAvaliacao>("Avaliacao", AvaliacaoSchema);

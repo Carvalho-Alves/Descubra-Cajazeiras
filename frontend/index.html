@@ -144,20 +144,20 @@
                                 <div class="p-3 pt-2">
                                     <div class="btn-group w-100 mb-2" role="group" id="filtrosEventosHome">
                                         <input type="radio" class="btn-check" name="filtroEventoHome" id="filtroEvTodos" value="" checked>
-                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvTodos">
-                                            <i class="fas fa-list me-1"></i>Todos
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvTodos" data-short-text="Todos">
+                                            <i class="fas fa-list me-1"></i><span>Todos</span>
                                         </label>
                                         <input type="radio" class="btn-check" name="filtroEventoHome" id="filtroEvAtivo" value="ativo">
-                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvAtivo">
-                                            <i class="fas fa-check-circle me-1"></i>Ativo
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvAtivo" data-short-text="Ativo">
+                                            <i class="fas fa-check-circle me-1"></i><span>Ativo</span>
                                         </label>
                                         <input type="radio" class="btn-check" name="filtroEventoHome" id="filtroEvCancelado" value="cancelado">
-                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvCancelado">
-                                            <i class="fas fa-times-circle me-1"></i>Cancelado
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvCancelado" data-short-text="Cancelado">
+                                            <i class="fas fa-times-circle me-1"></i><span>Cancelado</span>
                                         </label>
                                         <input type="radio" class="btn-check" name="filtroEventoHome" id="filtroEvEncerrado" value="encerrado">
-                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvEncerrado">
-                                            <i class="fas fa-flag-checkered me-1"></i>Encerrado
+                                        <label class="btn btn-outline-secondary btn-sm" for="filtroEvEncerrado" data-short-text="Encerrado">
+                                            <i class="fas fa-flag-checkered me-1"></i><span>Encerrado</span>
                                         </label>
                                     </div>
                                     <div class="input-group input-group-sm">
@@ -214,40 +214,220 @@
     </main>
 
     <div class="modal fade" id="modalSobreProjeto" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Conheça o Projeto Descubra+ Cajazeiras
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-primary text-white">
+                    <h4 class="modal-title mb-0">
+                        <i class="fas fa-compass me-2"></i>
+                        Descubra+ Cajazeiras
+                    </h4>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <p class="lead">O sistema <strong>Descubra+ Cajazeiras</strong> é uma aplicação web que visa divulgar, organizar e facilitar o acesso aos atrativos turísticos e históricos da cidade de Cajazeiras–PB, conhecida como "A Terra que ensinou a Paraíba a ler". A proposta é centralizar todas as informações que um turista precisa em uma única plataforma, oferecendo recursos como o cadastro e gerenciamento de pontos turísticos, hotéis, restaurantes e eventos, geolocalização dos locais em mapa, sistema de avaliação com notas e comentários, e upload de imagens com informações detalhadas. Com essas funcionalidades, o projeto busca facilitar o planejamento de visitas, estimular o turismo e fortalecer a economia e a cultura locais, promovendo a cidade como um destino completo e conectando os visitantes aos encantos e tradições que fazem de Cajazeiras uma cidade única no sertão paraibano.</p>
-
-                    <hr class="my-4">
-
-                    <h4><i class="fas fa-map-signs me-2 text-primary"></i>Tipos de Serviços Turísticos</h4>
-                    <p>Para manter a organização, os serviços turísticos são classificados da seguinte forma:</p>
-                    <div class="mt-3">
-                        <h6><i class="fas fa-hotel me-2"></i>Hospedagem</h6>
-                        <p>Hotéis, pousadas e outros meios de hospedagem na cidade.</p>
-                        <h6><i class="fas fa-utensils me-2"></i>Alimentação/Lazer</h6>
-                        <p>Restaurantes, bares, lanchonetes e locais de lazer gastronômico.</p>
-                        <h6><i class="fas fa-landmark me-2"></i>Ponto Turístico</h6>
-                        <p>Igrejas, museus, praças e outros marcos culturais, religiosos ou de aventura em Cajazeiras.</p>
+                <div class="modal-body p-0">
+                    <!-- Hero Section -->
+                    <div class="bg-light p-4 text-center border-bottom">
+                        <div class="mb-3">
+                            <img src="assets/images/logotipo.png" alt="Logo Descubra+ Cajazeiras" height="80" class="mb-3">
+                        </div>
+                        <h5 class="text-primary fw-bold mb-2">"A Terra que ensinou a Paraíba a ler"</h5>
+                        <p class="lead text-muted mb-0">Seu guia completo para explorar Cajazeiras</p>
                     </div>
 
-                    <p>Os <strong>Eventos</strong> estão listados no botão na barra de navegação da página inicial.</p>
+                    <!-- Sobre o Projeto -->
+                    <div class="p-4">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Sobre o Projeto
+                                </h5>
+                                <p class="mb-3">
+                                    O <strong>Descubra+ Cajazeiras</strong> é uma plataforma digital inovadora que transforma a experiência turística na cidade de Cajazeiras-PB. Nossa missão é conectar visitantes aos encantos históricos, culturais e gastronômicos desta cidade única do sertão paraibano.
+                                </p>
+                                <p class="mb-3">
+                                    Desenvolvida com tecnologia de ponta, a plataforma oferece ferramentas interativas para planejamento de roteiros, descoberta de atrações e compartilhamento de experiências, tudo em um ambiente intuitivo e acessível.
+                                </p>
+                            </div>
+                            <div class="col-lg-4 text-center">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <i class="fas fa-map-marked-alt fa-3x text-primary mb-3"></i>
+                                        <h6 class="card-title">Navegação Inteligente</h6>
+                                        <p class="card-text small">Explore Cajazeiras com mapas interativos e geolocalização</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div class="alert alert-info mt-4">
-                        Explore, descubra e apaixone-se por Cajazeiras! ☀️
+                    <!-- Funcionalidades -->
+                    <div class="bg-light p-4">
+                        <h5 class="text-primary mb-4 text-center">
+                            <i class="fas fa-star me-2"></i>Funcionalidades Principais
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-store fa-2x text-success mb-2"></i>
+                                        <h6 class="card-title">Serviços Turísticos</h6>
+                                        <p class="card-text small">Cadastre e descubra hotéis, restaurantes e pontos turísticos com informações completas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-calendar-alt fa-2x text-info mb-2"></i>
+                                        <h6 class="card-title">Eventos Locais</h6>
+                                        <p class="card-text small">Acompanhe eventos culturais, festivais e atrações sazonais da cidade</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                                        <h6 class="card-title">Sistema de Avaliações</h6>
+                                        <p class="card-text small">Avalie e compartilhe experiências para ajudar outros visitantes</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tipos de Serviços -->
+                    <div class="p-4">
+                        <h5 class="text-primary mb-4">
+                            <i class="fas fa-tags me-2"></i>Categorias de Serviços
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card border-success">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-hotel fa-lg text-success me-2"></i>
+                                            <h6 class="card-title mb-0">Hospedagem</h6>
+                                        </div>
+                                        <p class="card-text small">Hotéis, pousadas, hostels e outras opções de hospedagem com conforto e qualidade.</p>
+                                        <small class="text-muted">🏨 Pousadas charmosas • 🏢 Hotéis modernos • 🏕️ Opções econômicas</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-utensils fa-lg text-warning me-2"></i>
+                                            <h6 class="card-title mb-0">Alimentação & Lazer</h6>
+                                        </div>
+                                        <p class="card-text small">Restaurantes, bares, lanchonetes e locais de entretenimento gastronômico.</p>
+                                        <small class="text-muted">🍽️ Gastronomia local • 🍺 Bares tradicionais • 🎭 Entretenimento</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-info">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-landmark fa-lg text-info me-2"></i>
+                                            <h6 class="card-title mb-0">Pontos Turísticos</h6>
+                                        </div>
+                                        <p class="card-text small">Igrejas históricas, museus, praças e marcos culturais que contam a história de Cajazeiras.</p>
+                                        <small class="text-muted">⛪ Patrimônio histórico • 🏛️ Museus • 🌳 Praças centenárias</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas Rápidas -->
+                    <div class="bg-primary text-white p-4">
+                        <h5 class="mb-4 text-center">
+                            <i class="fas fa-chart-line me-2"></i>Cajazeiras em Números
+                        </h5>
+                        <div class="row text-center g-3">
+                            <div class="col-6 col-md-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-city fa-2x"></i>
+                                </div>
+                                <h4 class="mb-1" id="stats-populacao">60k+</h4>
+                                <small>Habitantes</small>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-history fa-2x"></i>
+                                </div>
+                                <h4 class="mb-1" id="stats-fundacao">186 anos</h4>
+                                <small>de História</small>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-mountain fa-2x"></i>
+                                </div>
+                                <h4 class="mb-1" id="stats-altitude">350m</h4>
+                                <small>de Altitude</small>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-sun fa-2x"></i>
+                                </div>
+                                <h4 class="mb-1" id="stats-clima">28°C</h4>
+                                <small>Temperatura Média</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dicas para Visitantes -->
+                    <div class="p-4 bg-light">
+                        <h5 class="text-primary mb-4">
+                            <i class="fas fa-lightbulb me-2"></i>Dicas para sua Visita
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-success">
+                                    <i class="fas fa-clock me-2"></i>Melhor Época
+                                </h6>
+                                <p class="small mb-3">Visite entre maio e outubro para aproveitar o clima ameno e os eventos culturais da cidade.</p>
+
+                                <h6 class="text-info">
+                                    <i class="fas fa-car me-2"></i>Como Chegar
+                                </h6>
+                                <p class="small mb-3">Acesso fácil pela BR-230, com aeroporto regional e terminal rodoviário moderno.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-warning">
+                                    <i class="fas fa-utensils me-2"></i>Gastronomia
+                                </h6>
+                                <p class="small mb-3">Experimente a culinária sertaneja: buchada, carne de sol e doces típicos.</p>
+
+                                <h6 class="text-danger">
+                                    <i class="fas fa-camera me-2"></i>O que Visitar
+                                </h6>
+                                <p class="small mb-0">Centro Histórico, Catedral Metropolitana, Museu do Instituto Histórico e praças centenárias.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Call to Action -->
+                    <div class="p-4 text-center bg-gradient-primary text-white">
+                        <h5 class="mb-3">Pronto para descobrir Cajazeiras?</h5>
+                        <p class="mb-4">Explore nossa plataforma e comece sua jornada pelos encantos da "Terra que ensinou a Paraíba a ler"</p>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <button class="btn btn-light" onclick="document.getElementById('modalSobreProjeto').querySelector('[data-bs-dismiss=modal]').click(); document.querySelector('a[href=&quot;servicos.html&quot;]')?.click();">
+                                <i class="fas fa-store me-1"></i> Ver Serviços
+                            </button>
+                            <button class="btn btn-outline-light" onclick="document.getElementById('modalSobreProjeto').querySelector('[data-bs-dismiss=modal]').click(); document.querySelector('a[href=&quot;eventos.html&quot;]')?.click();">
+                                <i class="fas fa-calendar me-1"></i> Ver Eventos
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-light">
+                    <small class="text-muted me-auto">
+                        <i class="fas fa-code me-1"></i>Desenvolvido com ❤️ para Cajazeiras
+                    </small>
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-                        Entendido!
+                        <i class="fas fa-check me-1"></i>Entendido!
                     </button>
                 </div>
             </div>
@@ -391,60 +571,144 @@
                         <div class="col-md-3 col-6">
                             <div class="card card-body h-100">
                                 <h6 class="text-muted">Total de Serviços</h6>
-                                <p id="totalServicos" class="display-5 fw-bold text-primary">0</p>
+                                <p id="totalServicos" class="h2 fw-bold text-primary mb-0">0</p>
                             </div>
                         </div>
                         <div class="col-md-3 col-6">
                             <div class="card card-body h-100">
                                 <h6 class="text-muted">Total de Eventos</h6>
-                                <p id="totalEventos" class="display-5 fw-bold text-info">0</p>
+                                <p id="totalEventos" class="h2 fw-bold text-info mb-0">0</p>
                             </div>
                         </div>
                         <div class="col-md-3 col-6 mt-3 mt-md-0">
                             <div class="card card-body h-100">
-                                <h6 class="text-muted">Tipo de Serviço Mais Comum</h6>
-                                <p id="tipoMaisComum" class="h5 mt-2">N/A</p>
+                                <h6 class="text-muted">Total de Avaliações</h6>
+                                <p id="totalAvaliacoes" class="h2 fw-bold text-warning mb-0">0</p>
                             </div>
                         </div>
                         <div class="col-md-3 col-6 mt-3 mt-md-0">
                             <div class="card card-body h-100">
-                                <h6 class="text-muted">Novos Cadastros (Mês)</h6>
-                                <p id="crescimentoMes" class="display-5 fw-bold text-success">0</p>
+                                <h6 class="text-muted">Média Geral</h6>
+                                <p id="mediaGeralAvaliacoes" class="h2 fw-bold text-success mb-0">0.0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Distribuição de Notas</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="graficoDistribuicaoNotas" style="max-height: 180px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Status dos Eventos</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="graficoStatusEventos" style="max-height: 180px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Crescimento de Avaliações</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="graficoCrescimentoAvaliacoes" style="max-height: 180px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Serviços Turísticos por Tipo</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="graficoServicosPorTipo" style="max-height: 200px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Crescimento de Cadastros por Mês</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="graficoCrescimento" style="max-height: 200px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Serviços Mais Avaliados</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush" id="topServicosAvaliados" style="max-height: 200px; overflow-y: auto;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Eventos Mais Avaliados</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush" id="topEventosAvaliados" style="max-height: 200px; overflow-y: auto;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Serviços Adicionados Recentemente</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush" id="servicosRecentes" style="max-height: 200px; overflow-y: auto;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Eventos Adicionados Recentemente</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush" id="eventosRecentes" style="max-height: 200px; overflow-y: auto;">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-lg-6 mb-4">
-                            <div class="card h-100">
-                                <div class="card-header">Serviços Turísticos por Tipo</div>
-                                <div class="card-body">
-                                    <canvas id="graficoServicosPorTipo" style="min-height: 250px;"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 mb-4">
-                            <div class="card h-100">
-                                <div class="card-header">Crescimento de Cadastros por Mês</div>
-                                <div class="card-body">
-                                    <canvas id="graficoCrescimento" style="min-height: 250px;"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-6 mb-4">
+                        <div class="col-lg-12 mb-4">
                             <div class="card">
-                                <div class="card-header">Serviços Adicionados Recentemente</div>
-                                <div class="list-group list-group-flush" id="servicosRecentes">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Avaliações Recentes</h6>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 mb-4">
-                            <div class="card">
-                                <div class="card-header">Próximos Eventos</div>
-                                <div class="list-group list-group-flush" id="proximosEventos">
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush" id="avaliacoesRecentes" style="max-height: 250px; overflow-y: auto;">
+                                    </div>
                                 </div>
                             </div>
                         </div>

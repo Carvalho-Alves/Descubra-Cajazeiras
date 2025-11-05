@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Descubra+ Cajazeiras</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/styles/index.css">
+  <link rel="stylesheet" href="/styles/auth.css"> <link rel="icon" type="image/x-icon" href="assets/images/favicon.png">
+</head>
+<body>
+
+  <div class="auth-card card">
+    <div class="card-body p-4 p-lg-5">
+      
+      <div class="text-center mb-4">
+        <a href="index.html">
+            <img src="assets/images/logotipo.png" alt="Logo Descubra+ Cajazeiras" height="70">
+        </a>
+        <h3 class="mt-4">Acessar sua Conta</h3>
+      </div>
+
+      <form id="login-form">
+        <div class="mb-3">
+          <label for="login-email" class="form-label">E-mail:</label>
+          <input type="email" class="form-control" id="login-email" name="email" required>
+        </div>
+        <div class="mb-4">
+          <label for="login-senha" class="form-label">Senha:</label>
+          <input type="password" class="form-control" id="login-senha" name="senha" required>
+        </div>
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+            </button>
+        </div>
+      </form>
+
+      <p class="text-center mt-4 text-muted">
+        Ainda não tem uma conta? <a href="telaCadastro.html">Cadastre-se</a>
+      </p>
+
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="./scripts/controller/login.js"></script>
+</body>
+</html>

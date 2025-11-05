@@ -6,8 +6,8 @@ export const createEventoSchema = z.object({
     data: z.string().min(1, "A data é obrigatória."),
     horario: z.string().optional(),
     local: z.string().optional(),
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
+    latitude: z.number({ required_error: "A latitude é obrigatória." }),
+    longitude: z.number({ required_error: "A longitude é obrigatória." }),
     // Aceita URL ou caminho local (ex.: /uploads/abc123)
     imagem: z.string().optional(),
 });

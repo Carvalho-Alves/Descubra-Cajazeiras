@@ -47,12 +47,6 @@ export const criarAvaliacao = async (dados: CriarAvaliacaoDTO) => {
     if (!evento) throw new Error("Evento não encontrado.");
   }
 
-  // Regra anti-duplicidade: 1 avaliação por usuário para o mesmo item
-  const existing = await Avaliacao.findOne({ tipo, referenciaId, usuarioId }).lean();
-  if (existing) {
-    throw new Error("Você já avaliou este item.");
-  }
-
   const doc = await Avaliacao.create({
     tipo,
     referenciaId,
@@ -61,7 +55,7 @@ export const criarAvaliacao = async (dados: CriarAvaliacaoDTO) => {
     comentario,
   });
 
-  return doc.toObject();
+  return await Avaliacao.findById(doc._id).populate('usuarioId', 'nome').lean();
 };
 
 /* -------------- Listar avaliações por referência (item) ----------------- */
@@ -75,6 +69,7 @@ export const listarAvaliacoesPorReferencia = async (
   validarId(referenciaId, "Referência");
 
   return Avaliacao.find({ tipo, referenciaId })
+    .populate('usuarioId', 'nome')
     .sort({ criadoEm: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
@@ -104,7 +99,7 @@ export const obterEstatisticasAvaliacao = async (
 /* ----------------------------- Buscar por ID ----------------------------- */
 export const buscarPorIdAvaliacao = async (id: string) => {
   validarId(id, "ID");
-  const avaliacao = await Avaliacao.findById(id).lean();
+  const avaliacao = await Avaliacao.findById(id).populate('usuarioId', 'nome').lean();
   if (!avaliacao) throw new Error("Avaliação não encontrada.");
   return avaliacao;
 };
@@ -125,7 +120,7 @@ export const atualizarAvaliacao = async (
     { _id: id, usuarioId },
     { $set: data },
     { new: true, lean: true }
-  );
+  ).populate('usuarioId', 'nome');
 
   if (!updated) throw new Error("Avaliação não encontrada ou não autorizada.");
   return updated;
@@ -144,6 +139,7 @@ export const removerAvaliacao = async (id: string, usuarioId: string) => {
 /* -------------------------- Listar todas (paginado) ---------------------- */
 export const listarTodasAValiacao = async (limit = 20, page = 1) => {
   return Avaliacao.find()
+    .populate('usuarioId', 'nome')
     .sort({ criadoEm: -1 })
     .skip((page - 1) * limit)
     .limit(limit)

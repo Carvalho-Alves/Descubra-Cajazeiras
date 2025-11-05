@@ -38,7 +38,7 @@
           <div class="list-group-item">
             <div class="d-flex justify-content-between align-items-start">
               <div class="flex-grow-1">
-                <div>${stars(av.nota)} <small class="text-muted">${new Date(av.criadoEm).toLocaleString('pt-BR')}</small></div>
+                <div><strong>${escapeHtml(av.usuarioId?.nome || 'Anônimo')}</strong> ${stars(av.nota)} <small class="text-muted">${new Date(av.criadoEm).toLocaleString('pt-BR')}</small></div>
                 ${av.comentario ? `<div class="mt-1">${escapeHtml(String(av.comentario))}</div>`: ''}
               </div>
             </div>

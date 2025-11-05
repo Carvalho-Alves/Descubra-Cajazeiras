@@ -373,6 +373,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let filtroEventoAtual = '';
     let termoBuscaEventos = '';
 
+    function filtrarEBuscarEventos(eventos) {
+        let filtrados = [...eventos];
+        
+        // Aplicar filtro de status
+        if (filtroEventoAtual) {
+            filtrados = filtrados.filter(ev => getStatusComputado(ev) === filtroEventoAtual);
+        }
+        
+        // Aplicar busca por termo
+        if (termoBuscaEventos.trim()) {
+            const termo = termoBuscaEventos.toLowerCase().trim();
+            filtrados = filtrados.filter(ev => 
+                (ev.nome || '').toLowerCase().includes(termo) ||
+                (ev.descricao || '').toLowerCase().includes(termo)
+            );
+        }
+        
+        return filtrados;
+    }
+
     function getStatusComputado(ev){
         const raw = (ev.status || 'ativo').toLowerCase();
         if (raw === 'cancelado') return 'cancelado';
@@ -385,14 +405,44 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'ativo';
     }
 
-    function filtrarEBuscarEventos(base){
-        let arr = [...base];
-        if (filtroEventoAtual) arr = arr.filter(e => getStatusComputado(e) === filtroEventoAtual);
-        if (termoBuscaEventos){
-            const q = termoBuscaEventos.toLowerCase();
-            arr = arr.filter(e => (String(e.nome||'').toLowerCase().includes(q) || String(e.descricao||'').toLowerCase().includes(q)));
-        }
-        return arr;
+    function atualizarMarcadoresEventos(eventos) {
+        camadaEventos.clearLayers();
+        eventMarkersById = new Map();
+        eventos.forEach(ev => {
+            const ll = normalizarCoordsEvento(ev);
+            if (!ll) return;
+            const m = L.marker(ll, { icon: eventoIcon });
+            const statusPopup = getStatusComputado(ev);
+            const badgeClass = statusPopup === 'ativo' ? 'bg-success' : (statusPopup === 'cancelado' ? 'bg-danger' : 'bg-secondary');
+            const { userId, isAdmin } = getUserContext();
+            const ownerId = (ev.usuario && typeof ev.usuario === 'object') ? (ev.usuario._id || ev.usuario.id) : ev.usuario;
+            const canManage = Boolean(isAdmin || (userId && ownerId && String(ownerId) === String(userId)));
+            const img = normalizeImageUrl(ev.imagem);
+            const imgHtml = img ? `<div class="mb-2 text-center"><img src="${img}" alt="Imagem do evento" style="max-width:220px;max-height:130px;object-fit:cover;border-radius:6px;" onerror="this.style.display='none';"></div>` : '';
+            const manageHtml = canManage ? `
+                <div class='btn-group btn-group-sm w-100'>
+                    <a class='btn btn-primary' href='eventos.html'><i class="fas fa-external-link-alt me-1"></i>Gerenciar</a>
+                </div>` : '';
+            const avalHtml = ev._id ? `
+                <div class='btn-group btn-group-sm w-100 mt-1'>
+                    <button class='btn btn-outline-secondary' onclick='avaliacoesUI.abrir("evento", "${ev._id}", ${JSON.stringify(ev.nome||'Evento')})'><i class="fas fa-star me-1"></i>Avaliações</button>
+                </div>` : '';
+            m.bindPopup(`
+                <div class='popup-servico'>
+                    <h6>${ev.nome||'Evento'}</h6>
+                    <small>
+                      <span class="badge ${badgeClass} text-uppercase me-2">${statusPopup}</span>
+                      ${ev.data? new Date(ev.data).toLocaleDateString('pt-BR'):''}
+                    </small>
+                    ${imgHtml}
+                    <p>${ev.descricao? String(ev.descricao).substring(0,100)+'...': ''}</p>
+                    ${manageHtml}
+                    ${avalHtml}
+                </div>
+            `);
+            camadaEventos.addLayer(m);
+            if (ev._id) eventMarkersById.set(String(ev._id), m);
+        });
     }
 
     function renderizarEventosHome(eventos, opts = {}){
@@ -440,43 +490,8 @@ document.addEventListener('DOMContentLoaded', () => {
             listaEventosHome.appendChild(a);
         });
 
-        camadaEventos.clearLayers();
-        eventMarkersById = new Map();
-        items.forEach(ev=>{
-            const ll = normalizarCoordsEvento(ev);
-            if (!ll) return;
-            const m = L.marker(ll, { icon: eventoIcon });
-            const statusPopup = getStatusComputado(ev);
-            const badgeClass = statusPopup === 'ativo' ? 'bg-success' : (statusPopup === 'cancelado' ? 'bg-danger' : 'bg-secondary');
-            const { userId, isAdmin } = getUserContext();
-            const ownerId = (ev.usuario && typeof ev.usuario === 'object') ? (ev.usuario._id || ev.usuario.id) : ev.usuario;
-            const canManage = Boolean(isAdmin || (userId && ownerId && String(ownerId) === String(userId)));
-            const img = normalizeImageUrl(ev.imagem);
-            const imgHtml = img ? `<div class="mb-2 text-center"><img src="${img}" alt="Imagem do evento" style="max-width:220px;max-height:130px;object-fit:cover;border-radius:6px;" onerror="this.style.display='none';"></div>` : '';
-            const manageHtml = canManage ? `
-                <div class='btn-group btn-group-sm w-100'>
-                    <a class='btn btn-primary' href='eventos.html'><i class="fas fa-external-link-alt me-1"></i>Gerenciar</a>
-                </div>` : '';
-            const avalHtml = ev._id ? `
-                <div class='btn-group btn-group-sm w-100 mt-1'>
-                    <button class='btn btn-outline-secondary' onclick='avaliacoesUI.abrir("evento", "${ev._id}", ${JSON.stringify(ev.nome||'Evento')})'><i class="fas fa-star me-1"></i>Avaliações</button>
-                </div>` : '';
-            m.bindPopup(`
-                <div class='popup-servico'>
-                    <h6>${ev.nome||'Evento'}</h6>
-                    <small>
-                      <span class="badge ${badgeClass} text-uppercase me-2">${statusPopup}</span>
-                      ${ev.data? new Date(ev.data).toLocaleDateString('pt-BR'):''}
-                    </small>
-                    ${imgHtml}
-                    <p>${ev.descricao? String(ev.descricao).substring(0,100)+'...': ''}</p>
-                    ${manageHtml}
-                    ${avalHtml}
-                </div>
-            `);
-            camadaEventos.addLayer(m);
-            if (ev._id) eventMarkersById.set(String(ev._id), m);
-        });
+        // Atualizar marcadores no mapa com todos os eventos (não filtrados)
+        atualizarMarcadoresEventos(eventos);
     }
 
     async function carregarEventosHome(){
@@ -488,10 +503,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const r = await fetch('/api/eventos');
             if (!r.ok) throw new Error('Falha ao buscar eventos');
             const arr = await r.json();
-            todosOsEventos = arr.sort((a,b)=> new Date(b.data||0).getTime() - new Date(a.data||0).getTime());
+            todosOsEventos = arr.sort((a,b)=> new Date(b.createdAt||0).getTime() - new Date(a.createdAt||0).getTime());
             renderizarEventosHome(todosOsEventos);
         } catch(e){
-            console.error(e);
+            console.error('Erro ao carregar eventos:', e);
             listaEventosHome.innerHTML = `<div class="alert alert-danger m-2">Erro ao carregar eventos.</div>`;
         } finally {
             loadingEventosHome.style.display = 'none';

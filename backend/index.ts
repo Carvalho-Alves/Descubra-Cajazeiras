@@ -103,8 +103,7 @@ app.use('/api/servicos', servicoRoutes);
 app.use('/api/eventos', eventoRoutes)
 app.use('/api/estatisticas', estatisticasRoutes)
 // Servir uploads de caminhos possíveis no build
-app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 // Servindo a página inicial para a rota raiz (/).
 app.get('/', (_req, res) => {
@@ -130,8 +129,8 @@ const startServer = async () => {
       console.log('ℹ️ Neo4j desabilitado (NEO4J_ENABLED=false).');
     }
     
-    server = app.listen(env.PORT, () => {
-      console.log(`🚀 Servidor rodando na porta ${env.PORT}`);
+    server = app.listen(env.PORT, '0.0.0.0', () => {
+      console.log(`🚀 Servidor rodando na porta ${env.PORT} em todas as interfaces`);
     });
   } catch (error) {
     console.error('❌ Erro ao iniciar o servidor:', error);
