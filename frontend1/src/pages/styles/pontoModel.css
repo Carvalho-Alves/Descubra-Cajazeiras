@@ -1,0 +1,251 @@
+.ponto-page {
+  min-height: 100vh;
+  background: #f4f5f7;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #1f2933;
+}
+
+.ponto-header {
+  background: #fdd835;
+  padding: 0.5rem 1rem;
+}
+
+.ponto-nav {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.ponto-logo {
+  height: 64px;
+}
+
+
+.ponto-main {
+  max-width: 1100px;
+  margin: 2.25rem auto;
+  padding: 0 1rem;
+}
+
+.ponto-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem 1.75rem 1.75rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+}
+
+.ponto-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+.ponto-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+  gap: 1.5rem;
+}
+
+.ponto-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.ponto-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.ponto-field label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.ponto-input,
+.ponto-input-group input,
+.ponto-field textarea,
+.ponto-field select {
+  border-radius: 10px;
+  border: 1px solid #d4d4d8;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ponto-input:focus,
+.ponto-field textarea:focus,
+.ponto-field select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+}
+
+.ponto-input.erro {
+  border-color: #b91c1c;
+}
+
+.ponto-error {
+  font-size: 0.8rem;
+  color: #b91c1c;
+}
+
+.ponto-required {
+  color: #b91c1c;
+}
+
+.ponto-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ponto-dynamic {
+  margin-top: 0.2rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: #f3f4ff;
+  border: 1px dashed #c7d2fe;
+}
+
+.ponto-subtitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.45rem;
+}
+
+.ponto-input-group {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.ponto-input-group input {
+  flex: 1;
+}
+
+.ponto-btn-ghost {
+  border-radius: 999px;
+  border: 1px solid #d4d4d8;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  background: #f9fafb;
+  cursor: pointer;
+}
+
+.ponto-btn-ghost:hover {
+  background: #e5e7eb;
+}
+
+.ponto-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.ponto-btn-primary,
+.ponto-btn-secondary,
+.ponto-btn-outline {
+  border-radius: 999px;
+  padding: 0.7rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+}
+
+.ponto-btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.ponto-btn-primary:hover {
+  filter: brightness(0.95);
+}
+
+.ponto-btn-secondary {
+  background: #e5e7eb;
+  color: #111827;
+  text-decoration: none;
+}
+
+.ponto-btn-secondary:hover {
+  background: #d4d4d8;
+}
+
+.ponto-btn-outline {
+  background: #ffffff;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+}
+
+.ponto-btn-outline:hover {
+  background: #eff6ff;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.ponto-map-block {
+  margin-top: 0.5rem;
+}
+
+.ponto-label-map {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.ponto-muted {
+  display: block;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 0.45rem;
+}
+
+.ponto-map {
+  height: 300px;
+  width: 100%;
+  border-radius: 10px;
+  border: 2px dashed #d4d4d8;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ponto-map-placeholder {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+@media (max-width: 900px) {
+  .ponto-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ponto-main {
+    margin-top: 1.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .ponto-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .ponto-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .ponto-btn-primary,
+  .ponto-btn-secondary {
+    text-align: center;
+    width: 100%;
+  }
+}

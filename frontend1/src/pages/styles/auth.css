@@ -1,0 +1,260 @@
+:root {
+  --yellow-main: #ffd500;
+  --yellow-dark: #e0be00;
+  --primary: #0d6efd;
+  --success: #198754;
+  --text-main: #212529;
+  --text-muted: #6c757d;
+  --border: #dee2e6;
+  --bg: #f8f9fa;
+}
+
+.auth-page {
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.auth-header {
+  background: linear-gradient(135deg, var(--yellow-main), var(--yellow-dark));
+  padding: 1rem 0;
+}
+
+.auth-container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-img {
+  height: 40px;
+}
+
+.brand-title {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.btn-outline {
+  border: 1px solid #000;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: transparent;
+  color: #000;
+  text-decoration: none;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: 0.15s ease;
+}
+
+.btn-outline:hover {
+  background: #000;
+  color: #fff;
+}
+
+.auth-main {
+  padding: 3rem 1rem;
+}
+
+.auth-card {
+  max-width: 480px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 0.75rem 2.5rem rgba(0, 0, 0, 0.08);
+  padding: 2.5rem;
+}
+
+.tabs {
+  display: flex;
+  border-radius: 999px;
+  background: #f1f3f5;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.6rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.tab.active {
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+}
+
+.tab-panel {
+  animation: fade-in 0.18s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mb-24 {
+  margin-bottom: 1.5rem;
+}
+
+.title-primary {
+  color: var(--primary);
+  font-size: 1.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.title-success {
+  color: var(--success);
+  font-size: 1.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle-muted {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: var(--text-main);
+}
+
+.input-lg {
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+
+.helper-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.preview-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.avatar-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #eee;
+}
+
+.btn-small-outline {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.9rem;
+  background: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.btn-small-outline:hover {
+  background: #f1f3f5;
+}
+
+.btn-primary,
+.btn-success {
+  border: none;
+  border-radius: 999px;
+  padding: 0.8rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  color: #fff;
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--primary);
+}
+
+.btn-success {
+  background: var(--success);
+}
+
+.btn-primary:hover {
+  filter: brightness(0.95);
+}
+
+.btn-success:hover {
+  filter: brightness(0.95);
+}
+
+.btn-block {
+  margin-top: 0.75rem;
+}
+.divider {
+  border-top: 1px solid var(--border);
+  margin-top: 1.75rem;
+  padding-top: 1rem;
+  text-align: center;
+}
+
+.divider-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+  .auth-card {
+    padding: 1.75rem 1.5rem;
+  }
+
+  .auth-main {
+    padding-top: 2rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
