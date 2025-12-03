@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import "./styles/telaLogin.css";
+import Footer from "../components/Footer";
+import { usuariosMock } from "../mocks/eventosMock";
 
 const INITIAL_FORM = {
   email: "",
@@ -38,8 +40,18 @@ export default function TelaLogin() {
 
     if (Object.keys(novoErrors).length > 0) return;
 
-    console.log("Login (mock):", form);
-    alert("Login realizado (mock). Integração com backend entra depois.");
+    // Validar credenciais contra dados mock
+    const usuarioEncontrado = usuariosMock.find(
+      user => user.email === form.email && user.senha === form.senha
+    );
+
+    if (usuarioEncontrado) {
+      console.log("Login bem-sucedido:", usuarioEncontrado);
+      alert(`Login realizado com sucesso! Bem-vindo, ${usuarioEncontrado.nome}!`);
+      // Aqui seria redirecionado para dashboard ou página principal
+    } else {
+      setErrors({ geral: "E-mail ou senha incorretos." });
+    }
   }
 
   return (
@@ -109,6 +121,7 @@ export default function TelaLogin() {
           </p>
         </div>
       </div>
+      <Footer texto="© 2025 Descubra Cajazeiras - Todos os direitos reservados" />
     </div>
   );
 }

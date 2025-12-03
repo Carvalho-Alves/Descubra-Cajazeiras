@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./styles/telaCadastros.css";
+import Footer from "../components/Footer";
 
 const INITIAL_FORM = {
   nome: "",
@@ -180,6 +181,7 @@ export default function CadastroPage() {
           </p>
         </div>
       </div>
+      <Footer texto="© 2025 Descubra Cajazeiras - Todos os direitos reservados" />
     </div>
   );
 }

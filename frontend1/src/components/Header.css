@@ -1,0 +1,20 @@
+.header {
+  background: linear-gradient(135deg, #ffd500, #e0be00);
+  padding: 1rem;
+  text-align: center;
+  color: white;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-titulo {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.header-subtitulo {
+  margin: 0.5rem 0 0 0;
+}

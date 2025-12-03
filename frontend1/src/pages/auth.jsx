@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import "./styles/auth.css";
+import Footer from "../components/Footer";
+import { usuariosMock } from "../mocks/eventosMock";
 
 export default function Auth() {
   const [activeTab, setActiveTab] = useState("login"); // login | register
   const [preview, setPreview] = useState(null);
+  const [loginForm, setLoginForm] = useState({ email: "", senha: "" });
+  const [registerForm, setRegisterForm] = useState({ nome: "", email: "", senha: "", confirmarSenha: "" });
+  const [errors, setErrors] = useState({});
 
   function handleImageChange(event) {
     const file = event.target.files?.[0];
@@ -12,20 +17,53 @@ export default function Auth() {
     setPreview(url);
   }
 
-  function handleClearImage() {
-    setPreview(null);
+  function handleLoginChange(e) {
+    const { name, value } = e.target;
+    setLoginForm(prev => ({ ...prev, [name]: value }));
+  }
+
+  function handleRegisterChange(e) {
+    const { name, value } = e.target;
+    setRegisterForm(prev => ({ ...prev, [name]: value }));
   }
 
   function handleSubmitLogin(e) {
     e.preventDefault();
-   
-    console.log("login enviado");
+
+    // Validar credenciais contra dados mock
+    const usuarioEncontrado = usuariosMock.find(
+      user => user.email === loginForm.email && user.senha === loginForm.senha
+    );
+
+    if (usuarioEncontrado) {
+      console.log("Login bem-sucedido:", usuarioEncontrado);
+      alert(`Login realizado com sucesso! Bem-vindo, ${usuarioEncontrado.nome}!`);
+      // Aqui seria redirecionado para dashboard
+    } else {
+      alert("E-mail ou senha incorretos.");
+    }
   }
 
   function handleSubmitRegister(e) {
     e.preventDefault();
-    
-    console.log("cadastro enviado");
+
+    // Verificar se email já existe
+    const emailExistente = usuariosMock.find(user => user.email === registerForm.email);
+
+    if (emailExistente) {
+      alert("Este e-mail já está cadastrado.");
+      return;
+    }
+
+    if (registerForm.senha !== registerForm.confirmarSenha) {
+      alert("As senhas não coincidem.");
+      return;
+    }
+
+    console.log("Cadastro realizado:", registerForm);
+    alert("Cadastro realizado com sucesso! Faça login para continuar.");
+    setActiveTab("login");
+    setRegisterForm({ nome: "", email: "", senha: "", confirmarSenha: "" });
   }
 
   return (
@@ -91,6 +129,9 @@ export default function Auth() {
                     <input
                       type="email"
                       id="loginEmail"
+                      name="email"
+                      value={loginForm.email}
+                      onChange={handleLoginChange}
                       required
                       className="input-lg"
                       placeholder="seuemail@exemplo.com"
@@ -102,6 +143,9 @@ export default function Auth() {
                     <input
                       type="password"
                       id="loginSenha"
+                      name="senha"
+                      value={loginForm.senha}
+                      onChange={handleLoginChange}
                       required
                       className="input-lg"
                       placeholder="Digite sua senha"
@@ -131,6 +175,9 @@ export default function Auth() {
                     <input
                       type="text"
                       id="registerNome"
+                      name="nome"
+                      value={registerForm.nome}
+                      onChange={handleRegisterChange}
                       required
                       className="input-lg"
                       placeholder="Seu nome completo"
@@ -142,6 +189,9 @@ export default function Auth() {
                     <input
                       type="email"
                       id="registerEmail"
+                      name="email"
+                      value={registerForm.email}
+                      onChange={handleRegisterChange}
                       required
                       className="input-lg"
                       placeholder="seuemail@exemplo.com"
@@ -187,6 +237,9 @@ export default function Auth() {
                     <input
                       type="password"
                       id="registerSenha"
+                      name="senha"
+                      value={registerForm.senha}
+                      onChange={handleRegisterChange}
                       required
                       minLength={6}
                       className="input-lg"
@@ -202,6 +255,9 @@ export default function Auth() {
                     <input
                       type="password"
                       id="registerConfirmarSenha"
+                      name="confirmarSenha"
+                      value={registerForm.confirmarSenha}
+                      onChange={handleRegisterChange}
                       required
                       className="input-lg"
                     />
@@ -222,6 +278,7 @@ export default function Auth() {
           </div>
         </div>
       </main>
+      <Footer texto="© 2025 Descubra Cajazeiras - Todos os direitos reservados" />
     </div>
   );
 }

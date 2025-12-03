@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import "./styles/pontoModel.css";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const INITIAL_FORM = {
   nome: "",
@@ -68,6 +70,8 @@ export default function PontoModelPage() {
 
   return (
     <div className="ponto-page">
+      <Header titulo="Modelo de Ponto" subtitulo="Visualize e gerencie pontos" />
+
       <header className="ponto-header">
         <nav className="ponto-nav">
           <a href="/index.html" className="ponto-logo-link">
@@ -301,6 +305,7 @@ export default function PontoModelPage() {
           </div>
         </form>
       </main>
+      <Footer texto="© 2025 Descubra Cajazeiras - Todos os direitos reservados" />
     </div>
   );
 }

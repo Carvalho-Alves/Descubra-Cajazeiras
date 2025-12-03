@@ -1,28 +1,19 @@
 import React, { useMemo, useState } from "react";
 import "./styles/eventos.css";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { eventosMock } from "../mocks/eventosMock";
 
-const MOCK_EVENTS = [
-  {
-    id: 1,
-    nome: "Festival de Inverno",
-    data: "2025-07-20",
-    horario: "19:00",
-    status: "ativo",
-    descricao: "Shows e gastronomia no centro da cidade.",
-    latitude: -6.88,
-    longitude: -38.55,
-  },
-  {
-    id: 2,
-    nome: "Feira de Artesanato",
-    data: "2025-05-12",
-    horario: "08:00",
-    status: "encerrado",
-    descricao: "Exposição de artistas locais.",
-    latitude: -6.89,
-    longitude: -38.56,
-  },
-];
+const MOCK_EVENTS = eventosMock.map(evento => ({
+  id: evento.id,
+  nome: evento.titulo,
+  data: evento.data,
+  horario: "19:00",
+  status: "ativo",
+  descricao: evento.descricao,
+  latitude: -6.88,
+  longitude: -38.55,
+}));
 
 const STATUS_LABELS = {
   ativo: "Ativo",
@@ -131,6 +122,7 @@ export default function EventosPage() {
 
   return (
     <div className="page-eventos">
+      <Header titulo="Eventos" subtitulo="Gerencie os eventos da cidade" />
       <header className="ev-header">
         <div className="ev-header-left">
           <a href="/index.html" className="ev-logo-link">
@@ -440,6 +432,7 @@ export default function EventosPage() {
           </div>
         </div>
       )}
+      <Footer texto="© 2025 Descubra Cajazeiras - Todos os direitos reservados" />
     </div>
   );
 }

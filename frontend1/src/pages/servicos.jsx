@@ -1,38 +1,10 @@
 import React, { useMemo, useState } from "react";
 import "./styles/servicos.css";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { servicosMock } from "../mocks/eventosMock";
 
-const MOCK_SERVICES = [
-  {
-    id: 1,
-    nome: "Hotel Cajazeiras Palace",
-    tipo: "Hospedagem",
-    descricao: "Hotel confortável no centro, café da manhã incluso.",
-    latitude: -6.88,
-    longitude: -38.56,
-    telefone: "(83) 99999-0001",
-    instagram: "cajazeiraspalace",
-  },
-  {
-    id: 2,
-    nome: "Restaurante Sabor do Sertão",
-    tipo: "Alimentação/Lazer",
-    descricao: "Comida regional, música ao vivo aos fins de semana.",
-    latitude: -6.881,
-    longitude: -38.55,
-    telefone: "(83) 98888-0002",
-    instagram: "sabordosertao",
-  },
-  {
-    id: 3,
-    nome: "Mirante do Cristo Rei",
-    tipo: "Ponto Turístico",
-    descricao: "Vista panorâmica da cidade, pôr do sol incrível.",
-    latitude: -6.89,
-    longitude: -38.57,
-    telefone: "",
-    instagram: "",
-  },
-];
+const MOCK_SERVICES = servicosMock;
 
 const TIPO_LABEL = {
   "Hospedagem": "Hospedagem",
@@ -169,6 +141,7 @@ export default function ServicosPage() {
 
   return (
     <div className="sv-page">
+      <Header titulo="Serviços" subtitulo="Explore os serviços disponíveis" />
 
       <header className="sv-header">
         <div className="sv-header-left">
@@ -541,6 +514,7 @@ export default function ServicosPage() {
           </div>
         </div>
       )}
+      <Footer texto="© 2025 Descubra Cajazeiras - Todos os direitos reservados" />
     </div>
   );
 }
