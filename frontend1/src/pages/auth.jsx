@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../styles/auth.css";
+import "./styles/auth.css";
 
 export default function Auth() {
   const [activeTab, setActiveTab] = useState("login"); // login | register

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../styles/ponto.css";
+import "./styles/pontoModel.css";
 
 const INITIAL_FORM = {
   nome: "",

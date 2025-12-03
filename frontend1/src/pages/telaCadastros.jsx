@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../styles/auth.css";
+import "./styles/telaCadastros.css";
 
 const INITIAL_FORM = {
   nome: "",

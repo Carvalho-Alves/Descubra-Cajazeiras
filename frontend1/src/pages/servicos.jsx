@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import "../styles/servicos.css";
+import "./styles/servicos.css";
 
 const MOCK_SERVICES = [
   {

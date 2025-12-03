@@ -1,14 +1,20 @@
 .ponto-page {
   min-height: 100vh;
-  background: #f4f5f7;
+  background: #f8f9fa;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   color: #1f2933;
+  padding-top: 60px;
 }
 
 .ponto-header {
-  background: #fdd835;
+  background: linear-gradient(135deg, #ffd500, #e0be00);
   padding: 0.5rem 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
 }
 
 .ponto-nav {

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import "../styles/eventos.css";
+import "./styles/eventos.css";
 
 const MOCK_EVENTS = [
   {

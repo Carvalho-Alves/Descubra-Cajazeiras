@@ -11,7 +11,7 @@
 
 .auth-page {
   min-height: 100vh;
-  background: var(--bg);
+  background: #f8f9fa;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 }
@@ -19,6 +19,11 @@
 .auth-header {
   background: linear-gradient(135deg, var(--yellow-main), var(--yellow-dark));
   padding: 1rem 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
 }
 
 .auth-container {
@@ -69,6 +74,7 @@
 
 .auth-main {
   padding: 3rem 1rem;
+  padding-top: 80px; /* Ajuste conforme a altura do header */
 }
 
 .auth-card {
