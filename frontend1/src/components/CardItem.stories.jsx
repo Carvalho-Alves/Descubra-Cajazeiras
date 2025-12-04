@@ -17,7 +17,7 @@ export const ComImagem = {
   args: {
     titulo: 'Card com Imagem',
     descricao: 'Este card tem uma imagem',
-    imagem: 'https://via.placeholder.com/150',
+    imagem: "https://revistaunick.com.br/wp-content/uploads/2020/08/turismo-portada.jpg",
     onClick: () => console.log('Clicado'),
   },
 };
