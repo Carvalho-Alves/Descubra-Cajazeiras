@@ -11,5 +11,8 @@ export const findAllServicoController = async (req: Request, res: Response, next
     throw error;
   }
 
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.status(200).json(servicos);
 };

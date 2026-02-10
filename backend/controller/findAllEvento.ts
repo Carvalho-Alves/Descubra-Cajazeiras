@@ -16,5 +16,8 @@ export const findAllEventoController = async (req: Request, res: Response, next:
       const tb = new Date(b.createdAt || 0).getTime();
       return tb - ta;
     });
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.status(200).json(ordenados);
 };

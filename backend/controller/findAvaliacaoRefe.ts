@@ -11,6 +11,11 @@ export const listarAvaliacoesPorReferenciaController = async (req: Request, res:
     obterEstatisticasAvaliacao(tipo as "servico" | "evento", id),
   ]);
 
+  // Estatísticas e listagens mudam com frequência; evita cache/ETag revalidation (304)
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   return res.json({
     referencia: { tipo, id },
     paginacao: { page, limit, count: items.length },

@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 const config = {
   stories: [
     "../src/**/*.mdx", // Para arquivos MDX, se estiver usando
-    "../src/**/*.stories.@(js|jsx|mjs)" // Ajustado para .jsx
+    "../src/components/**/*.stories.@(js|jsx|ts|tsx|mjs)" // Foca nos componentes do projeto
   ],
   addons: [
     "@storybook/addon-vitest",
