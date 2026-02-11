@@ -1,0 +1,74 @@
+[20:02:54.033] [INFO] Storybook upgrade - v10.2.8
+[20:02:54.039] [INFO] detect-projects-spinner-start: Detecting projects...
+[20:02:54.041] [DEBUG] Finding Storybook projects...
+[20:02:54.337] [DEBUG] Found 1 Storybook projects
+[20:02:54.341] [INFO] detect-projects-spinner: Detecting projects: 1 projects
+[20:02:54.342] [DEBUG] Getting Storybook data...
+[20:02:54.342] [DEBUG] Getting Storybook info...
+[20:02:54.723] [DEBUG] SB_CORE-SERVER_0007 (MainFileEvaluationError): Storybook couldn't evaluate your [33m.storybook\main.js[39m file.
+
+Original error:
+[37mfile:///C:/Users/Bruno%20Dutra/Desktop/pw2/Descubra-Cajazeiras/frontend1/.storybook/main.js:2
+import { Meta, StoryObj } from '@storybook/react';
+         ^^^^
+SyntaxError: The requested module '@storybook/react' does not provide an export named 'Meta'
+    at #_instantiate (node:internal/modules/esm/module_job:254:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:369:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:671:26)
+    at async importModule (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-C6KVY6VB.js:732:11)
+    at async loadMainConfig (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11678:12)
+    at async getStorybookInfo (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11798:59)
+    at async getStorybookData (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:169:7)
+    at async processProject (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:304:9)[39m
+[20:02:54.723] [INFO] detect-projects-spinner-stop: 1 project detected
+[20:02:54.724] [DEBUG] Found 0 valid projects and 1 error projects
+[20:02:54.724] [ERROR] Failed to get projects
+[20:02:54.726] [ERROR] [38;2;241;97;97mError: ❌ Storybook found errors while collecting data for the following projects:
+C:/Users/Bruno Dutra/Desktop/pw2/Descubra-Cajazeiras/frontend1/.storybook:
+SB_CORE-SERVER_0007 (MainFileEvaluationError): Storybook couldn't evaluate your [33m.storybook\main.js[39m file.
+
+Original error:
+[37mfile:///C:/Users/Bruno%20Dutra/Desktop/pw2/Descubra-Cajazeiras/frontend1/.storybook/main.js:2
+import { Meta, StoryObj } from '@storybook/react';
+         ^^^^
+SyntaxError: The requested module '@storybook/react' does not provide an export named 'Meta'
+    at #_instantiate (node:internal/modules/esm/module_job:254:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:369:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:671:26)
+    at async importModule (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-C6KVY6VB.js:732:11)
+    at async loadMainConfig (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11678:12)
+    at async getStorybookInfo (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11798:59)
+    at async getStorybookData (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:169:7)
+    at async processProject (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:304:9)[39m
+    at loadMainConfig (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11709:11)
+    at async getStorybookInfo (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11798:59)
+    at async getStorybookData (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:169:7)
+    at async processProject (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:304:9)
+Please fix the errors and run the upgrade command again.[39m
+    at getProjects (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:477:13)
+    at async upgrade (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/run-I2PTZ5OH.js:9470:24)
+    at async file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/run-I2PTZ5OH.js:9669:70
+    at async withTelemetry (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-KIOKJLL5.js:218:12)
+    at async Command.<anonymous> (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/run-I2PTZ5OH.js:9665:3)
+[20:02:55.437] [ERROR] Error: ❌ Storybook found errors while collecting data for the following projects:
+C:/Users/Bruno Dutra/Desktop/pw2/Descubra-Cajazeiras/frontend1/.storybook:
+SB_CORE-SERVER_0007 (MainFileEvaluationError): Storybook couldn't evaluate your [33m.storybook\main.js[39m file.
+
+Original error:
+[37mfile:///C:/Users/Bruno%20Dutra/Desktop/pw2/Descubra-Cajazeiras/frontend1/.storybook/main.js:2
+import { Meta, StoryObj } from '@storybook/react';
+         ^^^^
+SyntaxError: The requested module '@storybook/react' does not provide an export named 'Meta'
+    at #_instantiate (node:internal/modules/esm/module_job:254:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:369:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:671:26)
+    at async importModule (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-C6KVY6VB.js:732:11)
+    at async loadMainConfig (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11678:12)
+    at async getStorybookInfo (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11798:59)
+    at async getStorybookData (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:169:7)
+    at async processProject (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:304:9)[39m
+    at loadMainConfig (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11709:11)
+    at async getStorybookInfo (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/storybook/dist/_node-chunks/chunk-WF46L34H.js:11798:59)
+    at async getStorybookData (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:169:7)
+    at async processProject (file:///C:/Users/Bruno%20Dutra/AppData/Local/npm-cache/_npx/b8d6390bedbcd544/node_modules/@storybook/cli/dist/_node-chunks/chunk-JECGKZSI.js:304:9)
+Please fix the errors and run the upgrade command again.
