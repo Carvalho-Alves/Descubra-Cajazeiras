@@ -143,13 +143,73 @@ Authorization: Bearer <token>
 - A centralização “Minha Localização” usa `navigator.geolocation`.
 - Em produção, geolocalização exige HTTPS (ou `localhost` em dev).
 
-## Contribuição
+## Funcionalidades que Utilizam Redux
 
-1. Fork no GitHub
-2. `git checkout -b minha-feature`
-3. `git commit -m "feat: minha nova feature"`
-4. `git push origin minha-feature`
-5. Abra um Pull Request
+No frontend React (`frontend1/`), o Redux Toolkit gerencia o estado global para:
+
+- **Autenticação (auth)**: Controle de login, tokens JWT e dados do usuário.
+- **Eventos (eventos)**: Estado de listagem, criação e edição de eventos.
+- **Serviços (servicos)**: Estado de listagem, criação e edição de serviços.
+
+Configurado em `frontend1/src/store/store.ts`, com slices em `features/`. Use Redux DevTools no navegador para inspecionar mudanças de estado.
+
+## Funcionalidades que Utilizam Cache com Service Worker
+
+O Service Worker (via vite-plugin-pwa/Workbox) implementa cache offline no frontend React (`frontend1/`):
+
+- Cache de requisições GET para `/api/servicos` e `/api/eventos`, permitindo acesso rápido/offline a listagens.
+- Para demonstrar: Build o app (`npm run build` em `frontend1/`), sirva com `npm run preview`, desconecte internet e recarregue – dados persistem.
+
+## Componentes no Storybook
+
+O Storybook documenta componentes React isoladamente (`frontend1/src/stories/`):
+
+- **Header/Footer**: Layouts responsivos.
+- **ServiceCard/EventCard**: Cards para serviços/eventos com avaliações.
+- **RatingModal**: Modal para avaliações por estrelas.
+- **ListaItems**: Listas filtráveis.
+- Execute com `npm run storybook` em `frontend1/` (porta 6006) para visualizar e testar props/estados.
+
+## Tutorial de Execução do Projeto
+
+### Backend
+1. Navegue para `backend/`: `cd backend`
+2. Instale dependências: `npm install`
+3. Configure `.env` (veja exemplo acima).
+4. Execute: `npm run dev` (porta 3333). Ou com Docker: `docker-compose up` (inclui MongoDB/Neo4j).
+
+### Frontend1 (React)
+1. Navegue para `frontend1/`: `cd frontend1`
+2. Instale dependências: `npm install`
+3. Execute em dev: `npm run dev` (porta 5173, proxy para API).
+4. Para PWA: `npm run build` e `npm run preview` (porta 4173).
+
+### Storybook
+1. Em `frontend1/`: `npm run storybook` (porta 6006).
+
+### Testes
+- **Unitários**: `npm run test` (Vitest + React Testing Library).
+- **E2E**: `npm run test:e2e` (Playwright).
+
+## Demonstração do Sistema e Funcionalidades
+
+Execute o backend e frontend1. Explore:
+
+- **Cadastro/Login**: Crie conta, faça login.
+- **Serviços/Eventos**: Liste, crie, edite, delete; busque/filtre.
+- **Avaliações**: Adicione estrelas/comentários via modal.
+- **Mapa**: Visualize marcadores, clique para detalhes/avaliações.
+- **Dashboard**: Estatísticas em `/estatisticas`.
+- **Offline**: Em PWA, teste cache desconectando internet.
+
+## Execução dos Testes Unitários e de Sistema
+
+- **Unitários**: Cobrem componentes e lógica (ex.: auth, CRUD). Execute `npm run test` em `frontend1/` para ver cobertura.
+- **E2E**: Testam fluxos completos (login, criação de itens). Execute `npm run test:e2e` para simular usuário real.
+
+Esses pontos destacam os requisitos atendidos (SPA, Redux, PWA, testes, etc.).
+
+## Contribuição
 
 ## Licença
 
