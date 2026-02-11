@@ -1,13 +1,32 @@
 .footer {
-  background: #333;
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  position: fixed;
-  bottom: 0;
   width: 100%;
+  padding: 24px 16px;
+
+  background: linear-gradient(135deg, #1f2933, #111827);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
+
+  /* IMPORTANTE */
+  position: relative;
 }
+
 
 .footer-texto {
   margin: 0;
+
+  /* Tipografia */
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+
+  color: #e5e7eb; /* cinza claro elegante */
+  text-align: center;
+
+  /* Suavidade */
+  opacity: 0.9;
 }

@@ -1,26 +1,20 @@
-import { defineConfig } from 'vite';
-
+/** @type { import('@storybook/react-vite').StorybookConfig } */
 const config = {
+  framework: '@storybook/react-vite',
+
   stories: [
-    "../src/**/*.mdx", // Para arquivos MDX, se estiver usando
-    "../src/components/**/*.stories.@(js|jsx|ts|tsx|mjs)" // Foca nos componentes do projeto
+    '../src/**/*.mdx',
+    '../src/components/**/*.stories.@(js|jsx|ts|tsx)',
   ],
+
   addons: [
-    "@storybook/addon-vitest",
-    "@storybook/addon-a11y",
-    "@storybook/addon-docs", // Para documentação, se necessário
+    '@storybook/addon-a11y',
+    '@storybook/addon-docs',
   ],
-  framework: "@storybook/react-vite",
-  viteFinal: (config) => {
-    return {
-      ...config,
-      test: {
-        globals: true,
-        environment: 'jsdom',
-      },
-      assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.svg'], // Suporte a imagens
-    };
-  }
+
+  typescript: {
+    reactDocgen: 'none',
+  },
 };
 
 export default config;

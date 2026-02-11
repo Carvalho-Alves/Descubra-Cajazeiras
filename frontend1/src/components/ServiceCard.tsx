@@ -1,4 +1,5 @@
 import React from 'react';
+import './ServiceCard.css';
 
 export type ServiceCardProps = {
   title: string;
@@ -36,7 +37,7 @@ export function ServiceCard({
   title,
   category,
   imageUrl,
-  rating,
+  rating = 0,
   ratingCount,
   onDetailsClick,
   onRateClick,
@@ -44,38 +45,70 @@ export function ServiceCard({
   onDeleteClick
 }: ServiceCardProps) {
   return (
-    <div className="card" data-testid="service-card">
-      {imageUrl ? <img src={imageUrl} className="card-img-top" alt={`Imagem de ${title}`} /> : null}
+    <div className="service-card" data-testid="service-card">
+      {imageUrl && (
+        <div className="service-card-image-wrapper">
+          <img
+            src={imageUrl}
+            alt={`Imagem de ${title}`}
+            className="service-card-image"
+          />
+        </div>
+      )}
 
-      <div className="card-body">
-        <h5 className="card-title">{title}</h5>
-        <p className="card-text">{category}</p>
+      <div className="service-card-body">
+        <h5 className="service-card-title">{title}</h5>
 
-        <div className="d-flex align-items-center gap-2 mb-2">
-          <Stars value={rating ?? 0} />
-          <small className="text-muted" data-testid="rating-meta">
-            {typeof rating === 'number' ? rating.toFixed(1) : '0.0'}
+        <p className="service-card-category">{category}</p>
+
+        <div className="service-card-rating">
+          <Stars value={rating} />
+          <small className="service-card-rating-meta">
+            {rating.toFixed(1)}
             {typeof ratingCount === 'number' ? ` (${ratingCount})` : ''}
           </small>
         </div>
 
-        <div className="d-flex gap-2">
-          <button type="button" className="btn btn-outline-primary btn-sm" onClick={onDetailsClick}>
-            Detalhes
-          </button>
-          <button type="button" className="btn btn-primary btn-sm" onClick={onRateClick}>
-            Avaliar
-          </button>
-          {onEditClick ? (
-            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onEditClick}>
+        <div className="service-card-actions">
+          {onDetailsClick && (
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm"
+              onClick={onDetailsClick}
+            >
+              Detalhes
+            </button>
+          )}
+
+          {onRateClick && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={onRateClick}
+            >
+              Avaliar
+            </button>
+          )}
+
+          {onEditClick && (
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={onEditClick}
+            >
               Editar
             </button>
-          ) : null}
-          {onDeleteClick ? (
-            <button type="button" className="btn btn-outline-danger btn-sm" onClick={onDeleteClick}>
+          )}
+
+          {onDeleteClick && (
+            <button
+              type="button"
+              className="btn btn-outline-danger btn-sm"
+              onClick={onDeleteClick}
+            >
               Excluir
             </button>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

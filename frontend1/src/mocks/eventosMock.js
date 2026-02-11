@@ -20,8 +20,9 @@ export const servicosMock = [
     longitude: -38.56,
     telefone: "(83) 99999-0001",
     instagram: "cajazeiraspalace",
-    preco: 180.00,
-    categoria: "Hospedagem"
+    preco: 180.0,
+    categoria: "Hospedagem",
+    imagem: "https://q-xx.bstatic.com/xdata/images/hotel/max1024x768/299879929.jpg?k=e1d6f0950cf7b091b2376f3fae5c59c82b778662b68d9bde46c0d11d49ec6082&o="
   },
   {
     id: 2,
@@ -32,8 +33,9 @@ export const servicosMock = [
     longitude: -38.55,
     telefone: "(83) 98888-0002",
     instagram: "sabordosertao",
-    preco: 45.00,
-    categoria: "Alimentação"
+    preco: 45.0,
+    categoria: "Alimentação",
+    imagem: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/e4/4b/35/sabor-do-serao.jpg?w=900&h=-1&s=1"
   },
   {
     id: 3,
@@ -44,8 +46,9 @@ export const servicosMock = [
     longitude: -38.54,
     telefone: "(83) 97777-0003",
     instagram: "cristoreicajazeiras",
-    preco: 0.00,
-    categoria: "Turismo"
+    preco: 0.0,
+    categoria: "Turismo",
+    imagem: "https://media-cdn.tripadvisor.com/media/photo-s/0c/8e/86/39/vista-de-frente-com-o.jpg"
   },
   {
     id: 4,
@@ -56,7 +59,8 @@ export const servicosMock = [
     longitude: -38.53,
     telefone: "(83) 96666-0004",
     instagram: "reparoscajazeiras",
-    preco: 120.00,
-    categoria: "Serviços Técnicos"
+    preco: 120.0,
+    categoria: "Serviços Técnicos",
+    imagem: "https://pontualreparosautomotivos.com.br/site/wp-content/uploads/2024/01/15-1.jpeg"
   }
 ];

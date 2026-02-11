@@ -7,6 +7,7 @@ const meta: Meta<typeof RatingModal> = {
   args: {
     isOpen: true,
     title: 'Avaliar serviço',
+    imageUrl: 'https://i.ibb.co/tMYkbVQ1/hoteljpg.jpg',
     onClose: () => undefined,
     onSubmit: async () => undefined
   }
@@ -15,4 +16,8 @@ const meta: Meta<typeof RatingModal> = {
 export default meta;
 type Story = StoryObj<typeof RatingModal>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    imageUrl: "https://pontualreparosautomotivos.com.br/site/wp-content/uploads/2024/01/15-1.jpeg"
+  }
+};

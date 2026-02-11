@@ -18,12 +18,14 @@ const ListaItems = () => {
   return (
     <div className="lista-items">
       <h2>Lista de Itens</h2>
+
       <div className="lista-container">
-        {itens.map(item => (
+        {itens.map((item) => (
           <CardItem
             key={item.id}
             titulo={item.nome}
             descricao={item.descricao}
+            imagem={item.imagem}   // 👈 AQUI está a mudança
             onClick={() => handleItemClick(item)}
           />
         ))}
