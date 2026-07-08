@@ -209,6 +209,92 @@ Execute o backend e frontend1. Explore:
 
 Esses pontos destacam os requisitos atendidos (SPA, Redux, PWA, testes, etc.).
 
+---
+
+## 📱 App Mobile — Descubra+ Cajazeiras (Expo Go)
+
+O diretório `mobile/` contém o aplicativo React Native + Expo que espelha as principais funcionalidades do sistema em uma interface mobile nativa.
+
+### Stack Mobile
+
+| Tecnologia | Versão |
+|---|---|
+| Expo SDK | ~51.0.0 |
+| React Native | 0.74.x |
+| React Navigation | ^6.x |
+| TypeScript | ~5.3.x |
+| Fontes | Poppins + Open Sans (Google Fonts) |
+| Ícones | @expo/vector-icons (Ionicons) |
+
+### Instalação das dependências
+
+```powershell
+cd mobile
+npm install
+```
+
+### Executando no dispositivo físico com Expo Go
+
+> O flag `--lan` faz o Expo expor o servidor na rede local (LAN), permitindo que qualquer dispositivo na mesma rede Wi-Fi se conecte.
+
+**Passo a passo:**
+
+1. **Instale o Expo Go** no seu celular:
+   - Android → [Google Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
+   - iOS → [App Store](https://apps.apple.com/app/expo-go/id982107779)
+
+2. **Conecte celular e computador na mesma rede Wi-Fi.**
+   > Redes corporativas/universitárias podem bloquear a comunicação entre dispositivos. Use uma rede doméstica ou um hotspot do celular.
+
+3. **Inicie o servidor Expo** no terminal do VS Code, dentro da pasta `mobile/`:
+
+   ```powershell
+   cd mobile
+   npm run dev
+   ```
+
+   O terminal exibirá um QR Code e uma URL no formato `exp://192.168.x.x:8081`.
+
+4. **Escaneie o QR Code**:
+   - **Android**: Abra o Expo Go → toque em **"Scan QR code"** e aponte a câmera.
+   - **iOS**: Use a câmera nativa do iPhone; um banner aparecerá para abrir no Expo Go.
+
+5. O app carregará automaticamente no seu celular. Mudanças no código são refletidas em tempo real (Fast Refresh).
+
+### Scripts disponíveis
+
+| Comando | Descrição |
+|---|---|
+| `npm run dev` | Inicia servidor Expo em modo LAN (padrão para dispositivo físico) |
+| `npm run android` | Abre diretamente em emulador/dispositivo Android |
+| `npm run ios` | Abre diretamente no simulador iOS (requer macOS) |
+| `npm run web` | Abre versão web no navegador |
+
+### Telas implementadas
+
+| Tela | Rota | Descrição |
+|---|---|---|
+| Login | `Login` | Autenticação com e-mail e senha |
+| Home | `Tabs > Home` | Descoberta de serviços e eventos |
+| Favoritos | `Tabs > Favoritos` | Itens salvos pelo usuário |
+| Perfil | `Tabs > Perfil` | Dashboard pessoal do usuário |
+| Gerenciar Eventos | `GerenciarEventos` | CRUD de eventos do usuário |
+| Novo Serviço | `NovoServico` | Formulário de cadastro de serviço |
+| Gerenciar Serviços | `GerenciarServicos` | CRUD de serviços com toggle ativo/inativo |
+| Avaliações | `Avaliacoes` | Listagem e filtro de avaliações |
+| Sobre | `Sobre` | Informações do app, equipe e links |
+
+### Solução de problemas comuns
+
+| Problema | Solução |
+|---|---|
+| QR Code não conecta | Verifique se estão na mesma rede Wi-Fi; desative VPN |
+| Expo Go mostra erro de rede | Rode `npm run dev` com `-- --tunnel` para usar tunnel ngrok |
+| Fonte não carrega | Certifique-se de que `expo-font` e `@expo-google-fonts/*` estão instalados |
+| Cache antigo | No app Expo Go, agite o celular → "Reload" ou "Clear cache" |
+
+---
+
 ## Contribuição
 
 ## Licença
