@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,10 @@ import {
   StyleSheet,
   Dimensions,
   ListRenderItem,
+  Linking,
 } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
@@ -85,10 +88,31 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
+const handleOpenSettings = () => {
+  Linking.openSettings();
+};
+
 // ── Tela principal ──────────────────────────────────────────────
 export function HomeScreen(_props: HomeScreenProps) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Tudo');
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [errorMsg, setErrorMsg] = useState<String | null>(null);
+
+  useEffect(() => {
+    async function getLocationPermission()  {
+      let {status} = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted"){
+        setErrorMsg('Permissão para acessar localização foi negada!');
+        return;
+      }
+
+      let coordonate = await Location.getCurrentPositionAsync({});
+      setLocation(coordonate);
+
+    }
+    getLocationPermission();
+  }, []);
 
   const renderHighlight: ListRenderItem<Highlight> = ({ item }) => (
     <View style={styles.highlightCard}>
@@ -147,6 +171,41 @@ export function HomeScreen(_props: HomeScreenProps) {
               returnKeyType="search"
             />
           </View>
+        </View>
+
+        {/* ── Mapa ────────────────────────────────────────── */}
+        <View style={styles.mapContainer}>
+            {location ? (
+              <MapView
+              style={{ flex: 1}}
+              initialRegion={{
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.0009,
+                longitudeDelta: 0.0009,
+              }}
+              showsPointsOfInterest={false}
+              >
+                <Marker
+                coordinate={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                }}
+                title="Você está aqui!"
+                />
+              </MapView>
+            ) : errorMsg ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{errorMsg}</Text>
+                  <Text style={styles.instructionText}>Para usar o mapa, precisamos do seu GPS. Altere as configurações de permissão do seu celular</Text>
+          
+                  <TouchableOpacity style={styles.settingsButton} onPress={handleOpenSettings}>
+                    <Text style={styles.settingsButtonText}>Abrir Configurações</Text>
+                  </TouchableOpacity>
+                </View>    
+                ) : (
+                 <Text style={styles.loadingText}>Buscando sua localização...</Text>
+            )}
         </View>
 
         {/* ── Categorias (sangra até a borda) ──────────────── */}
@@ -245,6 +304,7 @@ const styles = StyleSheet.create({
   padded: {
     paddingHorizontal: Spacing.containerPadding,
   },
+ 
 
   // ── Header ──────────────────────────────────────────────────
   header: {
@@ -296,6 +356,56 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.sm,
     color: Colors.text,
+  },
+
+  //  ── Mapa ───────────────────────────────────────────────────
+
+  mapContainer: {
+    height:   220,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    overflow: 'hidden',
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+   loadingText: {
+    textAlign: 'center',
+    marginTop: 90,
+    fontFamily: FontFamily.bodyMedium,
+    color: Colors.textSecondary,
+  },
+  errorText: {
+    textAlign: 'center',
+    marginTop: 80,
+    paddingHorizontal: Spacing.lg,
+    fontFamily: FontFamily.bodyMedium,
+    color: '#DC3545',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  instructionText: {
+    textAlign: 'center',
+    fontSize: FontSize.sm,
+    fontFamily: FontFamily.bodyRegular,
+    color: Colors.textSecondary,
+    marginTop: 8,
+    marginBottom: Spacing.md,
+  },
+  settingsButton: {
+    backgroundColor: Colors.primary, // Ou a cor de destaque do seu tema
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.md,
+  },
+  settingsButtonText: {
+    color: Colors.surface,
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.sm,
   },
 
   // ── Categorias ──────────────────────────────────────────────
