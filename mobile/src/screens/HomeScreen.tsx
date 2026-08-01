@@ -29,7 +29,10 @@ const HIGHLIGHT_GAP = Spacing.md; // 12px
 
 // ── Tipos de dados ──────────────────────────────────────────────
 type Highlight = { id: string; title: string; rating: number; image: string };
-type Evento    = { id: string; title: string; date: string;   image: string };
+type ServiceOrEvent = {
+  id: string; title: string; category: string; date?: string; 
+  rating?: number; image: string; latitude: number; longitude: number;
+};
 
 // ── Dados estáticos (placeholder) ───────────────────────────────
 const CATEGORIES = ['Tudo', 'Eventos', 'Gastronomia', 'Hospedagem'];
@@ -55,24 +58,43 @@ const HIGHLIGHTS: Highlight[] = [
   },
 ];
 
-const EVENTOS: Evento[] = [
+const ITEMS_DATA: ServiceOrEvent[] = [
   {
     id: '1',
     title: 'Show de Forró Universitário',
+    category: 'Eventos',
     date: 'Sáb, 22 Mai · 19h',
     image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200',
+    latitude: -6.8889,
+    longitude: -38.5606,
+    rating: 4.5,
   },
   {
     id: '2',
-    title: 'Exposição de Arte Local',
-    date: 'Dom, 23 Mai · 10h',
-    image: 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=200',
+    title: 'Restaurante Sabor Sertanejo',
+    category: 'Gastronomia',
+    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=500', 
+    latitude: -6.8875,
+    longitude: -38.5620,
+    rating: 4.8,
   },
   {
     id: '3',
+    title: 'Pousada Alto da Serra',
+    category: 'Hospedagem',
+    image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500',
+    latitude: -6.8901,
+    longitude: -38.5580,
+    rating: 4.2,
+  },
+  {
+    id: '4',
     title: 'Caminhada Ecológica na Serra',
+    category: 'Eventos',
     date: 'Seg, 24 Mai · 07h',
     image: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=200',
+    latitude: -6.8950,
+    longitude: -38.5550,
   },
 ];
 
@@ -98,6 +120,9 @@ export function HomeScreen(_props: HomeScreenProps) {
   const [activeCategory, setActiveCategory] = useState('Tudo');
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<String | null>(null);
+
+  const filteredItems = activeCategory === 'Tudo'
+    ? ITEMS_DATA : ITEMS_DATA.filter(item => item.category === activeCategory);
 
   useEffect(() => {
     async function getLocationPermission()  {
@@ -133,6 +158,30 @@ export function HomeScreen(_props: HomeScreenProps) {
         </View>
       </ImageBackground>
     </View>
+  );
+
+  const renderServiceItem: ListRenderItem<ServiceOrEvent> = ({ item }) => (
+    <TouchableOpacity
+      style={styles.eventCard}
+      activeOpacity={0.8}
+      onPress={() => {
+
+      }}
+    >
+      <Image source={{ uri: item.image }} style={ styles.eventImage } resizeMode='cover' />
+      <View style={ styles.eventInfo}>
+        <Text style={ styles.eventTitle } numberOfLines={2}>{item.title}</Text>
+        {item.date && (
+          <View style={ styles.eventDateRow}>
+            <Ionicons name='calendar-outline' size={12} color={Colors.textSecondary} />
+            <Text style={styles.eventDate}>{item.date}</Text>
+          </View>  
+        )}
+        <View style={ styles.detailsButton }>
+          <Text style={ styles.detailsButtonText }>Ver no mapa</Text>
+        </View>
+      </View>
+    </TouchableOpacity> 
   );
 
   return (
@@ -193,6 +242,18 @@ export function HomeScreen(_props: HomeScreenProps) {
                 }}
                 title="Você está aqui!"
                 />
+
+                {filteredItems.map((item) => (
+                  <Marker
+                    key={item.id}
+                    coordinate={{
+                      latitude: item.latitude,
+                      longitude: item.longitude,
+                    }}
+                    title={item.title}
+                    description={item.category}
+                  />
+                ))}
               </MapView>
             ) : errorMsg ? (
                 <View style={styles.errorContainer}>
@@ -258,34 +319,12 @@ export function HomeScreen(_props: HomeScreenProps) {
         <View style={[styles.padded, { marginTop: Spacing.xl }]}>
           <SectionHeader title="Eventos Próximos" />
 
-          {EVENTOS.map(event => (
-            <View key={event.id} style={styles.eventCard}>
-              <Image
-                source={{ uri: event.image }}
-                style={styles.eventImage}
-                resizeMode="cover"
-              />
-              <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle} numberOfLines={2}>
-                  {event.title}
-                </Text>
-                <View style={styles.eventDateRow}>
-                  <Ionicons
-                    name="calendar-outline"
-                    size={12}
-                    color={Colors.textSecondary}
-                  />
-                  <Text style={styles.eventDate}>{event.date}</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.detailsButton}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.detailsButtonText}>Ver detalhes</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
+          <FlatList
+            data={filteredItems}
+            keyExtractor={(item) => item.id}
+            renderItem={renderServiceItem}
+            scrollEnabled={false}
+          />
 
           <View style={{ height: Spacing.xl }} />
         </View>
