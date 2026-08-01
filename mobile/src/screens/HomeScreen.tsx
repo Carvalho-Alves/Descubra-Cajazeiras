@@ -21,6 +21,7 @@ import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
 import type { HomeScreenProps } from '../navigation/types';
+import { useNavigation } from '@react-navigation/native';
 
 // ── Constantes de layout ────────────────────────────────────────
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -121,6 +122,8 @@ export function HomeScreen(_props: HomeScreenProps) {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<String | null>(null);
 
+  const navigation = useNavigation<any>();
+
   const filteredItems = activeCategory === 'Tudo'
     ? ITEMS_DATA : ITEMS_DATA.filter(item => item.category === activeCategory);
 
@@ -164,9 +167,7 @@ export function HomeScreen(_props: HomeScreenProps) {
     <TouchableOpacity
       style={styles.eventCard}
       activeOpacity={0.8}
-      onPress={() => {
-
-      }}
+      onPress={() => navigation.navigate('Detalhes', { item: item })}
     >
       <Image source={{ uri: item.image }} style={ styles.eventImage } resizeMode='cover' />
       <View style={ styles.eventInfo}>

@@ -33,6 +33,7 @@ import { NovoServicoScreen } from '../screens/NovoServicoScreen';
 import { GerenciarServicosScreen } from '../screens/GerenciarServicosScreen';
 import { AvaliacoesScreen } from '../screens/AvaliacoesScreen';
 import { SobreScreen } from '../screens/SobreScreen';
+import { DetalhesScreen } from '@/screens/DetalhesScreen';
 
 import { Colors } from '../theme/colors';
 import type { RootStackParamList } from './types';
@@ -98,6 +99,11 @@ export function AppNavigator() {
           name="Sobre"
           component={SobreScreen}
           options={{ title: 'Sobre' }}
+        />
+        <Stack.Screen
+        name="Detalhes"
+        component={DetalhesScreen}
+        options={{ title: 'Detalhes'}}
         />
       </Stack.Navigator>
     </NavigationContainer>

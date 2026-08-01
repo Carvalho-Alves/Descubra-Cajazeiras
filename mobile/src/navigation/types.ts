@@ -31,6 +31,7 @@ export type RootStackParamList = {
   GerenciarServicos: undefined;
   Avaliacoes: undefined;
   Sobre: undefined;
+  Detalhes: { item: any };
 };
 
 // ── Declaração global para useNavigation() sem generics ───────────
