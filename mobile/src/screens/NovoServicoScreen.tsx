@@ -1,465 +1,455 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  Modal,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
   StyleSheet,
+  ScrollView,
   Alert,
+  ActivityIndicator,
+  Image,
+  Platform
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import MapView, { Marker, MapPressEvent, MarkerDragStartEndEvent } from 'react-native-maps';
+import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
-import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
-import type { NovoServicoScreenProps } from '../navigation/types';
 
-// ── Categorias disponíveis ───────────────────────────────────────
-const CATEGORIAS = ['Restaurante', 'Pousada', 'Ponto Turístico'] as const;
-type Categoria = (typeof CATEGORIAS)[number] | '';
+const CATEGORIES = ['Eventos', 'Gastronomia', 'Hospedagem'];
 
-// ── Subcomponente: wrapper de campo com label ────────────────────
-function FieldWrapper({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <View style={styles.fieldWrapper}>
-      <Text style={styles.label}>
-        {label}
-        {required && <Text style={styles.labelRequired}> *</Text>}
-      </Text>
-      {children}
-    </View>
-  );
-}
+const CAJAZEIRAS_INITIAL_REGION = {
+  latitude: -6.8889,
+  longitude: -38.5606,
+  latitudeDelta: 0.01,
+  longitudeDelta: 0.01,
+};
 
-// ── Tela principal ───────────────────────────────────────────────
-export function NovoServicoScreen({ navigation }: NovoServicoScreenProps) {
-  // ── Estado do formulário ──────────────────────────────────────
-  const [nome, setNome]           = useState('');
-  const [categoria, setCategoria] = useState<Categoria>('');
-  const [descricao, setDescricao] = useState('');
-  const [endereco, setEndereco]   = useState('');
-  const [horario, setHorario]     = useState('');
+export function NovoServicoScreen() {
+  const navigation = useNavigation();
 
-  // ── Estado do dropdown customizado ────────────────────────────
-  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('Eventos');
+  const [image, setImage] = useState('');
 
-  // Oculta cabeçalho padrão do Stack
-  useLayoutEffect(() => {
-    navigation.setOptions({ headerShown: false });
-  }, [navigation]);
+  const [date, setDate] = useState(new Date());
+  const [mode, setMode] = useState<'date' | 'time'>('date');
+  const [showPicker, setShowPicker] = useState(false);
+  const [dateText, setDateText] = useState('');
 
-  const handleSave = useCallback(() => {
-    if (!nome.trim()) {
-      Alert.alert('Campo obrigatório', 'Informe o nome do estabelecimento.');
+  const [operatingHours, setOperatingHours] = useState('');
+
+  const [latitude, setLatitude] = useState('-6.8889');
+  const [longitude, setLongitude] = useState('-38.5606');
+  const [loadingLocation, setLoadingLocation] = useState(false);
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || date;
+    
+    if (Platform.OS === 'android') {
+      setShowPicker(false);
+    }
+
+    if (event.type === 'set' && selectedDate) {
+      setDate(currentDate);
+      
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const year = currentDate.getFullYear();
+      
+      const hours = String(currentDate.getHours()).padStart(2, '0');
+      const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+
+      setDateText(`${day}/${month}/${year} · ${hours}h${minutes}`);
+    }
+  };
+
+  const showMode = (currentMode: 'date' | 'time') => {
+    setShowPicker(true);
+    setMode(currentMode);
+  };
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert('Permissão', 'Precisamos acessar sua galeria para escolher uma foto.');
       return;
     }
-    if (!categoria) {
-      Alert.alert('Campo obrigatório', 'Selecione uma categoria.');
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleGetCurrentLocation = async () => {
+    try {
+      setLoadingLocation(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert('Permissão', 'Precisamos de permissão do GPS para pegar sua localização.');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      setLatitude(location.coords.latitude.toFixed(6));
+      setLongitude(location.coords.longitude.toFixed(6));
+    } catch {
+      Alert.alert('Erro', 'Não foi possível obter sua localização atual.');
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const handleMapPress = (e: MapPressEvent) => {
+    const { latitude: lat, longitude: long } = e.nativeEvent.coordinate;
+    setLatitude(lat.toFixed(6));
+    setLongitude(long.toFixed(6));
+  };
+
+  const handleMarkerDragEnd = (e: MarkerDragStartEndEvent) => {
+    const { latitude: lat, longitude: long } = e.nativeEvent.coordinate;
+    setLatitude(lat.toFixed(6));
+    setLongitude(long.toFixed(6));
+  };
+
+  const handleSave = () => {
+    if (!title.trim()) {
+      Alert.alert('Atenção', 'Por favor, preencha o título.');
       return;
     }
-    Alert.alert('Sucesso', `Serviço "${nome}" salvo!`, [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
-  }, [nome, categoria, navigation]);
+
+    if (category === 'Eventos' && !dateText) {
+      Alert.alert('Atenção', 'Por favor, selecione a data e o horário do evento.');
+      return;
+    }
+
+    if (category !== 'Eventos' && !operatingHours.trim()) {
+      Alert.alert('Atenção', 'Por favor, digite os dias e horário de funcionamento.');
+      return;
+    }
+
+    if (!image) {
+      Alert.alert('Atenção', 'Por favor, escolha uma foto para o cadastro.');
+      return;
+    }
+
+    if (!latitude || !longitude) {
+      Alert.alert('Atenção', 'Por favor, selecione uma localização no mapa.');
+      return;
+    }
+
+    const newItem = {
+      id: Date.now().toString(),
+      title: title,
+      category: category,
+      date: category === 'Eventos' ? dateText : operatingHours,
+      image: image,
+      latitude: Number.parseFloat(latitude),
+      longitude: Number.parseFloat(longitude),
+    };
+
+    console.log('NOVO ITEM CADASTRADO:', newItem);
+    Alert.alert('Sucesso!', 'Cadastro realizado com sucesso!');
+    navigation.goBack();
+  };
+
+  const parsedLat = parseFloat(latitude) || CAJAZEIRAS_INITIAL_REGION.latitude;
+  const parsedLong = parseFloat(longitude) || CAJAZEIRAS_INITIAL_REGION.longitude;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <Text style={styles.headerTitle}>Novo Cadastro</Text>
+      <Text style={styles.headerSubtitle}>Preencha os dados do local ou evento</Text>
 
-      {/* ── Cabeçalho ─────────────────────────────────────────── */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerSide}
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Voltar"
-        >
-          <Ionicons name="chevron-back" size={22} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Novo Serviço</Text>
-        <View style={styles.headerSide} />
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Título</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Ex: Show na Praça"
+          value={title}
+          onChangeText={setTitle}
+        />
       </View>
 
-      {/* ── Formulário com KeyboardAvoidingView ───────────────── */}
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
-      >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* ── Área de upload de capa ──────────────────────── */}
-          <TouchableOpacity
-            style={styles.uploadArea}
-            activeOpacity={0.7}
-            accessibilityLabel="Adicionar imagem de capa"
-          >
-            <View style={styles.uploadInner}>
-              <Ionicons name="camera-outline" size={36} color={Colors.textSecondary} />
-              <Text style={styles.uploadText}>Adicionar capa do local</Text>
-              <Text style={styles.uploadHint}>JPG ou PNG · máx. 5 MB</Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* ── Campo: Nome ─────────────────────────────────── */}
-          <FieldWrapper label="Nome do Estabelecimento" required>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Restaurante Sabor da Terra"
-              placeholderTextColor={Colors.textSecondary}
-              value={nome}
-              onChangeText={setNome}
-              returnKeyType="next"
-              maxLength={100}
-            />
-          </FieldWrapper>
-
-          {/* ── Campo: Categoria (dropdown customizado) ──────── */}
-          <FieldWrapper label="Categoria" required>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Categoria</Text>
+        <View style={styles.categoryContainer}>
+          {CATEGORIES.map((cat) => (
             <TouchableOpacity
-              style={styles.dropdown}
-              onPress={() => setDropdownVisible(true)}
-              activeOpacity={0.75}
-              accessibilityLabel="Selecionar categoria"
+              key={cat}
+              style={[
+                styles.categoryButton,
+                category === cat && styles.categoryButtonActive
+              ]}
+              onPress={() => setCategory(cat)}
             >
-              <Text
-                style={[
-                  styles.dropdownText,
-                  !categoria && styles.dropdownPlaceholder,
-                ]}
-              >
-                {categoria || 'Selecione uma categoria'}
+              <Text style={[
+                styles.categoryText,
+                category === cat && styles.categoryTextActive
+              ]}>
+                {cat}
               </Text>
-              <Ionicons
-                name="chevron-down"
-                size={18}
-                color={Colors.textSecondary}
-              />
             </TouchableOpacity>
-          </FieldWrapper>
-
-          {/* ── Campo: Descrição (multiline) ─────────────────── */}
-          <FieldWrapper label="Descrição">
-            <TextInput
-              style={[styles.input, styles.inputMultiline]}
-              placeholder="Descreva o local, os serviços e diferenciais..."
-              placeholderTextColor={Colors.textSecondary}
-              value={descricao}
-              onChangeText={setDescricao}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              maxLength={500}
-            />
-            <Text style={styles.charCount}>{descricao.length}/500</Text>
-          </FieldWrapper>
-
-          {/* ── Campo: Endereço ──────────────────────────────── */}
-          <FieldWrapper label="Endereço Completo">
-            <TextInput
-              style={styles.input}
-              placeholder="Rua, número, bairro, cidade"
-              placeholderTextColor={Colors.textSecondary}
-              value={endereco}
-              onChangeText={setEndereco}
-              returnKeyType="next"
-            />
-          </FieldWrapper>
-
-          {/* ── Campo: Horário ───────────────────────────────── */}
-          <FieldWrapper label="Horário de Funcionamento">
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Seg–Sex 08h–18h · Sáb 08h–13h"
-              placeholderTextColor={Colors.textSecondary}
-              value={horario}
-              onChangeText={setHorario}
-              returnKeyType="done"
-            />
-          </FieldWrapper>
-
-          {/* Espaço para o footer não cobrir o último campo */}
-          <View style={{ height: Spacing.huge }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* ── Rodapé fixo ───────────────────────────────────────── */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="checkmark-circle-outline" size={20} color={Colors.surface} />
-          <Text style={styles.saveButtonText}>Salvar Serviço</Text>
-        </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
-      {/* ── Modal: Dropdown de Categoria ──────────────────────── */}
-      <Modal
-        visible={dropdownVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setDropdownVisible(false)}
-        statusBarTranslucent
-      >
-        <Pressable
-          style={styles.dropdownBackdrop}
-          onPress={() => setDropdownVisible(false)}
-        >
-          <Pressable style={styles.dropdownSheet}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.dropdownSheetTitle}>Selecione a Categoria</Text>
-
-            {CATEGORIAS.map((cat, index) => (
-              <View key={cat}>
-                <TouchableOpacity
-                  style={styles.dropdownOption}
-                  onPress={() => {
-                    setCategoria(cat);
-                    setDropdownVisible(false);
-                  }}
-                >
-                  <Text style={styles.dropdownOptionText}>{cat}</Text>
-                  {categoria === cat && (
-                    <Ionicons name="checkmark" size={20} color={Colors.primary} />
-                  )}
-                </TouchableOpacity>
-                {index < CATEGORIAS.length - 1 && (
-                  <View style={styles.optionDivider} />
-                )}
-              </View>
-            ))}
-
-            <TouchableOpacity
-              style={styles.dropdownCancelButton}
-              onPress={() => setDropdownVisible(false)}
+      {category === 'Eventos' ? (
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Data e Horário</Text>
+          <View style={styles.row}>
+            <TouchableOpacity 
+              style={[styles.input, { flex: 1, marginRight: 8, alignItems: 'center' }]} 
+              onPress={() => showMode('date')}
             >
-              <Text style={styles.dropdownCancelText}>Cancelar</Text>
+              <Ionicons name="calendar-outline" size={20} color={dateText ? Colors.primary : Colors.textSecondary} />
+              <Text style={{ color: dateText ? Colors.text : Colors.textSecondary, marginTop: 4 }}>
+                {dateText ? dateText.split(' · ')[0] : 'Selecionar Data'}
+              </Text>
             </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </SafeAreaView>
+
+            <TouchableOpacity 
+              style={[styles.input, { flex: 1, marginLeft: 8, alignItems: 'center' }]} 
+              onPress={() => showMode('time')}
+            >
+              <Ionicons name="time-outline" size={20} color={dateText ? Colors.primary : Colors.textSecondary} />
+              <Text style={{ color: dateText ? Colors.text : Colors.textSecondary, marginTop: 4 }}>
+                {dateText ? dateText.split(' · ')[1] : 'Selecionar Hora'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {showPicker && (
+            <DateTimePicker
+              value={date}
+              mode={mode}
+              is24Hour={true}
+              display="default"
+              onChange={onChangeDate}
+            />
+          )}
+        </View>
+      ) : (
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Dias e Horários de Funcionamento</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ex: Seg a Sáb · 08h às 18h"
+            value={operatingHours}
+            onChangeText={setOperatingHours}
+          />
+        </View>
+      )}
+
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Foto do Local/Evento</Text>
+        <TouchableOpacity style={styles.imagePickerButton} onPress={handlePickImage}>
+          <Ionicons name="images-outline" size={24} color={Colors.primary} />
+          <Text style={styles.imagePickerText}>Escolher Foto da Galeria</Text>
+        </TouchableOpacity>
+
+        {image ? (
+          <Image source={{ uri: image }} style={styles.imagePreview} />
+        ) : null}
+      </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Localização no Mapa</Text>
+        <Text style={styles.helperText}>
+          Clique no botão abaixo para usar seu GPS ou toque no mapa para posicionar o marcador.
+        </Text>
+
+        <TouchableOpacity
+          style={styles.gpsButton}
+          onPress={handleGetCurrentLocation}
+          disabled={loadingLocation}
+        >
+          {loadingLocation ? (
+            <ActivityIndicator color={Colors.primary} />
+          ) : (
+            <>
+              <Ionicons name="location-outline" size={18} color={Colors.primary} />
+              <Text style={styles.gpsButtonText}>Usar Minha Localização Atual</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.map}
+            region={{
+              latitude: parsedLat,
+              longitude: parsedLong,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+            onPress={handleMapPress}
+          >
+            <Marker
+              draggable
+              coordinate={{ latitude: parsedLat, longitude: parsedLong }}
+              onDragEnd={handleMarkerDragEnd}
+              title="Localização"
+            />
+          </MapView>
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.saveButton} activeOpacity={0.8} onPress={handleSave}>
+        <Ionicons name="checkmark-circle" size={24} color={Colors.surface} />
+        <Text style={styles.saveButtonText}>Salvar Cadastro</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
-// ── Estilos ──────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: {
+  container: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-  flex: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: Spacing.containerPadding,
-  },
-
-  // ── Cabeçalho ────────────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.containerPadding,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  headerSide: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+  content: {
+    padding: 20,
+    paddingBottom: 40,
   },
   headerTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.lg,
+    fontSize: 24,
+    fontFamily: 'Poppins_600SemiBold',
     color: Colors.text,
   },
-
-  // ── Área de upload ────────────────────────────────────────────
-  uploadArea: {
-    height: 160,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: Colors.border,
-    backgroundColor: 'transparent',
-    marginBottom: Spacing.xl,
-    overflow: 'hidden',
-  },
-  uploadInner: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-  },
-  uploadText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.md,
+  headerSubtitle: {
+    fontSize: 14,
     color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    marginBottom: 20,
   },
-  uploadHint: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.xs,
-    color: Colors.border,
-  },
-
-  // ── Campos do formulário ──────────────────────────────────────
-  fieldWrapper: {
-    marginBottom: Spacing.lg,
+  inputGroup: {
+    marginBottom: 16,
   },
   label: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.sm,           // 14px
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     color: Colors.text,
-    marginBottom: Spacing.xs,
+    marginBottom: 8,
   },
-  labelRequired: {
-    color: Colors.error,
+  helperText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: 10,
   },
   input: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
+    backgroundColor: '#F5F5F5',
     borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
+    borderColor: '#E5E5E5',
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 16,
     color: Colors.text,
-    height: 52,
   },
-  inputMultiline: {
-    height: 112,
-    paddingTop: 14,
-  },
-  charCount: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.xxs,          // 10px
-    color: Colors.textSecondary,
-    textAlign: 'right',
-    marginTop: 4,
-  },
-
-  // ── Dropdown ──────────────────────────────────────────────────
-  dropdown: {
+  row: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
+  },
+  categoryContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  categoryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
     borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.lg,
-    height: 52,
+    borderColor: '#E5E5E5',
   },
-  dropdownText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
+  categoryButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
-  dropdownPlaceholder: {
+  categoryText: {
+    fontSize: 14,
     color: Colors.textSecondary,
   },
-
-  // ── Rodapé fixo ───────────────────────────────────────────────
-  footer: {
-    paddingHorizontal: Spacing.containerPadding,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    ...Shadow.sm,
+  categoryTextActive: {
+    color: Colors.surface,
+    fontFamily: 'Poppins_600SemiBold',
   },
-  saveButton: {
+  gpsButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    height: 52,
-    gap: Spacing.sm,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    backgroundColor: '#F0E6FF',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    marginBottom: 12,
+    gap: 6,
   },
-  saveButtonText: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.surface,
+  gpsButtonText: {
+    color: Colors.primary,
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
   },
-
-  // ── Modal dropdown ────────────────────────────────────────────
-  dropdownBackdrop: {
+  mapContainer: {
+    height: 180,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  map: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    justifyContent: 'flex-end',
   },
-  dropdownSheet: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xxxl,
-    paddingHorizontal: Spacing.containerPadding,
-  },
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.border,
-    alignSelf: 'center',
-    marginBottom: Spacing.lg,
-  },
-  dropdownSheetTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.lg,
-    color: Colors.text,
-    marginBottom: Spacing.md,
-  },
-  dropdownOption: {
+  saveButton: {
+    backgroundColor: Colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.lg,
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 20,
+    gap: 8,
   },
-  dropdownOptionText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.md,
-    color: Colors.text,
+  saveButtonText: {
+    color: Colors.surface,
+    fontSize: 18,
+    fontFamily: 'Poppins_600SemiBold',
   },
-  optionDivider: {
-    height: 1,
-    backgroundColor: Colors.border,
-  },
-  dropdownCancelButton: {
-    marginTop: Spacing.md,
-    paddingVertical: Spacing.lg,
+  imagePickerButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderStyle: 'dashed',
+    borderRadius: 10,
+    padding: 14,
+    justifyContent: 'center',
+    gap: 8,
   },
-  dropdownCancelText: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
+  imagePickerText: {
+    color: Colors.primary,
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
+    marginTop: 12,
   },
 });

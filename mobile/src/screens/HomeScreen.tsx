@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
   ScrollView,
   FlatList,
-  ImageBackground,
   Image,
   StyleSheet,
   Dimensions,
   ListRenderItem,
   Linking,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -23,41 +25,21 @@ import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
 import type { HomeScreenProps } from '../navigation/types';
 import { useNavigation } from '@react-navigation/native';
 
-// ── Constantes de layout ────────────────────────────────────────
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const HIGHLIGHT_CARD_WIDTH = SCREEN_WIDTH * 0.78;
-const HIGHLIGHT_GAP = Spacing.md; // 12px
+// ── Configuração de Animação para Android ───────────────────────
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 // ── Tipos de dados ──────────────────────────────────────────────
-type Highlight = { id: string; title: string; rating: number; image: string };
 type ServiceOrEvent = {
-  id: string; title: string; category: string; date?: string; 
+  id: string; title: string; category: string; date?: string;
   rating?: number; image: string; latitude: number; longitude: number;
 };
 
-// ── Dados estáticos (placeholder) ───────────────────────────────
-const CATEGORIES = ['Tudo', 'Eventos', 'Gastronomia', 'Hospedagem'];
-
-const HIGHLIGHTS: Highlight[] = [
-  {
-    id: '1',
-    title: 'Festival de Inverno de Cajazeiras',
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c5820?w=500',
-  },
-  {
-    id: '2',
-    title: 'Feira da Agricultura Familiar',
-    rating: 4.5,
-    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=500',
-  },
-  {
-    id: '3',
-    title: 'Noite Cultural no Centro',
-    rating: 4.7,
-    image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500',
-  },
-];
+const CATEGORIES = ['Todos', 'Hospedagem', 'Gastronomia', 'Eventos'];
 
 const ITEMS_DATA: ServiceOrEvent[] = [
   {
@@ -74,7 +56,7 @@ const ITEMS_DATA: ServiceOrEvent[] = [
     id: '2',
     title: 'Restaurante Sabor Sertanejo',
     category: 'Gastronomia',
-    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=500', 
+    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=500',
     latitude: -6.8875,
     longitude: -38.5620,
     rating: 4.8,
@@ -99,18 +81,6 @@ const ITEMS_DATA: ServiceOrEvent[] = [
   },
 ];
 
-// ── Subcomponentes ──────────────────────────────────────────────
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <TouchableOpacity>
-        <Text style={styles.seeAll}>Ver todos</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
 const handleOpenSettings = () => {
   Linking.openSettings();
 };
@@ -118,50 +88,46 @@ const handleOpenSettings = () => {
 // ── Tela principal ──────────────────────────────────────────────
 export function HomeScreen(_props: HomeScreenProps) {
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Tudo');
+  const [activeCategory, setActiveCategory] = useState('Todos');
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<String | null>(null);
+  
+  // Controle de expansão do bottom sheet
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const navigation = useNavigation<any>();
 
-  const filteredItems = activeCategory === 'Tudo'
-    ? ITEMS_DATA : ITEMS_DATA.filter(item => item.category === activeCategory);
+  // Joga itens com data (eventos) pra cima
+  const sortedItems = [...ITEMS_DATA].sort((a, b) => {
+    if (a.date && !b.date) return -1;
+    if (!a.date && b.date) return 1;
+    return 0;
+  });
+
+  const filteredItems = activeCategory === 'Todos'
+    ? sortedItems : sortedItems.filter(item => item.category === activeCategory);
+
+  // Limita a quantidade baseada no estado de expansão
+  const visibleItems = filteredItems.slice(0, isExpanded ? 4 : 2);
 
   useEffect(() => {
-    async function getLocationPermission()  {
-      let {status} = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted"){
+    async function getLocationPermission() {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
         setErrorMsg('Permissão para acessar localização foi negada!');
         return;
       }
 
       let coordonate = await Location.getCurrentPositionAsync({});
       setLocation(coordonate);
-
     }
     getLocationPermission();
   }, []);
 
-  const renderHighlight: ListRenderItem<Highlight> = ({ item }) => (
-    <View style={styles.highlightCard}>
-      <ImageBackground
-        source={{ uri: item.image }}
-        style={styles.highlightImage}
-        imageStyle={{ borderRadius: BorderRadius.lg }}
-        resizeMode="cover"
-      >
-        <View style={styles.highlightOverlay}>
-          <Text style={styles.highlightTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <View style={styles.ratingRow}>
-            <Ionicons name="star" size={13} color={Colors.highlight} />
-            <Text style={styles.ratingText}>{item.rating}</Text>
-          </View>
-        </View>
-      </ImageBackground>
-    </View>
-  );
+  const toggleExpand = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setIsExpanded(!isExpanded);
+  };
 
   const renderServiceItem: ListRenderItem<ServiceOrEvent> = ({ item }) => (
     <TouchableOpacity
@@ -169,184 +135,169 @@ export function HomeScreen(_props: HomeScreenProps) {
       activeOpacity={0.8}
       onPress={() => navigation.navigate('Detalhes', { item: item })}
     >
-      <Image source={{ uri: item.image }} style={ styles.eventImage } resizeMode='cover' />
-      <View style={ styles.eventInfo}>
-        <Text style={ styles.eventTitle } numberOfLines={2}>{item.title}</Text>
+      <Image source={{ uri: item.image }} style={styles.eventImage} resizeMode='cover' />
+      <View style={styles.eventInfo}>
+        <Text style={styles.eventTitle} numberOfLines={2}>{item.title}</Text>
+        <Text style={styles.eventCategory}>{item.category}</Text>
         {item.date && (
-          <View style={ styles.eventDateRow}>
+          <View style={styles.eventDateRow}>
             <Ionicons name='calendar-outline' size={12} color={Colors.textSecondary} />
             <Text style={styles.eventDate}>{item.date}</Text>
-          </View>  
+          </View>
         )}
-        <View style={ styles.detailsButton }>
-          <Text style={ styles.detailsButtonText }>Ver no mapa</Text>
-        </View>
       </View>
-    </TouchableOpacity> 
+      <Ionicons name="chevron-forward" size={20} color={Colors.border} style={styles.eventChevron} />
+    </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* ── Header ─────────────────────────────────────────── */}
-        <View style={styles.padded}>
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.greeting}>Olá, Visitante 👋</Text>
-              <Text style={styles.subGreeting}>Explore Cajazeiras hoje</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.bellButton}
-              accessibilityLabel="Notificações"
-            >
-              <Ionicons name="notifications-outline" size={22} color={Colors.text} />
-            </TouchableOpacity>
+      
+      {/* ── Topo ─────────────────────────────────── */}
+      <View style={styles.topContainer}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Olá, Visitante 👋</Text>
+            <Text style={styles.subGreeting}>Explore Cajazeiras hoje</Text>
           </View>
-
-          {/* ── Busca ────────────────────────────────────────── */}
-          <View style={styles.searchBar}>
-            <Ionicons
-              name="search-outline"
-              size={18}
-              color={Colors.textSecondary}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Buscar eventos ou locais..."
-              placeholderTextColor={Colors.textSecondary}
-              value={search}
-              onChangeText={setSearch}
-              returnKeyType="search"
-            />
-          </View>
+          <TouchableOpacity
+            style={styles.bellButton}
+            accessibilityLabel="Notificações"
+          >
+            <Ionicons name="notifications-outline" size={22} color={Colors.text} />
+          </TouchableOpacity>
         </View>
 
-        {/* ── Mapa ────────────────────────────────────────── */}
-        <View style={styles.mapContainer}>
-            {location ? (
-              <MapView
-              style={{ flex: 1}}
-              initialRegion={{
+        <View style={styles.searchBar}>
+          <Ionicons name="search-outline" size={18} color={Colors.textSecondary} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar eventos ou locais..."
+            placeholderTextColor={Colors.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+          />
+        </View>
+      </View>
+
+      {/* ── Mapa ───────────────────────────────────── */}
+      <View style={styles.mapWrapper}>
+        {location ? (
+          <MapView
+            style={StyleSheet.absoluteFillObject}
+            initialRegion={{
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              latitudeDelta: 0.009,
+              longitudeDelta: 0.009,
+            }}
+            showsPointsOfInterest={false}
+          >
+            <Marker
+              coordinate={{
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
-                latitudeDelta: 0.0009,
-                longitudeDelta: 0.0009,
               }}
-              showsPointsOfInterest={false}
-              >
-                <Marker
-                coordinate={{
-                  latitude: location.coords.latitude,
-                  longitude: location.coords.longitude,
-                }}
-                title="Você está aqui!"
-                />
+              title="Você está aqui!"
+            />
+            {filteredItems.map((item) => (
+              <Marker
+                key={item.id}
+                coordinate={{ latitude: item.latitude, longitude: item.longitude }}
+                title={item.title}
+                description={item.category}
+              />
+            ))}
+          </MapView>
+        ) : errorMsg ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errorMsg}</Text>
+            <Text style={styles.instructionText}>Para usar o mapa, precisamos do seu GPS.</Text>
+            <TouchableOpacity style={styles.settingsButton} onPress={handleOpenSettings}>
+              <Text style={styles.settingsButtonText}>Abrir Configurações</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <Text style={styles.loadingText}>Buscando sua localização...</Text>
+        )}
+      </View>
 
-                {filteredItems.map((item) => (
-                  <Marker
-                    key={item.id}
-                    coordinate={{
-                      latitude: item.latitude,
-                      longitude: item.longitude,
-                    }}
-                    title={item.title}
-                    description={item.category}
-                  />
-                ))}
-              </MapView>
-            ) : errorMsg ? (
-                <View style={styles.errorContainer}>
-                  <Text style={styles.errorText}>{errorMsg}</Text>
-                  <Text style={styles.instructionText}>Para usar o mapa, precisamos do seu GPS. Altere as configurações de permissão do seu celular</Text>
-          
-                  <TouchableOpacity style={styles.settingsButton} onPress={handleOpenSettings}>
-                    <Text style={styles.settingsButtonText}>Abrir Configurações</Text>
-                  </TouchableOpacity>
-                </View>    
-                ) : (
-                 <Text style={styles.loadingText}>Buscando sua localização...</Text>
-            )}
-        </View>
+      {/* ── Bottom sheet (aba expansível) ──────────────── */}
+      <View style={[styles.bottomSheet, { height: isExpanded ? '65%' : 300 }]}>
 
-        {/* ── Categorias (sangra até a borda) ──────────────── */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesContent}
-          style={styles.categoriesScroll}
+        {/* Indicador de arrasto / clica e expande */}
+        <TouchableOpacity 
+          style={styles.dragHandleContainer} 
+          activeOpacity={0.7} 
+          onPress={toggleExpand}
         >
-          {CATEGORIES.map((cat, i) => {
-            const active = cat === activeCategory;
-            return (
-              <TouchableOpacity
-                key={cat}
-                style={[
-                  styles.pill,
-                  active && styles.pillActive,
-                  i > 0 && { marginLeft: Spacing.sm },
-                ]}
-                onPress={() => setActiveCategory(cat)}
-                activeOpacity={0.75}
-              >
-                <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+          <View style={styles.dragHandle} />
+        </TouchableOpacity>
 
-        {/* ── Destaques ────────────────────────────────────── */}
-        <View style={[styles.padded, { marginTop: Spacing.lg }]}>
-          <SectionHeader title="Destaques" />
+        {/* Categorias */}
+        <View style={styles.categoriesWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesContent}
+          >
+            {CATEGORIES.map((cat, i) => {
+              const active = cat === activeCategory;
+              return (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.pill,
+                    active && styles.pillActive,
+                    i > 0 && { marginLeft: Spacing.sm },
+                  ]}
+                  onPress={() => setActiveCategory(cat)}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[styles.pillText, active && styles.pillTextActive]}>
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
+        {/* Lista de serviço/evento */}
         <FlatList
-          data={HIGHLIGHTS}
-          keyExtractor={item => item.id}
-          renderItem={renderHighlight}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={HIGHLIGHT_CARD_WIDTH + HIGHLIGHT_GAP}
-          decelerationRate="fast"
-          contentContainerStyle={styles.highlightsList}
-          ItemSeparatorComponent={() => <View style={{ width: HIGHLIGHT_GAP }} />}
-          scrollEventThrottle={16}
+          data={visibleItems}
+          keyExtractor={(item) => item.id}
+          renderItem={renderServiceItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
         />
+      </View>
 
-        {/* ── Eventos Próximos ─────────────────────────────── */}
-        <View style={[styles.padded, { marginTop: Spacing.xl }]}>
-          <SectionHeader title="Eventos Próximos" />
+      {/* Botão de cadastro de serviço/evento */}
+      <TouchableOpacity
+        style={styles.fabButton}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('NovoServico')}
+      >
+        <Ionicons name="add" size={32} color={Colors.text} style={styles.fabIcon} />
+      </TouchableOpacity>
 
-          <FlatList
-            data={filteredItems}
-            keyExtractor={(item) => item.id}
-            renderItem={renderServiceItem}
-            scrollEnabled={false}
-          />
-
-          <View style={{ height: Spacing.xl }} />
-        </View>
-      </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ── Estilos ─────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-  /** Seções com padding horizontal padrão de 24 px */
-  padded: {
+  topContainer: {
     paddingHorizontal: Spacing.containerPadding,
+    backgroundColor: Colors.background,
+    zIndex: 10, 
   },
- 
-
-  // ── Header ──────────────────────────────────────────────────
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -356,12 +307,12 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontFamily: FontFamily.headingBold,
-    fontSize: FontSize.xl,         // 20px
+    fontSize: FontSize.xl,
     color: Colors.text,
   },
   subGreeting: {
     fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.sm,         // 14px
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
     marginTop: 2,
   },
@@ -375,18 +326,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-
-  // ── Busca ───────────────────────────────────────────────────
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,  // 8px
+    borderRadius: BorderRadius.md,
     borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: Spacing.lg,
     height: 48,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   searchIcon: {
     marginRight: Spacing.sm,
@@ -398,18 +347,12 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
 
-  //  ── Mapa ───────────────────────────────────────────────────
-
-  mapContainer: {
-    height:   220,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    overflow: 'hidden',
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
+  // ── Mapa ────────────────────────────────────────────────────
+  mapWrapper: {
+    flex: 1,
+    backgroundColor: Colors.border, 
   },
-   loadingText: {
+  loadingText: {
     textAlign: 'center',
     marginTop: 90,
     fontFamily: FontFamily.bodyMedium,
@@ -417,8 +360,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     textAlign: 'center',
-    marginTop: 80,
-    paddingHorizontal: Spacing.lg,
     fontFamily: FontFamily.bodyMedium,
     color: '#DC3545',
   },
@@ -437,7 +378,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   settingsButton: {
-    backgroundColor: Colors.primary, // Ou a cor de destaque do seu tema
+    backgroundColor: Colors.primary,
     paddingVertical: 10,
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.md,
@@ -448,9 +389,33 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
   },
 
+  // ── Bottom sheet ────────────────────────────────────────────
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.background,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    ...Shadow.lg,
+    elevation: 20,
+  },
+  dragHandleContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: Colors.border,
+    borderRadius: 2,
+  },
+
   // ── Categorias ──────────────────────────────────────────────
-  categoriesScroll: {
-    marginBottom: Spacing.sm,
+  categoriesWrapper: {
+    marginBottom: Spacing.md,
   },
   categoriesContent: {
     paddingHorizontal: Spacing.containerPadding,
@@ -464,7 +429,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   pillActive: {
-    backgroundColor: Colors.highlight,   // #FFD500 Amarelo
+    backgroundColor: Colors.highlight,
     borderColor: Colors.highlight,
   },
   pillText: {
@@ -473,91 +438,44 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   pillTextActive: {
-    color: Colors.text,                   // #212529 Cinza Escuro
-  },
-
-  // ── Cabeçalho de seção ──────────────────────────────────────
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  sectionTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.lg,               // 18px
     color: Colors.text,
   },
-  seeAll: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.sm,
-    color: Colors.primary,
-  },
 
-  // ── Destaques — cards horizontais com snap ──────────────────
-  highlightsList: {
-    paddingLeft: Spacing.containerPadding,
-    paddingRight: Spacing.containerPadding,
-    paddingBottom: Spacing.sm,           // para sombra não cortar
+  // ── Lista de Eventos ────────────────────────────────────────
+  listContent: {
+    paddingHorizontal: Spacing.containerPadding,
+    paddingBottom: Spacing.xl,
   },
-  highlightCard: {
-    width: HIGHLIGHT_CARD_WIDTH,
-    height: 220,
-    borderRadius: BorderRadius.lg,       // 12px
-    overflow: 'hidden',
-    ...Shadow.md,
-  },
-  highlightImage: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  highlightOverlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.52)',
-    padding: Spacing.md,
-    borderBottomLeftRadius: BorderRadius.lg,
-    borderBottomRightRadius: BorderRadius.lg,
-  },
-  highlightTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,               // 16px
-    color: Colors.surface,
-    marginBottom: 4,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratingText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.xs,               // 12px
-    color: Colors.surface,
-  },
-
-  // ── Eventos Próximos — cards verticais ──────────────────────
   eventCard: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.md,
-    overflow: 'hidden',
+    padding: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
-    ...Shadow.sm,
   },
   eventImage: {
-    width: 88,
-    height: 96,
+    width: 60,
+    height: 60,
+    borderRadius: BorderRadius.sm,
   },
   eventInfo: {
     flex: 1,
-    padding: Spacing.md,
-    justifyContent: 'space-between',
+    marginLeft: Spacing.md,
+    justifyContent: 'center',
   },
   eventTitle: {
     fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.sm,               // 14px
+    fontSize: FontSize.sm,
     color: Colors.text,
+  },
+  eventCategory: {
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   eventDateRow: {
     flexDirection: 'row',
@@ -567,20 +485,28 @@ const styles = StyleSheet.create({
   },
   eventDate: {
     fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.xs,               // 12px
+    fontSize: FontSize.xs,
     color: Colors.textSecondary,
   },
-  detailsButton: {
-    alignSelf: 'flex-start',
-    marginTop: 8,
-    paddingVertical: 5,
-    paddingHorizontal: Spacing.md,
-    backgroundColor: Colors.primary,     // #0D6EFD
-    borderRadius: BorderRadius.sm,       // 4px
+  eventChevron: {
+    paddingLeft: Spacing.sm,
   },
-  detailsButtonText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.xs,
-    color: Colors.surface,
+
+  // ── FAB ────────────────────
+  fabButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: Colors.highlight,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.md,
+    elevation: 8,
+  },
+  fabIcon: {
+    marginLeft: 2,
   },
 });

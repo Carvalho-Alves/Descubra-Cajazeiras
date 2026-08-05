@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#F0F8FF"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.descubracajazeiras.app"
@@ -30,6 +32,9 @@
       "eas": {
         "projectId": "descubra-cajazeiras"
       }
-    }
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ]
   }
 }
