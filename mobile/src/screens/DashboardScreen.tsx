@@ -1,317 +1,370 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
   Alert,
+  Image,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
+import { useAuth } from '../context/AuthContext';
+import { getEstatisticas } from '../services/statsService';
+import { listMyServicos } from '../services/servicoService';
+import { listMyEventos } from '../services/eventoService';
+import { ApiError } from '../services/apiClient';
+import { resolveAssetUrl } from '../utils/resolveAssetUrl';
 import type { DashboardScreenProps } from '../navigation/types';
 
-// ── Tipos ───────────────────────────────────────────────────────
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 type MenuItem = {
   id: string;
   label: string;
   icon: IoniconName;
+  color: string;
   onPress: () => void;
 };
 
 type StatItem = {
   id: string;
   label: string;
-  value: number;
-  icon: IoniconName;
+  value: string;
+  color: string;
+  onPress?: () => void;
 };
 
-// ── Dados estáticos ─────────────────────────────────────────────
-const STATS: StatItem[] = [
-  { id: '1', label: 'Eventos salvos', value: 12, icon: 'heart' },
-  { id: '2', label: 'Avaliações',     value: 5,  icon: 'star'  },
-];
-
-// ── Subcomponentes ──────────────────────────────────────────────
 function StatCard({ item }: { item: StatItem }) {
   return (
-    <View style={styles.statCard}>
-      <Ionicons name={item.icon} size={22} color={Colors.highlight} />
-      <Text style={styles.statValue}>{item.value}</Text>
-      <Text style={styles.statLabel}>{item.label}</Text>
-    </View>
-  );
-}
-
-function MenuRow({ item }: { item: MenuItem }) {
-  return (
     <TouchableOpacity
-      style={styles.menuRow}
+      style={styles.statCard}
+      activeOpacity={item.onPress ? 0.75 : 1}
       onPress={item.onPress}
-      activeOpacity={0.65}
+      disabled={!item.onPress}
     >
-      <View style={styles.menuIconWrapper}>
-        <Ionicons name={item.icon} size={20} color={Colors.primary} />
-      </View>
-      <Text style={styles.menuLabel}>{item.label}</Text>
-      <Ionicons name="chevron-forward" size={18} color={Colors.textSecondary} />
+      <Text style={styles.statLabel}>{item.label}</Text>
+      <Text style={[styles.statValue, { color: item.color }]}>{item.value}</Text>
     </TouchableOpacity>
   );
 }
 
-// ── Tela principal ──────────────────────────────────────────────
+function MenuRow({
+  item,
+  isLast,
+}: {
+  item: MenuItem;
+  isLast: boolean;
+}) {
+  return (
+    <TouchableOpacity
+      style={[styles.menuRow, !isLast && styles.menuRowBorder]}
+      onPress={item.onPress}
+      activeOpacity={0.65}
+    >
+      <Ionicons name={item.icon} size={20} color={item.color} />
+      <Text style={[styles.menuLabel, { color: item.color }]}>{item.label}</Text>
+      <Ionicons name="chevron-forward" size={20} color={Colors.muted} />
+    </TouchableOpacity>
+  );
+}
+
 export function DashboardScreen({ navigation }: DashboardScreenProps) {
+  const { user, token, logout } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    servicos: 0,
+    eventos: 0,
+    avaliacoes: 0,
+    media: 0,
+  });
+
+  const load = useCallback(
+    async (isRefresh = false) => {
+      try {
+        if (isRefresh) setRefreshing(true);
+        else setLoading(true);
+
+        const [estatisticas, meusServicos, meusEventos] = await Promise.all([
+          getEstatisticas(),
+          listMyServicos(token).catch(() => []),
+          listMyEventos(token).catch(() => []),
+        ]);
+
+        setStats({
+          servicos: Array.isArray(meusServicos)
+            ? meusServicos.length
+            : estatisticas.totalPontos,
+          eventos: Array.isArray(meusEventos)
+            ? meusEventos.length
+            : estatisticas.totalEventos,
+          avaliacoes: estatisticas.totalAvaliacoes,
+          media: estatisticas.mediaGeral,
+        });
+      } catch (error) {
+        Alert.alert(
+          'Erro',
+          error instanceof ApiError
+            ? error.message
+            : 'Falha ao carregar o perfil.',
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [token],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
+  const statItems: StatItem[] = [
+    {
+      id: '1',
+      label: 'Meus Serviços',
+      value: String(stats.servicos),
+      color: Colors.primary,
+      onPress: () => navigation.navigate('GerenciarServicos'),
+    },
+    {
+      id: '2',
+      label: 'Meus Eventos',
+      value: String(stats.eventos),
+      color: Colors.success,
+      onPress: () => navigation.navigate('GerenciarEventos'),
+    },
+    {
+      id: '3',
+      label: 'Total Avaliações',
+      value: String(stats.avaliacoes),
+      color: Colors.warning,
+      onPress: () => navigation.navigate('Avaliacoes'),
+    },
+    {
+      id: '4',
+      label: 'Média Geral',
+      value: Number(stats.media || 0).toFixed(1),
+      color: Colors.coral,
+      onPress: () => navigation.navigate('Avaliacoes'),
+    },
+  ];
+
   const menuItems: MenuItem[] = [
     {
-      id: 'edit',
-      label: 'Editar Dados',
-      icon: 'pencil-outline',
-      onPress: () => Alert.alert('Em breve', 'Edição de perfil em desenvolvimento.'),
+      id: 'info',
+      label: 'Minhas Informações',
+      icon: 'person-outline',
+      color: Colors.text,
+      onPress: () => navigation.navigate('MinhasInformacoes'),
     },
     {
       id: 'servicos',
-      label: 'Meus Serviços Turísticos',
-      icon: 'storefront-outline',
+      label: 'Meus Serviços',
+      icon: 'briefcase-outline',
+      color: Colors.text,
       onPress: () => navigation.navigate('GerenciarServicos'),
     },
     {
       id: 'eventos',
       label: 'Meus Eventos',
       icon: 'calendar-outline',
+      color: Colors.text,
       onPress: () => navigation.navigate('GerenciarEventos'),
     },
     {
-      id: 'config',
-      label: 'Configurações',
-      icon: 'settings-outline',
-      onPress: () => Alert.alert('Em breve', 'Configurações em desenvolvimento.'),
+      id: 'notif',
+      label: 'Notificações',
+      icon: 'notifications-outline',
+      color: Colors.text,
+      onPress: () => navigation.navigate('Notificacoes'),
     },
     {
       id: 'sobre',
-      label: 'Sobre o Projeto',
+      label: 'Sobre Cajazeiras',
       icon: 'information-circle-outline',
+      color: Colors.text,
       onPress: () => navigation.navigate('Sobre'),
+    },
+    {
+      id: 'sair',
+      label: 'Sair da Conta',
+      icon: 'log-out-outline',
+      color: Colors.error,
+      onPress: () =>
+        Alert.alert('Sair da conta', 'Deseja mesmo sair?', [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Sair',
+            style: 'destructive',
+            onPress: () => logout(),
+          },
+        ]),
     },
   ];
 
-  const handleLogout = () =>
-    Alert.alert('Sair da conta', 'Deseja mesmo sair?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: () => navigation.replace('Login') },
-    ]);
+  const foto = resolveAssetUrl(user?.foto);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* ── Cabeçalho ─────────────────────────────────────── */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.navigate('Home')}
-            accessibilityLabel="Voltar para Início"
-          >
-            <Ionicons name="chevron-back" size={22} color={Colors.text} />
-          </TouchableOpacity>
-
-          <Text style={styles.headerTitle}>Meu Perfil</Text>
-
-          {/* Spacer simétrico para centralizar o título */}
-          <View style={styles.backButton} />
-        </View>
-
-        {/* ── Informações do usuário ────────────────────────── */}
-        <View style={styles.userCard}>
-          <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200' }}
-            style={styles.avatar}
-            resizeMode="cover"
-          />
-          <Text style={styles.userName}>João da Silva</Text>
-          <Text style={styles.userEmail}>joao.silva@email.com</Text>
-        </View>
-
-        {/* ── Estatísticas ──────────────────────────────────── */}
-        <View style={styles.statsRow}>
-          {STATS.map(stat => (
-            <StatCard key={stat.id} item={stat} />
-          ))}
-        </View>
-
-        {/* ── Menu ─────────────────────────────────────────── */}
-        <View style={styles.menuCard}>
-          {menuItems.map((item, index) => (
-            <View key={item.id}>
-              <MenuRow item={item} />
-              {index < menuItems.length - 1 && (
-                <View style={styles.menuDivider} />
+    <View style={styles.root}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />
+        }
+      >
+        <LinearGradient
+          colors={[Colors.highlight, Colors.highlightDark]}
+          style={styles.hero}
+        >
+          <SafeAreaView edges={['top']} style={styles.heroInner}>
+            <View style={styles.avatarRing}>
+              {foto ? (
+                <Image source={{ uri: foto }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatar}>
+                  <Ionicons name="person" size={40} color="#4B5563" />
+                </View>
               )}
             </View>
-          ))}
-        </View>
+            <Text style={styles.userName}>{user?.nome || 'Usuário'}</Text>
+            <Text style={styles.userEmail}>{user?.email || ''}</Text>
+          </SafeAreaView>
+        </LinearGradient>
 
-        {/* ── Botão Logout ──────────────────────────────────── */}
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-          activeOpacity={0.75}
-        >
-          <Ionicons name="log-out-outline" size={18} color={Colors.error} />
-          <Text style={styles.logoutText}>Sair da conta</Text>
-        </TouchableOpacity>
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: 40 }} color={Colors.primary} />
+        ) : (
+          <>
+            <View style={styles.statsGrid}>
+              {statItems.map(stat => (
+                <View key={stat.id} style={styles.statCell}>
+                  <StatCard item={stat} />
+                </View>
+              ))}
+            </View>
 
-        <View style={{ height: Spacing.xl }} />
+            <View style={styles.menuCard}>
+              {menuItems.map((item, index) => (
+                <MenuRow
+                  key={item.id}
+                  item={item}
+                  isLast={index === menuItems.length - 1}
+                />
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-// ── Estilos ─────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-
-  // ── Cabeçalho ──────────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  root: { flex: 1, backgroundColor: Colors.backgroundMuted },
+  scrollContent: { paddingBottom: Spacing.xxxl },
+  hero: {
+    paddingBottom: Spacing.xl,
     paddingHorizontal: Spacing.containerPadding,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
   },
-  backButton: {
-    width: 36,
-    height: 36,
+  heroInner: {
+    alignItems: 'center',
+    paddingTop: Spacing.lg,
+  },
+  avatarRing: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.surface,
+    padding: 4,
+    marginBottom: Spacing.md,
+    ...Shadow.md,
+  },
+  avatar: {
+    flex: 1,
+    borderRadius: 32,
+    backgroundColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.lg,           // 18px
-    color: Colors.text,
-  },
-
-  // ── Card de usuário ─────────────────────────────────────────
-  userCard: {
-    alignItems: 'center',
-    paddingVertical: Spacing.xl,
-    paddingHorizontal: Spacing.containerPadding,
-    marginHorizontal: Spacing.containerPadding,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    ...Shadow.sm,
-    marginBottom: Spacing.lg,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,                // círculo perfeito
-    borderWidth: 3,
-    borderColor: Colors.primary,
-    marginBottom: Spacing.md,
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 32,
   },
   userName: {
     fontFamily: FontFamily.headingBold,
-    fontSize: FontSize.xl,           // 20px
+    fontSize: FontSize.xl,
     color: Colors.text,
-    marginBottom: 4,
+    textAlign: 'center',
   },
   userEmail: {
     fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.sm,           // 14px
-    color: Colors.textSecondary,
-  },
-
-  // ── Estatísticas ────────────────────────────────────────────
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.containerPadding,
-    gap: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    ...Shadow.sm,
-  },
-  statValue: {
-    fontFamily: FontFamily.headingBold,
-    fontSize: FontSize.xxl,          // 24px
+    fontSize: FontSize.sm,
     color: Colors.text,
-    marginTop: Spacing.xs,
+    opacity: 0.7,
+    marginTop: 2,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: Spacing.lg,
+    marginTop: -32,
+    gap: Spacing.md,
+    marginBottom: Spacing.containerPadding,
+  },
+  statCell: { width: '47.5%', flexGrow: 1 },
+  statCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    ...Shadow.sm,
   },
   statLabel: {
     fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.xs,           // 12px
+    fontSize: FontSize.xs,
     color: Colors.textSecondary,
-    marginTop: 2,
-    textAlign: 'center',
+    marginBottom: 4,
   },
-
-  // ── Menu ────────────────────────────────────────────────────
+  statValue: {
+    fontFamily: FontFamily.headingBold,
+    fontSize: 28,
+  },
   menuCard: {
-    marginHorizontal: Spacing.containerPadding,
+    marginHorizontal: Spacing.lg,
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,
-    ...Shadow.sm,
-    marginBottom: Spacing.xl,
     overflow: 'hidden',
+    ...Shadow.sm,
   },
   menuRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
   },
-  menuIconWrapper: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.md,
+  menuRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   menuLabel: {
     flex: 1,
     fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.md,           // 16px
-    color: Colors.text,
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginLeft: Spacing.lg + 32 + Spacing.md, // alinha com o texto
-  },
-
-  // ── Botão Logout ────────────────────────────────────────────
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: Spacing.containerPadding,
-    height: 48,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1.5,
-    borderColor: Colors.error,       // vermelho #DC3545
-    gap: Spacing.sm,
-  },
-  logoutText: {
-    fontFamily: FontFamily.headingSemiBold,
     fontSize: FontSize.md,
-    color: Colors.error,
+    textAlign: 'left',
   },
 });

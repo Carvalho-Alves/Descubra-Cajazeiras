@@ -102,8 +102,40 @@ app.use('/api/avaliacoes', avaliacaoRoutes);
 app.use('/api/servicos', servicoRoutes);
 app.use('/api/eventos', eventoRoutes)
 app.use('/api/estatisticas', estatisticasRoutes)
-// Servir uploads de caminhos possíveis no build
-app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
+
+// ── Uploads ──────────────────────────────────────────────────────
+// Pasta local (criada se não existir). Arquivos antigos no Mongo podem
+// apontar para paths que não estão no disco (uploads está no .gitignore).
+const uploadsDir = path.resolve(process.cwd(), 'uploads');
+fs.mkdirSync(uploadsDir, { recursive: true });
+
+const placeholderPath = [
+  path.resolve(process.cwd(), 'backend', 'assets', 'placeholder.png'),
+  path.resolve(__dirname, 'assets', 'placeholder.png'),
+].find((p) => fs.existsSync(p));
+
+app.use(
+  '/uploads',
+  express.static(uploadsDir, {
+    fallthrough: true,
+    index: false,
+  }),
+  // Arquivo ausente → placeholder 200 (evita 404 ruidoso e quebra de UI)
+  (req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      return next();
+    }
+    if (placeholderPath && fs.existsSync(placeholderPath)) {
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      res.setHeader('X-Upload-Fallback', 'placeholder');
+      return res.status(200).sendFile(placeholderPath);
+    }
+    return res.status(404).json({
+      success: false,
+      message: 'Arquivo de upload não encontrado.',
+    });
+  },
+);
 
 // Servindo a página inicial para a rota raiz (/).
 app.get('/', (_req, res) => {

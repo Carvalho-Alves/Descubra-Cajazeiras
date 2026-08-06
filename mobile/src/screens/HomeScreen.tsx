@@ -1,436 +1,338 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  FlatList,
   ImageBackground,
-  Image,
   StyleSheet,
   Dimensions,
-  ListRenderItem,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
+import { listServicos, Servico } from '../services/servicoService';
+import { ApiError } from '../services/apiClient';
+import {
+  colorForTipo,
+  iconForTipo,
+  mapTipoFilterToApi,
+  shortTipoServico,
+} from '../utils/format';
 import type { HomeScreenProps } from '../navigation/types';
 
-// ── Constantes de layout ────────────────────────────────────────
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const HIGHLIGHT_CARD_WIDTH = SCREEN_WIDTH * 0.78;
-const HIGHLIGHT_GAP = Spacing.md; // 12px
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const MAP_URI =
+  'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1080&q=80';
+const CATEGORIES = ['Todos', 'Hospedagem', 'Alimentação', 'Turístico'];
 
-// ── Tipos de dados ──────────────────────────────────────────────
-type Highlight = { id: string; title: string; rating: number; image: string };
-type Evento    = { id: string; title: string; date: string;   image: string };
-
-// ── Dados estáticos (placeholder) ───────────────────────────────
-const CATEGORIES = ['Tudo', 'Eventos', 'Gastronomia', 'Hospedagem'];
-
-const HIGHLIGHTS: Highlight[] = [
-  {
-    id: '1',
-    title: 'Festival de Inverno de Cajazeiras',
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1519451241324-20b4ea2c5820?w=500',
-  },
-  {
-    id: '2',
-    title: 'Feira da Agricultura Familiar',
-    rating: 4.5,
-    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=500',
-  },
-  {
-    id: '3',
-    title: 'Noite Cultural no Centro',
-    rating: 4.7,
-    image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500',
-  },
-];
-
-const EVENTOS: Evento[] = [
-  {
-    id: '1',
-    title: 'Show de Forró Universitário',
-    date: 'Sáb, 22 Mai · 19h',
-    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200',
-  },
-  {
-    id: '2',
-    title: 'Exposição de Arte Local',
-    date: 'Dom, 23 Mai · 10h',
-    image: 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=200',
-  },
-  {
-    id: '3',
-    title: 'Caminhada Ecológica na Serra',
-    date: 'Seg, 24 Mai · 07h',
-    image: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=200',
-  },
-];
-
-// ── Subcomponentes ──────────────────────────────────────────────
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <TouchableOpacity>
-        <Text style={styles.seeAll}>Ver todos</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-// ── Tela principal ──────────────────────────────────────────────
-export function HomeScreen(_props: HomeScreenProps) {
+export function HomeScreen({ navigation }: HomeScreenProps) {
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Tudo');
+  const [activeCategory, setActiveCategory] = useState('Todos');
+  const [servicos, setServicos] = useState<Servico[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const renderHighlight: ListRenderItem<Highlight> = ({ item }) => (
-    <View style={styles.highlightCard}>
-      <ImageBackground
-        source={{ uri: item.image }}
-        style={styles.highlightImage}
-        imageStyle={{ borderRadius: BorderRadius.lg }}
-        resizeMode="cover"
-      >
-        <View style={styles.highlightOverlay}>
-          <Text style={styles.highlightTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <View style={styles.ratingRow}>
-            <Ionicons name="star" size={13} color={Colors.highlight} />
-            <Text style={styles.ratingText}>{item.rating}</Text>
-          </View>
-        </View>
-      </ImageBackground>
-    </View>
+  const load = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+      const data = await listServicos();
+      setServicos(Array.isArray(data) ? data : []);
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'Falha ao carregar serviços da API.';
+      Alert.alert('Erro', message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
   );
 
+  const filtered = servicos.filter(item => {
+    const apiTipo = mapTipoFilterToApi(activeCategory);
+    const matchCat = !apiTipo || item.tipo_servico === apiTipo;
+    const matchSearch =
+      !search.trim() ||
+      item.nome.toLowerCase().includes(search.trim().toLowerCase());
+    return matchCat && matchSearch;
+  });
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <View style={styles.root}>
+      <ImageBackground source={{ uri: MAP_URI }} style={styles.map} resizeMode="cover">
+        <View style={styles.mapOverlay} />
+      </ImageBackground>
 
-        {/* ── Header ─────────────────────────────────────────── */}
-        <View style={styles.padded}>
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.greeting}>Olá, Visitante 👋</Text>
-              <Text style={styles.subGreeting}>Explore Cajazeiras hoje</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.bellButton}
-              accessibilityLabel="Notificações"
-            >
-              <Ionicons name="notifications-outline" size={22} color={Colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          {/* ── Busca ────────────────────────────────────────── */}
+      <SafeAreaView style={styles.overlay} edges={['top']} pointerEvents="box-none">
+        <View style={styles.searchRow}>
           <View style={styles.searchBar}>
-            <Ionicons
-              name="search-outline"
-              size={18}
-              color={Colors.textSecondary}
-              style={styles.searchIcon}
-            />
+            <Ionicons name="search" size={20} color={Colors.muted} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Buscar eventos ou locais..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholder="Buscar pontos em Cajazeiras..."
+              placeholderTextColor={Colors.muted}
               value={search}
               onChangeText={setSearch}
-              returnKeyType="search"
             />
           </View>
+          <TouchableOpacity style={styles.filterBtn} onPress={() => load(true)}>
+            <Ionicons name="refresh" size={20} color={Colors.text} />
+          </TouchableOpacity>
         </View>
+      </SafeAreaView>
 
-        {/* ── Categorias (sangra até a borda) ──────────────── */}
+      <View style={styles.fabs} pointerEvents="box-none">
+        <TouchableOpacity
+          style={styles.fabYellow}
+          onPress={() => navigation.navigate('NovoServico')}
+        >
+          <Ionicons name="add" size={28} color={Colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.sheet}>
+        <View style={styles.handle} />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesContent}
-          style={styles.categoriesScroll}
+          contentContainerStyle={styles.chips}
         >
-          {CATEGORIES.map((cat, i) => {
-            const active = cat === activeCategory;
+          {CATEGORIES.map(category => {
+            const active = activeCategory === category;
             return (
               <TouchableOpacity
-                key={cat}
-                style={[
-                  styles.pill,
-                  active && styles.pillActive,
-                  i > 0 && { marginLeft: Spacing.sm },
-                ]}
-                onPress={() => setActiveCategory(cat)}
-                activeOpacity={0.75}
+                key={category}
+                style={[styles.chip, active && styles.chipActive]}
+                onPress={() => setActiveCategory(category)}
               >
-                <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                  {cat}
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                  {category}
                 </Text>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
 
-        {/* ── Destaques ────────────────────────────────────── */}
-        <View style={[styles.padded, { marginTop: Spacing.lg }]}>
-          <SectionHeader title="Destaques" />
-        </View>
-
-        <FlatList
-          data={HIGHLIGHTS}
-          keyExtractor={item => item.id}
-          renderItem={renderHighlight}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={HIGHLIGHT_CARD_WIDTH + HIGHLIGHT_GAP}
-          decelerationRate="fast"
-          contentContainerStyle={styles.highlightsList}
-          ItemSeparatorComponent={() => <View style={{ width: HIGHLIGHT_GAP }} />}
-          scrollEventThrottle={16}
-        />
-
-        {/* ── Eventos Próximos ─────────────────────────────── */}
-        <View style={[styles.padded, { marginTop: Spacing.xl }]}>
-          <SectionHeader title="Eventos Próximos" />
-
-          {EVENTOS.map(event => (
-            <View key={event.id} style={styles.eventCard}>
-              <Image
-                source={{ uri: event.image }}
-                style={styles.eventImage}
-                resizeMode="cover"
-              />
-              <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle} numberOfLines={2}>
-                  {event.title}
-                </Text>
-                <View style={styles.eventDateRow}>
-                  <Ionicons
-                    name="calendar-outline"
-                    size={12}
-                    color={Colors.textSecondary}
-                  />
-                  <Text style={styles.eventDate}>{event.date}</Text>
-                </View>
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: 24 }} color={Colors.primary} />
+        ) : (
+          <ScrollView
+            style={styles.list}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />
+            }
+          >
+            {filtered.length === 0 ? (
+              <Text style={styles.empty}>Nenhum serviço encontrado.</Text>
+            ) : (
+              filtered.map(location => (
                 <TouchableOpacity
-                  style={styles.detailsButton}
-                  activeOpacity={0.8}
+                  key={location._id}
+                  style={styles.card}
+                  onPress={() =>
+                    navigation.navigate('Avaliacoes', {
+                      tipo: 'servico',
+                      referenciaId: location._id,
+                      titulo: location.nome,
+                    })
+                  }
                 >
-                  <Text style={styles.detailsButtonText}>Ver detalhes</Text>
+                  <View
+                    style={[
+                      styles.cardIcon,
+                      { backgroundColor: colorForTipo(location.tipo_servico) },
+                    ]}
+                  >
+                    <Ionicons
+                      name={iconForTipo(location.tipo_servico)}
+                      size={22}
+                      color={Colors.surface}
+                    />
+                  </View>
+                  <View style={styles.cardBody}>
+                    <Text style={styles.cardTitle}>{location.nome}</Text>
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>
+                        {shortTipoServico(location.tipo_servico)}
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={Colors.muted} />
                 </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-
-          <View style={{ height: Spacing.xl }} />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+              ))
+            )}
+          </ScrollView>
+        )}
+      </View>
+    </View>
   );
 }
 
-// ── Estilos ─────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
+  root: { flex: 1, backgroundColor: '#E5E7EB' },
+  map: { ...StyleSheet.absoluteFillObject },
+  mapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.18)',
   },
-  /** Seções com padding horizontal padrão de 24 px */
-  padded: {
-    paddingHorizontal: Spacing.containerPadding,
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
-
-  // ── Header ──────────────────────────────────────────────────
-  header: {
+  searchRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: Spacing.lg,
-    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
   },
-  greeting: {
-    fontFamily: FontFamily.headingBold,
-    fontSize: FontSize.xl,         // 20px
-    color: Colors.text,
-  },
-  subGreeting: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.sm,         // 14px
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  bellButton: {
-    width: 42,
-    height: 42,
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: Spacing.md,
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-
-  // ── Busca ───────────────────────────────────────────────────
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,  // 8px
-    borderWidth: 1,
-    borderColor: Colors.border,
     paddingHorizontal: Spacing.lg,
     height: 48,
-    marginBottom: Spacing.lg,
-  },
-  searchIcon: {
-    marginRight: Spacing.sm,
+    ...Shadow.md,
   },
   searchInput: {
     flex: 1,
     fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.sm,
     color: Colors.text,
+    paddingVertical: 0,
   },
-
-  // ── Categorias ──────────────────────────────────────────────
-  categoriesScroll: {
-    marginBottom: Spacing.sm,
+  filterBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.md,
   },
-  categoriesContent: {
-    paddingHorizontal: Spacing.containerPadding,
+  fabs: {
+    position: 'absolute',
+    right: Spacing.lg,
+    bottom: SCREEN_HEIGHT * 0.34,
+    zIndex: 15,
   },
-  pill: {
+  fabYellow: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.highlight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.lg,
+  },
+  sheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: SCREEN_HEIGHT * 0.3,
+    minHeight: 250,
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    zIndex: 20,
+    ...Shadow.lg,
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 48,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#D1D5DB',
+    marginTop: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  chips: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+    paddingBottom: Spacing.lg,
+  },
+  chip: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: '#F3F4F6',
   },
-  pillActive: {
-    backgroundColor: Colors.highlight,   // #FFD500 Amarelo
-    borderColor: Colors.highlight,
-  },
-  pillText: {
-    fontFamily: FontFamily.bodyMedium,
+  chipActive: { backgroundColor: Colors.highlight },
+  chipText: {
+    fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
-  pillTextActive: {
-    color: Colors.text,                   // #212529 Cinza Escuro
-  },
-
-  // ── Cabeçalho de seção ──────────────────────────────────────
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  sectionTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.lg,               // 18px
     color: Colors.text,
   },
-  seeAll: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.sm,
-    color: Colors.primary,
+  chipTextActive: { fontFamily: FontFamily.headingSemiBold },
+  list: { flex: 1 },
+  listContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    gap: Spacing.md,
   },
-
-  // ── Destaques — cards horizontais com snap ──────────────────
-  highlightsList: {
-    paddingLeft: Spacing.containerPadding,
-    paddingRight: Spacing.containerPadding,
-    paddingBottom: Spacing.sm,           // para sombra não cortar
+  empty: {
+    textAlign: 'center',
+    color: Colors.textSecondary,
+    fontFamily: FontFamily.bodyRegular,
+    marginTop: Spacing.lg,
   },
-  highlightCard: {
-    width: HIGHLIGHT_CARD_WIDTH,
-    height: 220,
-    borderRadius: BorderRadius.lg,       // 12px
-    overflow: 'hidden',
-    ...Shadow.md,
-  },
-  highlightImage: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  highlightOverlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.52)',
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: Colors.inputBackground,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.md,
-    borderBottomLeftRadius: BorderRadius.lg,
-    borderBottomRightRadius: BorderRadius.lg,
   },
-  highlightTitle: {
+  cardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardBody: { flex: 1 },
+  cardTitle: {
     fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,               // 16px
-    color: Colors.surface,
+    fontSize: FontSize.md,
+    color: Colors.text,
     marginBottom: 4,
   },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratingText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.xs,               // 12px
-    color: Colors.surface,
-  },
-
-  // ── Eventos Próximos — cards verticais ──────────────────────
-  eventCard: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    marginBottom: Spacing.md,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...Shadow.sm,
-  },
-  eventImage: {
-    width: 88,
-    height: 96,
-  },
-  eventInfo: {
-    flex: 1,
-    padding: Spacing.md,
-    justifyContent: 'space-between',
-  },
-  eventTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.sm,               // 14px
-    color: Colors.text,
-  },
-  eventDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  eventDate: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.xs,               // 12px
-    color: Colors.textSecondary,
-  },
-  detailsButton: {
+  badge: {
     alignSelf: 'flex-start',
-    marginTop: 8,
-    paddingVertical: 5,
-    paddingHorizontal: Spacing.md,
-    backgroundColor: Colors.primary,     // #0D6EFD
-    borderRadius: BorderRadius.sm,       // 4px
+    backgroundColor: '#E5E7EB',
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
   },
-  detailsButtonText: {
-    fontFamily: FontFamily.bodyMedium,
+  badgeText: {
+    fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.xs,
-    color: Colors.surface,
+    color: Colors.text,
   },
 });

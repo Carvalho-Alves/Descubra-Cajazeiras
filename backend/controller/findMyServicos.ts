@@ -10,5 +10,8 @@ export const findMyServicosController = async (req: Request, res: Response, next
   const servicos = await Servico.find({ usuario: new Types.ObjectId(userId) })
     .sort({ createdAt: -1 })
     .lean();
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.status(200).json(servicos);
 };

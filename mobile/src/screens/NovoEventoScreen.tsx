@@ -5,8 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Modal,
-  Pressable,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -19,29 +17,19 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
+import { Spacing, BorderRadius } from '../theme/spacing';
 import { useAuth } from '../context/AuthContext';
-import {
-  createServicoRequest,
-  TipoServico,
-} from '../services/servicoService';
+import { createEventoRequest } from '../services/eventoService';
 import { ApiError } from '../services/apiClient';
-import type { NovoServicoScreenProps } from '../navigation/types';
+import type { NovoEventoScreenProps } from '../navigation/types';
 
-const TIPOS: TipoServico[] = [
-  'Hospedagem',
-  'Alimentação/Lazer',
-  'Ponto Turístico',
-];
-
-export function NovoServicoScreen({ navigation }: NovoServicoScreenProps) {
+export function NovoEventoScreen({ navigation }: NovoEventoScreenProps) {
   const { token } = useAuth();
   const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState<TipoServico | ''>('');
   const [descricao, setDescricao] = useState('');
-  const [telefone, setTelefone] = useState('');
+  const [data, setData] = useState('');
+  const [horario, setHorario] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const pickImage = async () => {
@@ -61,27 +49,37 @@ export function NovoServicoScreen({ navigation }: NovoServicoScreenProps) {
 
   const handleSave = async () => {
     if (!nome.trim()) {
-      Alert.alert('Campo obrigatório', 'Informe o nome do estabelecimento.');
+      Alert.alert('Campo obrigatório', 'Informe o nome do evento.');
       return;
     }
-    if (!tipo) {
-      Alert.alert('Campo obrigatório', 'Selecione o tipo de serviço.');
+    if (!data.trim()) {
+      Alert.alert(
+        'Campo obrigatório',
+        'Informe a data (ex.: 2026-08-20 ou 20/08/2026).',
+      );
       return;
+    }
+
+    // Aceita DD/MM/YYYY ou YYYY-MM-DD
+    let isoDate = data.trim();
+    const brMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(isoDate);
+    if (brMatch) {
+      isoDate = `${brMatch[3]}-${brMatch[2]}-${brMatch[1]}`;
     }
 
     setSaving(true);
     try {
-      await createServicoRequest(
+      await createEventoRequest(
         {
           nome: nome.trim(),
           descricao: descricao.trim() || undefined,
-          tipo_servico: tipo,
-          telefone: telefone.trim() || undefined,
+          data: isoDate,
+          horario: horario.trim() || undefined,
           imageUri,
         },
         token,
       );
-      Alert.alert('Sucesso', 'Serviço cadastrado!', [
+      Alert.alert('Sucesso', 'Evento cadastrado!', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
@@ -89,7 +87,7 @@ export function NovoServicoScreen({ navigation }: NovoServicoScreenProps) {
         'Erro',
         error instanceof ApiError
           ? error.message
-          : 'Não foi possível salvar o serviço.',
+          : 'Não foi possível salvar o evento.',
       );
     } finally {
       setSaving(false);
@@ -102,7 +100,7 @@ export function NovoServicoScreen({ navigation }: NovoServicoScreenProps) {
         <TouchableOpacity onPress={() => navigation.goBack()} disabled={saving}>
           <Text style={styles.cancel}>Cancelar</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Novo Serviço</Text>
+        <Text style={styles.headerTitle}>Novo Evento</Text>
         <TouchableOpacity onPress={handleSave} disabled={saving}>
           {saving ? (
             <ActivityIndicator color={Colors.primary} />
@@ -127,14 +125,14 @@ export function NovoServicoScreen({ navigation }: NovoServicoScreenProps) {
               <>
                 <Ionicons name="camera-outline" size={48} color={Colors.muted} />
                 <Text style={styles.uploadText}>
-                  Toque para adicionar uma foto do local
+                  Toque para adicionar uma foto do evento
                 </Text>
               </>
             )}
           </TouchableOpacity>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Nome do Estabelecimento</Text>
+            <Text style={styles.label}>Nome do Evento</Text>
             <TextInput
               style={styles.input}
               placeholder="Digite o nome"
@@ -145,23 +143,32 @@ export function NovoServicoScreen({ navigation }: NovoServicoScreenProps) {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Tipo de Serviço</Text>
-            <TouchableOpacity
-              style={styles.select}
-              onPress={() => setDropdownVisible(true)}
-            >
-              <Text style={[styles.selectText, !tipo && styles.placeholder]}>
-                {tipo || 'Selecione o tipo'}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color={Colors.muted} />
-            </TouchableOpacity>
+            <Text style={styles.label}>Data</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="DD/MM/AAAA"
+              placeholderTextColor={Colors.muted}
+              value={data}
+              onChangeText={setData}
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Horário</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ex.: 19:00"
+              placeholderTextColor={Colors.muted}
+              value={horario}
+              onChangeText={setHorario}
+            />
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Descrição</Text>
             <TextInput
               style={[styles.input, styles.textarea]}
-              placeholder="Descreva o serviço..."
+              placeholder="Descreva o evento..."
               placeholderTextColor={Colors.muted}
               value={descricao}
               onChangeText={setDescricao}
@@ -170,19 +177,6 @@ export function NovoServicoScreen({ navigation }: NovoServicoScreenProps) {
             />
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Telefone</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="(00) 00000-0000"
-              placeholderTextColor={Colors.muted}
-              value={telefone}
-              onChangeText={setTelefone}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <Text style={styles.sectionTitle}>Endereço</Text>
           <View style={styles.mapBtn}>
             <Ionicons name="location" size={20} color={Colors.primary} />
             <Text style={styles.mapBtnText}>
@@ -191,36 +185,6 @@ export function NovoServicoScreen({ navigation }: NovoServicoScreenProps) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <Modal
-        visible={dropdownVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDropdownVisible(false)}
-      >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setDropdownVisible(false)}
-        >
-          <View style={styles.modalCard}>
-            {TIPOS.map(option => (
-              <TouchableOpacity
-                key={option}
-                style={styles.modalOption}
-                onPress={() => {
-                  setTipo(option);
-                  setDropdownVisible(false);
-                }}
-              >
-                <Text style={styles.modalOptionText}>{option}</Text>
-                {tipo === option && (
-                  <Ionicons name="checkmark" size={18} color={Colors.primary} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -295,28 +259,6 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   textarea: { minHeight: 96 },
-  select: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  selectText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
-  placeholder: { color: Colors.muted },
-  sectionTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
   mapBtn: {
     backgroundColor: Colors.surface,
     borderWidth: 1,
@@ -332,31 +274,5 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.bodyMedium,
     fontSize: FontSize.sm,
     color: Colors.primary,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center',
-    padding: Spacing.containerPadding,
-  },
-  modalCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
-    ...Shadow.md,
-  },
-  modalOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-  modalOptionText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
   },
 });

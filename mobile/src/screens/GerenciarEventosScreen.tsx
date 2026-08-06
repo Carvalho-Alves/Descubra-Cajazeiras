@@ -1,443 +1,375 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   FlatList,
   TouchableOpacity,
-  Modal,
-  Pressable,
+  ScrollView,
   StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
   Alert,
   ListRenderItem,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
+import {
+  deleteEventoRequest,
+  Evento,
+  listMyEventos,
+} from '../services/eventoService';
+import { useAuth } from '../context/AuthContext';
+import { ApiError } from '../services/apiClient';
+import { firstImage } from '../utils/resolveAssetUrl';
+import { formatDateBR, labelEventoStatus } from '../utils/format';
 import type { GerenciarEventosScreenProps } from '../navigation/types';
 
-// ── Tipos ────────────────────────────────────────────────────────
-type EventoStatus = 'Ativo' | 'Pendente';
+const FILTERS = ['Todos', 'Ativo', 'Cancelado', 'Encerrado'] as const;
 
-type Evento = {
-  id: string;
-  nome: string;
-  status: EventoStatus;
-  data: string;
-};
-
-// ── Configuração dos badges de status ────────────────────────────
-const STATUS_CONFIG: Record<EventoStatus, { bg: string; text: string }> = {
-  Ativo:    { bg: '#D1FAE5', text: '#065F46' }, // verde claro
-  Pendente: { bg: '#FEF3C7', text: '#92400E' }, // amarelo claro
-};
-
-// ── Dados mock ───────────────────────────────────────────────────
-const MOCK_EVENTOS: Evento[] = [
-  { id: '1', nome: 'Festival de Inverno de Cajazeiras', status: 'Ativo',    data: '22 Mai 2026' },
-  { id: '2', nome: 'Feira Gastronômica Regional',       status: 'Pendente', data: '30 Mai 2026' },
-  { id: '3', nome: 'Noite Cultural no Centro Histórico',status: 'Ativo',    data: '05 Jun 2026' },
-];
-
-// ── Empty State ──────────────────────────────────────────────────
-function EmptyState({ onPress }: { onPress: () => void }) {
-  return (
-    <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconCircle}>
-        <Ionicons name="calendar-outline" size={52} color={Colors.primary} />
-      </View>
-      <Text style={styles.emptyTitle}>Nenhum evento ainda</Text>
-      <Text style={styles.emptyBody}>
-        Você ainda não cadastrou eventos.{'\n'}Comece criando o seu primeiro!
-      </Text>
-      <TouchableOpacity style={styles.emptyButton} onPress={onPress} activeOpacity={0.8}>
-        <Text style={styles.emptyButtonText}>Criar primeiro evento</Text>
-      </TouchableOpacity>
-    </View>
-  );
+function statusColor(status?: string) {
+  switch ((status || 'ativo').toLowerCase()) {
+    case 'ativo':
+      return Colors.success;
+    case 'cancelado':
+      return Colors.error;
+    default:
+      return Colors.textSecondary;
+  }
 }
 
-// ── Tela principal ───────────────────────────────────────────────
-export function GerenciarEventosScreen({ navigation }: GerenciarEventosScreenProps) {
-  const [eventos, setEventos] = useState<Evento[]>(MOCK_EVENTOS);
-  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
-  const [sheetVisible, setSheetVisible] = useState(false);
+export function GerenciarEventosScreen({
+  navigation,
+}: GerenciarEventosScreenProps) {
+  const { token } = useAuth();
+  const [activeFilter, setActiveFilter] =
+    useState<(typeof FILTERS)[number]>('Todos');
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Oculta o cabeçalho padrão do Stack para usar o nosso custom
-  useLayoutEffect(() => {
-    navigation.setOptions({ headerShown: false });
-  }, [navigation]);
+  const load = useCallback(
+    async (isRefresh = false) => {
+      try {
+        if (isRefresh) setRefreshing(true);
+        else setLoading(true);
+        const data = await listMyEventos(token);
+        setEventos(Array.isArray(data) ? data : []);
+      } catch (error) {
+        Alert.alert(
+          'Erro',
+          error instanceof ApiError
+            ? error.message
+            : 'Falha ao carregar seus eventos.',
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [token],
+  );
 
-  const openSheet = useCallback((evento: Evento) => {
-    setSelectedEvento(evento);
-    setSheetVisible(true);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
-  const closeSheet = useCallback(() => {
-    setSheetVisible(false);
-    // Pequeno delay para o modal fechar antes de limpar o state
-    setTimeout(() => setSelectedEvento(null), 250);
-  }, []);
+  const filtered = useMemo(() => {
+    if (activeFilter === 'Todos') return eventos;
+    return eventos.filter(e => labelEventoStatus(e.status) === activeFilter);
+  }, [activeFilter, eventos]);
 
-  const handleCreate = () =>
-    Alert.alert('Criar evento', 'Formulário em desenvolvimento.');
+  const metrics = useMemo(() => {
+    const ativos = eventos.filter(
+      e => (e.status || 'ativo').toLowerCase() === 'ativo',
+    ).length;
+    const encerrados = eventos.filter(
+      e => (e.status || '').toLowerCase() === 'encerrado',
+    ).length;
+    return {
+      total: eventos.length,
+      ativos,
+      encerrados,
+    };
+  }, [eventos]);
 
-  const handleEdit = useCallback(() => {
-    const nome = selectedEvento?.nome;
-    closeSheet();
-    setTimeout(() => Alert.alert('Editar', `Editar "${nome}"`), 300);
-  }, [selectedEvento, closeSheet]);
+  const handleDelete = (item: Evento) => {
+    Alert.alert('Excluir evento', `Remover "${item.nome}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteEventoRequest(item._id, token);
+            await load(true);
+          } catch (error) {
+            Alert.alert(
+              'Erro',
+              error instanceof ApiError
+                ? error.message
+                : 'Não foi possível excluir.',
+            );
+          }
+        },
+      },
+    ]);
+  };
 
-  const handleDelete = useCallback(() => {
-    const toDelete = selectedEvento;
-    closeSheet();
-    setTimeout(() => {
-      Alert.alert(
-        'Excluir evento',
-        `Deseja remover "${toDelete?.nome}"?`,
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Excluir',
-            style: 'destructive',
-            onPress: () =>
-              setEventos(prev => prev.filter(e => e.id !== toDelete?.id)),
-          },
-        ],
-      );
-    }, 300);
-  }, [selectedEvento, closeSheet]);
-
-  // ── Card de evento ─────────────────────────────────────────────
-  const renderEvento: ListRenderItem<Evento> = ({ item }) => {
-    const badge = STATUS_CONFIG[item.status];
+  const renderItem: ListRenderItem<Evento> = ({ item }) => {
+    const color = statusColor(item.status);
+    const image = firstImage(item.imagem);
     return (
       <View style={styles.card}>
-        {/* Conteúdo principal */}
-        <View style={styles.cardBody}>
-          <Text style={styles.cardNome} numberOfLines={2}>
-            {item.nome}
-          </Text>
-          <View style={styles.cardMeta}>
-            {/* Badge de status */}
-            <View style={[styles.badge, { backgroundColor: badge.bg }]}>
-              <Text style={[styles.badgeText, { color: badge.text }]}>
-                {item.status}
-              </Text>
-            </View>
-            {/* Data */}
-            <View style={styles.dateRow}>
-              <Ionicons name="calendar-outline" size={12} color={Colors.textSecondary} />
-              <Text style={styles.cardData}>{item.data}</Text>
-            </View>
+        {image ? (
+          <Image source={{ uri: image }} style={styles.thumb} />
+        ) : (
+          <View style={[styles.thumb, styles.thumbFallback]}>
+            <Ionicons name="calendar" size={24} color={Colors.muted} />
           </View>
-        </View>
-
-        {/* Botão 3 pontos */}
+        )}
         <TouchableOpacity
-          style={styles.moreButton}
-          onPress={() => openSheet(item)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          accessibilityLabel={`Opções para ${item.nome}`}
+          style={styles.cardBody}
+          onPress={() =>
+            navigation.navigate('Avaliacoes', {
+              tipo: 'evento',
+              referenciaId: item._id,
+              titulo: item.nome,
+            })
+          }
         >
-          <Ionicons name="ellipsis-vertical" size={18} color={Colors.textSecondary} />
+          <Text style={styles.cardTitle}>{item.nome}</Text>
+          <Text style={styles.cardDate}>{formatDateBR(item.data)}</Text>
+          <View style={[styles.badge, { backgroundColor: `${color}20` }]}>
+            <Text style={[styles.badgeText, { color }]}>
+              {labelEventoStatus(item.status)}
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.moreBtn} onPress={() => handleDelete(item)}>
+          <Ionicons name="trash-outline" size={18} color={Colors.error} />
         </TouchableOpacity>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-
-      {/* ── Cabeçalho ──────────────────────────────────────────── */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerSide}
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Voltar"
-        >
-          <Ionicons name="chevron-back" size={22} color={Colors.text} />
+    <View style={styles.root}>
+      <SafeAreaView edges={['top']} style={styles.header}>
+        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Meus Eventos</Text>
-        <View style={styles.headerSide} />
+        <View style={styles.headerBtn} />
+      </SafeAreaView>
+
+      <View style={styles.metrics}>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricLabel}>Total</Text>
+          <Text style={styles.metricValue}>{metrics.total}</Text>
+        </View>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricLabel}>Ativos</Text>
+          <Text style={[styles.metricValue, { color: Colors.success }]}>
+            {metrics.ativos}
+          </Text>
+        </View>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricLabel}>Encerrados</Text>
+          <Text style={[styles.metricValue, { color: Colors.textSecondary }]}>
+            {metrics.encerrados}
+          </Text>
+        </View>
       </View>
 
-      {/* ── Lista ou Empty State ────────────────────────────────── */}
-      <View style={styles.content}>
-        {eventos.length === 0 ? (
-          <EmptyState onPress={handleCreate} />
-        ) : (
-          <FlatList
-            data={eventos}
-            keyExtractor={item => item.id}
-            renderItem={renderEvento}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-
-        {/* ── FAB ──────────────────────────────────────────────── */}
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={handleCreate}
-          activeOpacity={0.85}
-          accessibilityLabel="Criar novo evento"
-          accessibilityRole="button"
-        >
-          <Ionicons name="add" size={30} color={Colors.surface} />
-        </TouchableOpacity>
-      </View>
-
-      {/* ── Action Sheet (Modal) ────────────────────────────────── */}
-      <Modal
-        visible={sheetVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={closeSheet}
-        statusBarTranslucent
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filters}
       >
-        <Pressable style={styles.backdrop} onPress={closeSheet}>
-          {/* stopPropagation via Pressable wrapping the sheet */}
-          <Pressable style={styles.sheet}>
-            {/* Handle */}
-            <View style={styles.sheetHandle} />
-
-            {/* Título do evento selecionado */}
-            <Text style={styles.sheetEventTitle} numberOfLines={1}>
-              {selectedEvento?.nome}
-            </Text>
-
-            {/* Opção: Editar */}
-            <TouchableOpacity style={styles.sheetOption} onPress={handleEdit}>
-              <Ionicons name="pencil-outline" size={20} color={Colors.text} />
-              <Text style={styles.sheetOptionText}>Editar</Text>
-            </TouchableOpacity>
-
-            <View style={styles.sheetDivider} />
-
-            {/* Opção: Excluir */}
-            <TouchableOpacity style={styles.sheetOption} onPress={handleDelete}>
-              <Ionicons name="trash-outline" size={20} color={Colors.error} />
-              <Text style={[styles.sheetOptionText, styles.sheetOptionDestructive]}>
-                Excluir
+        {FILTERS.map(filter => {
+          const active = activeFilter === filter;
+          return (
+            <TouchableOpacity
+              key={filter}
+              style={[styles.chip, active ? styles.chipActive : styles.chipIdle]}
+              onPress={() => setActiveFilter(filter)}
+            >
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                {filter}
               </Text>
             </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
-            {/* Cancelar */}
-            <TouchableOpacity style={styles.sheetCancelButton} onPress={closeSheet}>
-              <Text style={styles.sheetCancelText}>Cancelar</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </SafeAreaView>
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} color={Colors.primary} />
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={item => item._id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />
+          }
+          ListEmptyComponent={
+            <Text style={styles.empty}>Você ainda não cadastrou eventos.</Text>
+          }
+        />
+      )}
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('NovoEvento')}
+      >
+        <Ionicons name="add" size={28} color={Colors.text} />
+      </TouchableOpacity>
+    </View>
   );
 }
 
-// ── Estilos ──────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    flex: 1,
-  },
-
-  // ── Cabeçalho ────────────────────────────────────────────────
+  root: { flex: 1, backgroundColor: Colors.background },
   header: {
+    backgroundColor: Colors.highlight,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.containerPadding,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
   },
-  headerSide: {
-    width: 36,
-    height: 36,
+  headerBtn: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontFamily: FontFamily.headingSemiBold,
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: FontFamily.headingBold,
     fontSize: FontSize.lg,
     color: Colors.text,
   },
-
-  // ── Lista ─────────────────────────────────────────────────────
-  listContent: {
-    padding: Spacing.containerPadding,
-    paddingBottom: 100, // espaço para o FAB não cobrir o último item
-  },
-
-  // ── Card de evento ────────────────────────────────────────────
-  card: {
+  metrics: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+  },
+  metricCard: {
+    flex: 1,
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.md,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
     ...Shadow.sm,
   },
-  cardBody: {
-    flex: 1,
-    marginRight: Spacing.sm,
+  metricLabel: {
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginBottom: 4,
   },
-  cardNome: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,           // 16px
+  metricValue: {
+    fontFamily: FontFamily.headingBold,
+    fontSize: FontSize.xxl,
     color: Colors.text,
-    marginBottom: Spacing.sm,
   },
-  cardMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  filters: {
+    paddingHorizontal: Spacing.lg,
     gap: Spacing.sm,
+    paddingBottom: Spacing.lg,
   },
-  badge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
+  chip: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
   },
-  badgeText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.xxs,          // 10px
+  chipActive: { backgroundColor: Colors.highlight },
+  chipIdle: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
-  dateRow: {
+  chipText: {
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.sm,
+    color: Colors.text,
+  },
+  chipTextActive: { fontFamily: FontFamily.headingSemiBold },
+  list: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: 100,
+    gap: Spacing.md,
+  },
+  empty: {
+    textAlign: 'center',
+    marginTop: 40,
+    color: Colors.textSecondary,
+    fontFamily: FontFamily.bodyRegular,
+  },
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    ...Shadow.sm,
   },
-  cardData: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.xs,           // 12px
-    color: Colors.textSecondary,
-  },
-  moreButton: {
-    padding: Spacing.xs,
-  },
-
-  // ── Empty State ───────────────────────────────────────────────
-  emptyContainer: {
-    flex: 1,
+  thumb: { width: 64, height: 64, borderRadius: BorderRadius.md },
+  thumbFallback: {
+    backgroundColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.xxxl,
   },
-  emptyIconCircle: {
-    width: 104,
-    height: 104,
-    borderRadius: 52,
-    backgroundColor: '#EFF6FF',      // azul muito claro
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xl,
-  },
-  emptyTitle: {
+  cardBody: { flex: 1 },
+  cardTitle: {
     fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.xl,
+    fontSize: 15,
     color: Colors.text,
-    marginBottom: Spacing.sm,
-    textAlign: 'center',
+    marginBottom: 4,
   },
-  emptyBody: {
+  cardDate: {
     fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: FontSize.md * 1.5,
-    marginBottom: Spacing.xl,
+    marginBottom: 4,
   },
-  emptyButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
+  badge: {
+    alignSelf: 'flex-start',
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
   },
-  emptyButtonText: {
+  badgeText: {
     fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.surface,
+    fontSize: FontSize.xs,
   },
-
-  // ── FAB ───────────────────────────────────────────────────────
+  moreBtn: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   fab: {
     position: 'absolute',
-    bottom: Spacing.xl,
     right: Spacing.containerPadding,
+    bottom: Spacing.containerPadding,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.primary,  // #0D6EFD
+    backgroundColor: Colors.highlight,
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadow.lg,
-  },
-
-  // ── Action Sheet ──────────────────────────────────────────────
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xxxl,
-    paddingHorizontal: Spacing.containerPadding,
-  },
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.border,
-    alignSelf: 'center',
-    marginBottom: Spacing.lg,
-  },
-  sheetEventTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.lg,
-  },
-  sheetOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    gap: Spacing.md,
-  },
-  sheetOptionText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
-  sheetOptionDestructive: {
-    color: Colors.error,
-  },
-  sheetDivider: {
-    height: 1,
-    backgroundColor: Colors.border,
-  },
-  sheetCancelButton: {
-    marginTop: Spacing.md,
-    paddingVertical: Spacing.lg,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  sheetCancelText: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
   },
 });

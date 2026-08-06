@@ -1,12 +1,11 @@
-import React, { useLayoutEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
-  Alert,
-  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,329 +14,213 @@ import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
 import type { SobreScreenProps } from '../navigation/types';
 
-// ── Dados estáticos ──────────────────────────────────────────────
-const VERSAO = '1.0.0';
-
-const MISSAO =
-  'O Descubra+ Cajazeiras nasce para conectar moradores e visitantes ao rico ' +
-  'patrimônio cultural, gastronômico e turístico da nossa cidade. Nossa missão ' +
-  'é fomentar o turismo local de forma sustentável, valorizando empreendedores ' +
-  'e fortalecendo a identidade cajazeirense.';
-
-const EQUIPE = [
-  { id: '1', funcao: 'Desenvolvimento', nome: 'Equipe PW1 — IFPB Cajazeiras' },
-  { id: '2', funcao: 'Design & UX',     nome: 'UI/UX Design Team' },
-  { id: '3', funcao: 'Backend / API',   nome: 'API REST Team' },
-  { id: '4', funcao: 'Orientação',      nome: 'Prof. Disciplina de PW' },
-];
-
-type SocialLink = {
+type InfoCard = {
   id: string;
-  icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
+  value: string;
   color: string;
-  url: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
 };
 
-const SOCIAL_LINKS: SocialLink[] = [
-  {
-    id: 'instagram',
-    icon: 'logo-instagram',
-    label: 'Instagram',
-    color: '#E1306C',
-    url: 'https://instagram.com',
-  },
-  {
-    id: 'whatsapp',
-    icon: 'logo-whatsapp',
-    label: 'WhatsApp',
-    color: '#25D366',
-    url: 'https://wa.me',
-  },
-  {
-    id: 'web',
-    icon: 'globe-outline',
-    label: 'Website',
-    color: Colors.primary,
-    url: 'https://cajazeiras.pb.gov.br',
-  },
+const INFO_CARDS: InfoCard[] = [
+  { id: '1', icon: 'people', label: 'População', value: '60k+', color: Colors.primary },
+  { id: '2', icon: 'business', label: 'Pontos Turísticos', value: '25+', color: Colors.success },
+  { id: '3', icon: 'trending-up', label: 'Turismo Forte', value: '100%', color: Colors.warning },
+  { id: '4', icon: 'location', label: 'Localização', value: 'Paraíba', color: Colors.error },
 ];
 
-// ── Subcomponente: Card de seção ─────────────────────────────────
-function SectionCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+const MOTIVOS = [
+  'Rica história e cultura nordestina',
+  'Gastronomia regional autêntica',
+  'Hospitalidade única do povo cajazeirense',
+  'Eventos culturais e festas tradicionais',
+];
+
+const COVER_URI =
+  'https://images.unsplash.com/photo-1768061002212-26797b45b893?auto=format&fit=crop&w=1080&q=80';
+
+export function SobreScreen({ navigation }: SobreScreenProps) {
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>{title}</Text>
-      {children}
+    <View style={styles.root}>
+      <SafeAreaView edges={['top']} style={styles.header}>
+        <Pressable style={styles.headerBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={Colors.surface} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Descubra+ Cajazeiras</Text>
+        <View style={styles.headerBtn} />
+      </SafeAreaView>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Image source={{ uri: COVER_URI }} style={styles.cover} resizeMode="cover" />
+
+        <View style={styles.content}>
+          <Text style={styles.sectionTitle}>Sobre o Projeto</Text>
+          <Text style={styles.paragraph}>
+            O <Text style={styles.bold}>Descubra+ Cajazeiras</Text> é uma plataforma
+            digital criada para conectar moradores e turistas com os melhores
+            serviços, eventos e pontos turísticos da cidade de Cajazeiras, Paraíba.
+          </Text>
+          <Text style={styles.paragraph}>
+            Nossa missão é fortalecer o turismo local, valorizar os empreendedores
+            da região e proporcionar experiências inesquecíveis para todos que
+            visitam nossa querida cidade.
+          </Text>
+          <Text style={[styles.paragraph, { marginBottom: Spacing.xl }]}>
+            Explore, descubra e se apaixone por Cajazeiras!
+          </Text>
+
+          <Text style={styles.subsectionTitle}>Números da Cidade</Text>
+          <View style={styles.grid}>
+            {INFO_CARDS.map(card => (
+              <View key={card.id} style={styles.infoCard}>
+                <View
+                  style={[
+                    styles.infoIcon,
+                    { backgroundColor: `${card.color}20` },
+                  ]}
+                >
+                  <Ionicons name={card.icon} size={24} color={card.color} />
+                </View>
+                <Text style={styles.infoLabel}>{card.label}</Text>
+                <Text style={[styles.infoValue, { color: card.color }]}>
+                  {card.value}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.whyBox}>
+            <Text style={styles.whyTitle}>Por que visitar Cajazeiras?</Text>
+            {MOTIVOS.map(motivo => (
+              <View key={motivo} style={styles.whyRow}>
+                <Text style={styles.whyBullet}>•</Text>
+                <Text style={styles.whyText}>{motivo}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
-// ── Tela principal ───────────────────────────────────────────────
-export function SobreScreen({ navigation }: SobreScreenProps) {
-  useLayoutEffect(() => {
-    navigation.setOptions({ headerShown: false });
-  }, [navigation]);
-
-  const openLink = (url: string, label: string) =>
-    Linking.canOpenURL(url)
-      .then(can => {
-        if (can) Linking.openURL(url);
-        else Alert.alert(label, 'Não foi possível abrir o link.');
-      })
-      .catch(() => Alert.alert(label, 'Erro ao abrir o link.'));
-
-  return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-
-      {/* ── Cabeçalho ──────────────────────────────────────────── */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.headerSide}
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Voltar"
-        >
-          <Ionicons name="chevron-back" size={22} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sobre</Text>
-        <View style={styles.headerSide} />
-      </View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* ── Logo ─────────────────────────────────────────────── */}
-        <View style={styles.logoBlock}>
-          <Text style={styles.logoLine1}>Descubra+</Text>
-          <Text style={styles.logoLine2}>Cajazeiras</Text>
-          <View style={styles.versaoBadge}>
-            <Text style={styles.versaoText}>Versão {VERSAO}</Text>
-          </View>
-        </View>
-
-        {/* ── Missão ───────────────────────────────────────────── */}
-        <SectionCard title="Nosso Propósito">
-          <Text style={styles.paragraph}>{MISSAO}</Text>
-        </SectionCard>
-
-        {/* ── Equipe / Créditos ─────────────────────────────────── */}
-        <SectionCard title="Equipe & Créditos">
-          {EQUIPE.map((membro, index) => (
-            <View key={membro.id}>
-              <View style={styles.membroRow}>
-                <Text style={styles.membroFuncao}>{membro.funcao}</Text>
-                <Text style={styles.membroNome}>{membro.nome}</Text>
-              </View>
-              {index < EQUIPE.length - 1 && (
-                <View style={styles.rowDivider} />
-              )}
-            </View>
-          ))}
-        </SectionCard>
-
-        {/* ── Redes sociais ─────────────────────────────────────── */}
-        <View style={styles.socialSection}>
-          <Text style={styles.socialTitle}>Nos siga nas redes</Text>
-          <View style={styles.socialRow}>
-            {SOCIAL_LINKS.map(link => (
-              <TouchableOpacity
-                key={link.id}
-                style={[styles.socialButton, { backgroundColor: link.color }]}
-                onPress={() => openLink(link.url, link.label)}
-                activeOpacity={0.8}
-                accessibilityLabel={link.label}
-              >
-                <Ionicons name={link.icon} size={24} color={Colors.surface} />
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* ── Termos de uso ─────────────────────────────────────── */}
-        <TouchableOpacity
-          style={styles.termosButton}
-          onPress={() =>
-            Alert.alert(
-              'Termos de Uso e Privacidade',
-              'Os termos completos estarão disponíveis em breve.',
-            )
-          }
-        >
-          <Text style={styles.termosText}>Termos de Uso e Privacidade</Text>
-        </TouchableOpacity>
-
-        {/* Crédito de rodapé */}
-        <Text style={styles.rodape}>
-          © {new Date().getFullYear()} Descubra+ Cajazeiras{'\n'}Feito com ♥ no Sertão paraibano
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-// ── Estilos ──────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: {
+  root: {
     flex: 1,
-    backgroundColor: Colors.background,  // #F0F8FF
+    backgroundColor: Colors.surface,
   },
-  scrollContent: {
-    paddingHorizontal: Spacing.containerPadding,
-    paddingBottom: Spacing.huge,
-  },
-
-  // ── Cabeçalho ────────────────────────────────────────────────
   header: {
+    backgroundColor: Colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.containerPadding,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
   },
-  headerSide: {
-    width: 36,
-    height: 36,
+  headerBtn: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: FontFamily.headingBold,
+    fontSize: FontSize.lg,
+    color: Colors.surface,
+  },
+  cover: {
+    width: '100%',
+    height: 224,
+  },
+  content: {
+    paddingHorizontal: Spacing.containerPadding,
+    paddingVertical: Spacing.containerPadding,
+    paddingBottom: Spacing.xxxl,
+  },
+  sectionTitle: {
+    fontFamily: FontFamily.headingBold,
+    fontSize: 22,
+    color: Colors.text,
+    marginBottom: Spacing.md,
+  },
+  paragraph: {
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.md,
+    color: '#374151',
+    lineHeight: 24,
+    marginBottom: Spacing.md,
+  },
+  bold: {
+    fontFamily: FontFamily.headingSemiBold,
+    color: Colors.text,
+  },
+  subsectionTitle: {
     fontFamily: FontFamily.headingSemiBold,
     fontSize: FontSize.lg,
     color: Colors.text,
-  },
-
-  // ── Logo ──────────────────────────────────────────────────────
-  logoBlock: {
-    alignItems: 'center',
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
-  },
-  logoLine1: {
-    fontFamily: FontFamily.headingBold,
-    fontSize: FontSize.xxl,          // 24px — menor que o do login (32px)
-    color: Colors.text,              // #212529 Cinza Escuro
-    lineHeight: FontSize.xxl * 1.2,
-  },
-  logoLine2: {
-    fontFamily: FontFamily.headingBold,
-    fontSize: FontSize.xxl,
-    color: Colors.highlight,         // #FFD500 Amarelo
-    lineHeight: FontSize.xxl * 1.2,
-  },
-  versaoBadge: {
-    marginTop: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    backgroundColor: Colors.border,
-    borderRadius: BorderRadius.full,
-  },
-  versaoText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.xs,           // 12px
-    color: Colors.text,              // Cinza Escuro
-  },
-
-  // ── Cards de seção ────────────────────────────────────────────
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.lg,
     marginBottom: Spacing.lg,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.lg,
+    marginBottom: Spacing.containerPadding,
+  },
+  infoCard: {
+    width: '46%',
+    flexGrow: 1,
+    backgroundColor: '#F9FAFB',
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
     ...Shadow.sm,
   },
-  cardTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.lg,           // 18px
-    color: Colors.text,              // #212529 Cinza Escuro
-    marginBottom: Spacing.md,
-  },
-
-  // ── Missão ────────────────────────────────────────────────────
-  paragraph: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,           // 16px
-    color: Colors.textSecondary,
-    lineHeight: FontSize.md * 1.65,
-  },
-
-  // ── Equipe ────────────────────────────────────────────────────
-  membroRow: {
-    paddingVertical: Spacing.sm,
-  },
-  membroFuncao: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.xs,           // 12px
-    color: Colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  membroNome: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
-  rowDivider: {
-    height: 1,
-    backgroundColor: Colors.border,
-  },
-
-  // ── Redes Sociais ────────────────────────────────────────────
-  socialSection: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-  socialTitle: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.md,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    gap: Spacing.lg,
-  },
-  socialButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  infoIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Shadow.sm,
+    marginBottom: Spacing.md,
   },
-
-  // ── Termos ────────────────────────────────────────────────────
-  termosButton: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  termosText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    textDecorationLine: 'underline',
-  },
-
-  // ── Rodapé ────────────────────────────────────────────────────
-  rodape: {
+  infoLabel: {
     fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.xs,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: FontSize.xs * 1.8,
+    color: '#4B5563',
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontFamily: FontFamily.headingBold,
+    fontSize: FontSize.xxl,
+  },
+  whyBox: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: BorderRadius.lg,
+    padding: 20,
+  },
+  whyTitle: {
+    fontFamily: FontFamily.headingSemiBold,
+    fontSize: FontSize.md,
+    color: Colors.primary,
+    marginBottom: Spacing.md,
+  },
+  whyRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  whyBullet: {
+    color: Colors.primary,
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+  whyText: {
+    flex: 1,
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.sm,
+    color: '#374151',
+    lineHeight: 20,
   },
 });

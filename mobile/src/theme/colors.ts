@@ -7,6 +7,9 @@ export const Colors = {
   /** Amarelo de destaque / marca */
   highlight: '#FFD500',
 
+  /** Amarelo escuro do gradiente do header */
+  highlightDark: '#E6C200',
+
   /** Azul vibrante — ação primária / CTA */
   primary: '#0D6EFD',
 
@@ -14,8 +17,14 @@ export const Colors = {
   /** Fundo geral das telas */
   background: '#F0F8FF',
 
+  /** Fundo cinza claro (perfil / listas) */
+  backgroundMuted: '#F9FAFB',
+
   /** Superfície branca (cards, inputs, modais) */
   surface: '#FFFFFF',
+
+  /** Fundo de input */
+  inputBackground: '#F9FAFB',
 
   // ── Tipografia ──────────────────────────────────────────────
   /** Texto principal — títulos e corpo */
@@ -24,9 +33,15 @@ export const Colors = {
   /** Texto secundário / placeholders */
   textSecondary: '#6C757D',
 
+  /** Ícone/tab inativo */
+  muted: '#9CA3AF',
+
   // ── Suporte ─────────────────────────────────────────────────
   /** Bordas e divisores */
   border: '#E9ECEF',
+
+  /** Divisor de menu */
+  divider: '#F0F0F0',
 
   /** Erro / ação destrutiva */
   error: '#DC3545',
@@ -36,6 +51,9 @@ export const Colors = {
 
   /** Aviso */
   warning: '#FFC107',
+
+  /** Accent coral (média geral) */
+  coral: '#FF6B6B',
 } as const;
 
 export type ColorKey = keyof typeof Colors;

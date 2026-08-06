@@ -164,7 +164,10 @@ export const estatisticasController = async (_req: Request, res: Response) => {
     ]),
   ]);
 
-  return res.json({
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  return res.status(200).json({
     success: true,
     data: {
       totalPontos,
