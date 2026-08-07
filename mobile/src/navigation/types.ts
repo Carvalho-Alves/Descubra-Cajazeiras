@@ -1,5 +1,12 @@
 /**
  * types.ts — Tipagem centralizada da navegação
+ *
+ * Convenção de nomes:
+ *   • RootStackParamList → telas do Stack raiz
+ *   • TabParamList       → abas do Bottom Tab Navigator
+ *
+ * Use os tipos de props exportados nas telas para ter autocompletar
+ * e verificação de tipos no navigate() e route.params.
  */
 import type {
   CompositeScreenProps,
@@ -9,13 +16,17 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { AvaliacaoTipo } from '../services/avaliacaoService';
 
+// ── Tab Param List ────────────────────────────────────────────────
 export type TabParamList = {
+  Home: undefined;
   Mapa: undefined;
-  Servicos: undefined;
+  Favoritos: undefined;
   Eventos: undefined;
+  Servicos: undefined;
   Perfil: undefined;
 };
 
+// ── Root Stack Param List ─────────────────────────────────────────
 export type RootStackParamList = {
   Login: undefined;
   Tabs: NavigatorScreenParams<TabParamList>;
@@ -31,10 +42,12 @@ export type RootStackParamList = {
       }
     | undefined;
   Sobre: undefined;
+  Detalhes: { item: any };
   MinhasInformacoes: undefined;
   Notificacoes: undefined;
 };
 
+// ── Declaração global para useNavigation() sem generics ───────────
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace ReactNavigation {
@@ -42,6 +55,9 @@ declare global {
   }
 }
 
+// ── Props tipados por tela ────────────────────────────────────────
+
+// Stack screens
 export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
 export type GerenciarEventosScreenProps = NativeStackScreenProps<RootStackParamList, 'GerenciarEventos'>;
 export type NovoServicoScreenProps = NativeStackScreenProps<RootStackParamList, 'NovoServico'>;
@@ -52,12 +68,23 @@ export type SobreScreenProps = NativeStackScreenProps<RootStackParamList, 'Sobre
 export type MinhasInformacoesScreenProps = NativeStackScreenProps<RootStackParamList, 'MinhasInformacoes'>;
 export type NotificacoesScreenProps = NativeStackScreenProps<RootStackParamList, 'Notificacoes'>;
 
+// Tab screens (compostas com o Stack raiz para acessar navigate global)
 export type HomeScreenProps = CompositeScreenProps<
+  BottomTabScreenProps<TabParamList, 'Home'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
+
+export type MapaScreenProps = CompositeScreenProps<
   BottomTabScreenProps<TabParamList, 'Mapa'>,
   NativeStackScreenProps<RootStackParamList>
 >;
 
 export type FavoritosScreenProps = CompositeScreenProps<
+  BottomTabScreenProps<TabParamList, 'Favoritos'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
+
+export type EventosTabScreenProps = CompositeScreenProps<
   BottomTabScreenProps<TabParamList, 'Eventos'>,
   NativeStackScreenProps<RootStackParamList>
 >;

@@ -1,23 +1,18 @@
 import { CAJAZEIRAS_CENTER } from '../config/api';
 import { apiRequest } from './apiClient';
 
-export type TipoServico =
-  | 'Hospedagem'
-  | 'Alimentação/Lazer'
-  | 'Ponto Turístico';
-
 export type Servico = {
   _id: string;
   nome: string;
   descricao?: string;
-  tipo_servico: TipoServico;
-  categoria?: string;
-  contato?: { telefone?: string; instagram?: string };
-  localizacao?: { latitude?: number; longitude?: number };
-  imagem?: string[];
-  usuario?: { _id?: string; nome?: string; email?: string } | string;
-  createdAt?: string;
-  updatedAt?: string;
+  tipo_servico: string;
+  localizacao?: { latitude: number; longitude: number };
+  contato?: { telefone?: string };
+  telefone?: string;
+  data?: string;
+  horario?: string;
+  horario_funcionamento?: string;
+  funcionamento?: string;
 };
 
 export async function listServicos() {
@@ -41,8 +36,9 @@ export async function createServicoRequest(
   input: {
     nome: string;
     descricao?: string;
-    tipo_servico: TipoServico;
+    tipo_servico: string;
     telefone?: string;
+    horario?: string;
     latitude?: number;
     longitude?: number;
     imageUri?: string | null;
@@ -53,10 +49,9 @@ export async function createServicoRequest(
   form.append('nome', input.nome);
   if (input.descricao) form.append('descricao', input.descricao);
   form.append('tipo_servico', input.tipo_servico);
-  form.append(
-    'contato',
-    JSON.stringify({ telefone: input.telefone || undefined }),
-  );
+  if (input.telefone) form.append('telefone', input.telefone);
+  if (input.horario) form.append('horario', input.horario);
+  
   form.append(
     'localizacao',
     JSON.stringify({

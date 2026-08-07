@@ -11,6 +11,7 @@ import { NovoEventoScreen } from '../screens/NovoEventoScreen';
 import { GerenciarServicosScreen } from '../screens/GerenciarServicosScreen';
 import { AvaliacoesScreen } from '../screens/AvaliacoesScreen';
 import { SobreScreen } from '../screens/SobreScreen';
+import { DetalhesScreen } from '../screens/DetalhesScreen';
 import { MinhasInformacoesScreen } from '../screens/MinhasInformacoesScreen';
 import { NotificacoesScreen } from '../screens/NotificacoesScreen';
 import { useAuth } from '../context/AuthContext';
@@ -20,12 +21,19 @@ import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+/** Opções padrão de cabeçalho aplicadas a todas as telas Stack */
 const DEFAULT_HEADER_OPTIONS = {
-  headerStyle: { backgroundColor: Colors.surface },
+  headerStyle: {
+    backgroundColor: Colors.surface,
+  },
   headerTintColor: Colors.primary,
-  headerTitleStyle: { fontFamily: 'Poppins_600SemiBold' },
+  headerTitleStyle: {
+    fontFamily: 'Poppins_600SemiBold',
+  },
   headerShadowVisible: false,
-  contentStyle: { backgroundColor: Colors.background },
+  contentStyle: {
+    backgroundColor: Colors.background,
+  },
 } as const;
 
 export function AppNavigator() {
@@ -50,6 +58,7 @@ export function AppNavigator() {
           />
         ) : (
           <>
+            {/* ── Telas sem cabeçalho ───────────────────────────────── */}
             <Stack.Screen
               name="Tabs"
               component={TabNavigator}
@@ -94,6 +103,13 @@ export function AppNavigator() {
               name="Notificacoes"
               component={NotificacoesScreen}
               options={{ headerShown: false }}
+            />
+
+            {/* ── Telas com cabeçalho padrão ───────────────────────── */}
+            <Stack.Screen
+              name="Detalhes"
+              component={DetalhesScreen}
+              options={{ title: 'Detalhes' }}
             />
           </>
         )}
