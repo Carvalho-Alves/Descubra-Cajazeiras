@@ -32,7 +32,7 @@ import {
   shortTipoServico,
 } from '../utils/format';
 
-const BASE_URL = 'http://192.168.1.74:3333';
+const BASE_URL = 'http://10.220.0.89:3333';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CATEGORIES = ['Todos', 'Eventos', 'Hospedagem', 'Alimentação', 'Turístico'];
 

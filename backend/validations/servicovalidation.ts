@@ -9,6 +9,7 @@ export const createServicoSchema = z.object({
     telefone: z.string().optional(),
     instagram: z.string().optional(),
   }).optional(),
+  horario: z.string().optional(),
   localizacao: z.object({
     latitude: z.number().optional(),
     longitude: z.number().optional(),
@@ -17,7 +18,6 @@ export const createServicoSchema = z.object({
 });
 
 export const updateServicoSchema = createServicoSchema.partial();
-
 
 export type CreateServicoInput = z.infer<typeof createServicoSchema> & { usuarioId: string };
 export type UpdateServicoInput = z.infer<typeof updateServicoSchema>;

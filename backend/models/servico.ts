@@ -1,11 +1,10 @@
 import { Schema, model, Document, Types } from "mongoose";
 
-// --- DEFINIÇÃO DOS LIMITES GEOGRÁFICOS ---
 const limitesCajazeiras = {
-  latMin: -6.95, // Sul
-  latMax: -6.83, // Norte
-  lonMin: -38.62, // Oeste
-  lonMax: -38.50  // Leste
+  latMin: -6.95,
+  latMax: -6.83,
+  lonMin: -38.62,
+  lonMax: -38.50
 };
 
 export interface IServico extends Document {
@@ -17,6 +16,7 @@ export interface IServico extends Document {
     telefone?: string;
     instagram?: string;
   };
+  horario?: string;
   localizacao: {
     latitude: number;
     longitude: number;
@@ -49,10 +49,13 @@ const ServicoTuristicoSchema = new Schema<IServico>(
       telefone: { type: String, trim: true },
       instagram: { type: String, trim: true },
     },
+    horario: {
+      type: String,
+      trim: true,
+    },
     localizacao: {
       latitude: { 
         type: Number,
-        // --- VALIDAÇÃO ADICIONADA AQUI ---
         validate: {
           validator: (lat: number) => lat >= limitesCajazeiras.latMin && lat <= limitesCajazeiras.latMax,
           message: 'A latitude fornecida está fora da área de Cajazeiras.'
@@ -60,7 +63,6 @@ const ServicoTuristicoSchema = new Schema<IServico>(
       },
       longitude: { 
         type: Number,
-        // --- VALIDAÇÃO ADICIONADA AQUI ---
         validate: {
           validator: (lon: number) => lon >= limitesCajazeiras.lonMin && lon <= limitesCajazeiras.lonMax,
           message: 'A longitude fornecida está fora da área de Cajazeiras.'
@@ -83,7 +85,6 @@ const ServicoTuristicoSchema = new Schema<IServico>(
   }
 );
 
-// Índice para busca textual
 ServicoTuristicoSchema.index({
   nome: 'text',
   descricao: 'text',
@@ -91,11 +92,9 @@ ServicoTuristicoSchema.index({
   categoria: 'text',
 });
 
-// Exportações para compatibilidade
 export const ServicoTuristico = model<IServico>(
   "ServicoTuristico",
   ServicoTuristicoSchema
 );
 
-// Export padrão para uso no service
 export const Servico = ServicoTuristico;

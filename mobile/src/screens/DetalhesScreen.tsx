@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
@@ -20,7 +20,6 @@ export function DetalhesScreen() {
     const destLong = Number(item?.localizacao?.longitude || item?.longitude) || -38.5606;
     const isEvent = item?.tipo_servico === 'Eventos';
     
-    // Garante que vai achar o horário, não importa como o backend chamou a variável
     const horarioServico = item?.horario || item?.horario_funcionamento || item?.funcionamento;
 
     const handleShowRoute = async () => {
@@ -126,12 +125,6 @@ export function DetalhesScreen() {
                         showsUserLocation={true}
                         showsPointsOfInterest={false}
                     >
-                        <UrlTile
-                            urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            maximumZ={19}
-                            flipY={false}
-                        />
-
                         <Marker
                             coordinate={{ latitude: destLat, longitude: destLong }}
                             title={item?.nome}
