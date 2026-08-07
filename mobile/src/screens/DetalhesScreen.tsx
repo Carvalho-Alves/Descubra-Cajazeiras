@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker, Polyline, UrlTile } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
@@ -15,6 +15,13 @@ export function DetalhesScreen() {
     const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
     const mapRef = useRef<MapView>(null);
+
+    const destLat = Number(item?.localizacao?.latitude || item?.latitude) || -6.8889;
+    const destLong = Number(item?.localizacao?.longitude || item?.longitude) || -38.5606;
+    const isEvent = item?.tipo_servico === 'Eventos';
+    
+    // Garante que vai achar o horário, não importa como o backend chamou a variável
+    const horarioServico = item?.horario || item?.horario_funcionamento || item?.funcionamento;
 
     const handleShowRoute = async () => {
         try {
@@ -33,7 +40,7 @@ export function DetalhesScreen() {
 
             setUserCoords({ latitude: userLat, longitude: userLong });
 
-            const url = `https://router.project-osrm.org/route/v1/driving/${userLong},${userLat};${item.longitude},${item.latitude}?overview=full&geometries=geojson`;
+            const url = `https://router.project-osrm.org/route/v1/driving/${userLong},${userLat};${destLong},${destLat}?overview=full&geometries=geojson`;
             const response = await fetch(url);
             const data = await response.json();
 
@@ -48,7 +55,7 @@ export function DetalhesScreen() {
                     mapRef.current?.fitToCoordinates(
                         [
                             { latitude: userLat, longitude: userLong },
-                            { latitude: item.latitude, longitude: item.longitude },
+                            { latitude: destLat, longitude: destLong },
                         ],
                         {
                             edgePadding: { top: 60, right: 60, bottom: 60, left: 60 },
@@ -66,43 +73,76 @@ export function DetalhesScreen() {
         }
     };
 
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return '';
+        const d = new Date(dateString);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${day}/${month} às ${hours}h${minutes}`;
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.content}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.category}>{item.category}</Text>
+                <Text style={styles.title}>{item?.nome}</Text>
+                <Text style={styles.category}>{item?.tipo_servico}</Text>
 
-                {item.date && (
-                    <Text style={styles.date}>
-                        <Ionicons name="calendar-outline" size={14} /> {item.date}
+                {isEvent && item?.data && (
+                    <Text style={styles.infoText}>
+                        <Ionicons name="calendar-outline" size={14} /> {formatDate(item.data)}
                     </Text>
                 )}
 
-                {/* MAPA FOCADO NO DESTINO */}
+                {!isEvent && horarioServico && (
+                    <Text style={styles.infoText}>
+                        <Ionicons name="time-outline" size={14} /> {horarioServico}
+                    </Text>
+                )}
+
+                {item?.telefone && (
+                    <Text style={styles.infoText}>
+                        <Ionicons name="call-outline" size={14} /> {item.telefone}
+                    </Text>
+                )}
+
+                {item?.descricao && (
+                    <Text style={styles.description} numberOfLines={4}>
+                        {item.descricao}
+                    </Text>
+                )}
+
                 <View style={styles.mapContainer}>
                     <MapView
                         ref={mapRef}
                         style={styles.map}
                         initialRegion={{
-                            latitude: item.latitude,
-                            longitude: item.longitude,
+                            latitude: destLat,
+                            longitude: destLong,
                             latitudeDelta: 0.005,
                             longitudeDelta: 0.005,
                         }}
                         showsUserLocation={true}
                         showsPointsOfInterest={false}
                     >
+                        <UrlTile
+                            urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            maximumZ={19}
+                            flipY={false}
+                        />
+
                         <Marker
-                            coordinate={{ latitude: item.latitude, longitude: item.longitude }}
-                            title={item.title}
+                            coordinate={{ latitude: destLat, longitude: destLong }}
+                            title={item?.nome}
                             pinColor="red"
                         />
 
                         {userCoords && (
                             <Marker
                                 coordinate={userCoords}
-                                title='Sua Posição'
-                                pinColor='blue'
+                                title="Sua Posição"
+                                pinColor="blue"
                             />
                         )}
 
@@ -116,8 +156,8 @@ export function DetalhesScreen() {
                     </MapView>
                 </View>
 
-                {/*BOTÃO DE ROTA */}
-                <TouchableOpacity style={[styles.routeButton, loadingRoute && { opacity: 0.7 }]}
+                <TouchableOpacity 
+                    style={[styles.routeButton, loadingRoute && { opacity: 0.7 }]}
                     activeOpacity={0.8}
                     onPress={handleShowRoute}
                     disabled={loadingRoute}
@@ -126,9 +166,9 @@ export function DetalhesScreen() {
                         <ActivityIndicator color={Colors.surface} />
                     ) : (
                         <>
-                            <Ionicons name='navigate' size={20} color={Colors.surface} />
+                            <Ionicons name="navigate" size={20} color={Colors.surface} />
                             <Text style={styles.routeButtonText}>
-                                {routeCoordinates.length > 0 ? 'Recaucular Rota' : "Mostrar Rota"}
+                                {routeCoordinates.length > 0 ? 'Recalcular Rota' : 'Mostrar Rota'}
                             </Text>
                         </>
                     )}
@@ -160,10 +200,18 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins_600SemiBold',
         marginBottom: 8,
     },
-    date: {
+    infoText: {
         fontSize: 14,
         color: Colors.textSecondary,
+        marginBottom: 6,
+        fontFamily: 'Poppins_400Regular',
+    },
+    description: {
+        fontSize: 14,
+        color: Colors.text,
+        marginTop: 4,
         marginBottom: 16,
+        fontFamily: 'Poppins_400Regular',
     },
     mapContainer: {
         flex: 1,

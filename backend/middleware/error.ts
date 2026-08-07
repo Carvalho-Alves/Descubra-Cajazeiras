@@ -73,6 +73,16 @@ export function errorHandler(
 }
 
 export function notFoundHandler(req: Request, res: Response, next: NextFunction) {
+  // Uploads sem arquivo já são tratados pelo middleware de /uploads.
+  // Evita log ruidoso para assets e rotas de favicon/devtools.
+  if (
+    req.path.startsWith('/uploads') ||
+    req.path === '/favicon.ico' ||
+    req.path.startsWith('/.well-known')
+  ) {
+    return res.status(404).end();
+  }
+
   const error: any = new Error(`Não foi possível encontrar a rota: ${req.originalUrl}.`);
   error.statusCode = 404;
   next(error);

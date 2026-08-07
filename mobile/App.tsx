@@ -27,6 +27,7 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { AuthProvider } from './src/context/AuthContext';
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -75,9 +76,11 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <View style={styles.root} onLayout={onLayoutRootView}>
-        <AppNavigator />
-      </View>
+      <AuthProvider>
+        <View style={styles.root} onLayout={onLayoutRootView}>
+          <AppNavigator />
+        </View>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

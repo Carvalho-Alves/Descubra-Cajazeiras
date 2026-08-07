@@ -1,31 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  FlatList,
-  Image,
   StyleSheet,
   Dimensions,
-  ListRenderItem,
-  Linking,
-  LayoutAnimation,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
   Platform,
   UIManager,
+  LayoutAnimation,
+  Modal,
+  Pressable,
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
-import type { HomeScreenProps } from '../navigation/types';
-import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../context/AuthContext';
+import {
+  colorForTipo,
+  iconForTipo,
+  mapTipoFilterToApi,
+  shortTipoServico,
+} from '../utils/format';
 
-// ── Configuração de Animação para Android ───────────────────────
+const BASE_URL = 'http://192.168.1.74:3333';
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const CATEGORIES = ['Todos', 'Eventos', 'Hospedagem', 'Alimentação', 'Turístico'];
+
 if (
   Platform.OS === 'android' &&
   UIManager.setLayoutAnimationEnabledExperimental
@@ -33,91 +43,107 @@ if (
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// ── Tipos de dados ──────────────────────────────────────────────
-type ServiceOrEvent = {
-  id: string; title: string; category: string; date?: string;
-  rating?: number; image: string; latitude: number; longitude: number;
+type UnifiedItem = {
+  _id: string;
+  nome: string;
+  tipo_servico: string;
+  localizacao?: { latitude: number; longitude: number };
+  data?: string;
 };
 
-const CATEGORIES = ['Todos', 'Hospedagem', 'Gastronomia', 'Eventos'];
+export function HomeScreen() {
+  const navigation = useNavigation<any>();
+  const { token } = useAuth();
 
-const ITEMS_DATA: ServiceOrEvent[] = [
-  {
-    id: '1',
-    title: 'Show de Forró Universitário',
-    category: 'Eventos',
-    date: 'Sáb, 22 Mai · 19h',
-    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200',
-    latitude: -6.8889,
-    longitude: -38.5606,
-    rating: 4.5,
-  },
-  {
-    id: '2',
-    title: 'Restaurante Sabor Sertanejo',
-    category: 'Gastronomia',
-    image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=500',
-    latitude: -6.8875,
-    longitude: -38.5620,
-    rating: 4.8,
-  },
-  {
-    id: '3',
-    title: 'Pousada Alto da Serra',
-    category: 'Hospedagem',
-    image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500',
-    latitude: -6.8901,
-    longitude: -38.5580,
-    rating: 4.2,
-  },
-  {
-    id: '4',
-    title: 'Caminhada Ecológica na Serra',
-    category: 'Eventos',
-    date: 'Seg, 24 Mai · 07h',
-    image: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=200',
-    latitude: -6.8950,
-    longitude: -38.5550,
-  },
-];
-
-const handleOpenSettings = () => {
-  Linking.openSettings();
-};
-
-// ── Tela principal ──────────────────────────────────────────────
-export function HomeScreen(_props: HomeScreenProps) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('Todos');
+  const [items, setItems] = useState<UnifiedItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState<String | null>(null);
-  
-  // Controle de expansão do bottom sheet
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const navigation = useNavigation<any>();
+  const [selectedItem, setSelectedItem] = useState<UnifiedItem | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  // Joga itens com data (eventos) pra cima
-  const sortedItems = [...ITEMS_DATA].sort((a, b) => {
-    if (a.date && !b.date) return -1;
-    if (!a.date && b.date) return 1;
-    return 0;
-  });
+  const load = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
 
-  const filteredItems = activeCategory === 'Todos'
-    ? sortedItems : sortedItems.filter(item => item.category === activeCategory);
+      const headers = { Authorization: `Bearer ${token}` };
 
-  // Limita a quantidade baseada no estado de expansão
-  const visibleItems = filteredItems.slice(0, isExpanded ? 4 : 2);
+      const [resServicos, resEventos] = await Promise.all([
+        fetch(`${BASE_URL}/api/servicos`, { headers }),
+        fetch(`${BASE_URL}/api/eventos`, { headers })
+      ]);
+
+      const servicosData = await resServicos.json();
+      const eventosData = await resEventos.json();
+
+      let combined: UnifiedItem[] = [];
+
+      if (Array.isArray(servicosData)) {
+        combined = combined.concat(servicosData);
+      }
+
+      if (Array.isArray(eventosData)) {
+        const eventosFormatados = eventosData.map((e: any) => ({
+          ...e,
+          nome: e.nome || e.titulo,
+          tipo_servico: 'Eventos',
+        }));
+        combined = combined.concat(eventosFormatados);
+      }
+
+      const now = new Date().getTime();
+
+      combined.sort((a, b) => {
+        const isAEvent = a.tipo_servico === 'Eventos';
+        const isBEvent = b.tipo_servico === 'Eventos';
+
+        if (isAEvent && isBEvent) {
+          const dateA = new Date(a.data || 0).getTime();
+          const dateB = new Date(b.data || 0).getTime();
+          const diffA = dateA >= now ? dateA - now : Infinity;
+          const diffB = dateB >= now ? dateB - now : Infinity;
+
+          if (diffA !== Infinity || diffB !== Infinity) {
+            return diffA - diffB;
+          }
+          return dateB - dateA;
+        }
+
+        if (isAEvent && !isBEvent) return -1;
+        if (!isAEvent && isBEvent) return 1;
+
+        return a.nome.localeCompare(b.nome);
+      });
+
+      setItems(combined);
+    } catch (error) {
+      Alert.alert('Erro', 'Falha ao carregar dados da API.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [token]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   useEffect(() => {
     async function getLocationPermission() {
       let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg('Permissão para acessar localização foi negada!');
+      if (status !== 'granted') {
+        setErrorMsg('Permissão negada para localização!');
         return;
       }
-
       let coordonate = await Location.getCurrentPositionAsync({});
       setLocation(coordonate);
     }
@@ -129,60 +155,57 @@ export function HomeScreen(_props: HomeScreenProps) {
     setIsExpanded(!isExpanded);
   };
 
-  const renderServiceItem: ListRenderItem<ServiceOrEvent> = ({ item }) => (
-    <TouchableOpacity
-      style={styles.eventCard}
-      activeOpacity={0.8}
-      onPress={() => navigation.navigate('Detalhes', { item: item })}
-    >
-      <Image source={{ uri: item.image }} style={styles.eventImage} resizeMode='cover' />
-      <View style={styles.eventInfo}>
-        <Text style={styles.eventTitle} numberOfLines={2}>{item.title}</Text>
-        <Text style={styles.eventCategory}>{item.category}</Text>
-        {item.date && (
-          <View style={styles.eventDateRow}>
-            <Ionicons name='calendar-outline' size={12} color={Colors.textSecondary} />
-            <Text style={styles.eventDate}>{item.date}</Text>
-          </View>
-        )}
-      </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.border} style={styles.eventChevron} />
-    </TouchableOpacity>
-  );
+  const handleItemPress = (item: UnifiedItem) => {
+    setSelectedItem(item);
+    setModalVisible(true);
+  };
+
+  const handleNavigate = (screen: 'Detalhes' | 'Avaliacoes') => {
+    setModalVisible(false);
+    if (!selectedItem) return;
+
+    if (screen === 'Detalhes') {
+      navigation.navigate('Detalhes', { item: selectedItem });
+    } else {
+      navigation.navigate('Avaliacoes', {
+        tipo: selectedItem.tipo_servico === 'Eventos' ? 'evento' : 'servico',
+        referenciaId: selectedItem._id,
+        titulo: selectedItem.nome,
+      });
+    }
+  };
+
+  const filtered = items.filter((item) => {
+    let matchCat = false;
+    if (activeCategory === 'Todos') {
+      matchCat = true;
+    } else if (activeCategory === 'Eventos') {
+      matchCat = item.tipo_servico === 'Eventos';
+    } else {
+      const apiTipo = mapTipoFilterToApi(activeCategory);
+      matchCat = !apiTipo || item.tipo_servico === apiTipo;
+    }
+
+    const matchSearch =
+      !search.trim() ||
+      item.nome.toLowerCase().includes(search.trim().toLowerCase());
+
+    return matchCat && matchSearch;
+  });
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}/${month} · ${hours}h${minutes}`;
+  };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      
-      {/* ── Topo ─────────────────────────────────── */}
-      <View style={styles.topContainer}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Olá, Visitante 👋</Text>
-            <Text style={styles.subGreeting}>Explore Cajazeiras hoje</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.bellButton}
-            accessibilityLabel="Notificações"
-          >
-            <Ionicons name="notifications-outline" size={22} color={Colors.text} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={18} color={Colors.textSecondary} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar eventos ou locais..."
-            placeholderTextColor={Colors.textSecondary}
-            value={search}
-            onChangeText={setSearch}
-            returnKeyType="search"
-          />
-        </View>
-      </View>
-
-      {/* ── Mapa ───────────────────────────────────── */}
-      <View style={styles.mapWrapper}>
+    <View style={styles.root}>
+      <View style={styles.mapContainer}>
         {location ? (
           <MapView
             style={StyleSheet.absoluteFillObject}
@@ -201,62 +224,82 @@ export function HomeScreen(_props: HomeScreenProps) {
               }}
               title="Você está aqui!"
             />
-            {filteredItems.map((item) => (
+            {filtered.map((item) => (
               <Marker
-                key={item.id}
-                coordinate={{ latitude: item.latitude, longitude: item.longitude }}
-                title={item.title}
-                description={item.category}
+                key={item._id}
+                coordinate={{
+                  latitude: item.localizacao?.latitude || 0,
+                  longitude: item.localizacao?.longitude || 0,
+                }}
+                title={item.nome}
+                description={item.tipo_servico}
               />
             ))}
           </MapView>
         ) : errorMsg ? (
-          <View style={styles.errorContainer}>
+          <View style={styles.centeredMapState}>
             <Text style={styles.errorText}>{errorMsg}</Text>
-            <Text style={styles.instructionText}>Para usar o mapa, precisamos do seu GPS.</Text>
-            <TouchableOpacity style={styles.settingsButton} onPress={handleOpenSettings}>
-              <Text style={styles.settingsButtonText}>Abrir Configurações</Text>
-            </TouchableOpacity>
           </View>
         ) : (
-          <Text style={styles.loadingText}>Buscando sua localização...</Text>
+          <View style={styles.centeredMapState}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
         )}
+        <View style={styles.mapOverlay} />
       </View>
 
-      {/* ── Bottom sheet (aba expansível) ──────────────── */}
-      <View style={[styles.bottomSheet, { height: isExpanded ? '65%' : 300 }]}>
+      <SafeAreaView style={styles.overlay} edges={['top']} pointerEvents="box-none">
+        <View style={styles.searchRow}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search" size={20} color={Colors.muted} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar pontos em Cajazeiras..."
+              placeholderTextColor={Colors.muted}
+              value={search}
+              onChangeText={setSearch}
+            />
+          </View>
+          <TouchableOpacity style={styles.filterBtn} onPress={() => load(true)}>
+            <Ionicons name="refresh" size={20} color={Colors.text} />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
 
-        {/* Indicador de arrasto / clica e expande */}
-        <TouchableOpacity 
-          style={styles.dragHandleContainer} 
-          activeOpacity={0.7} 
+      <View style={styles.fabs} pointerEvents="box-none">
+        <TouchableOpacity
+          style={styles.fabYellow}
+          onPress={() => navigation.navigate('NovoServico')}
+        >
+          <Ionicons name="add" size={28} color={Colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.sheet, { height: isExpanded ? '65%' : SCREEN_HEIGHT * 0.35 }]}>
+        <TouchableOpacity
+          style={styles.dragArea}
+          activeOpacity={0.7}
           onPress={toggleExpand}
         >
-          <View style={styles.dragHandle} />
+          <View style={styles.handle} />
         </TouchableOpacity>
 
-        {/* Categorias */}
-        <View style={styles.categoriesWrapper}>
+        <View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesContent}
+            contentContainerStyle={styles.chips}
           >
-            {CATEGORIES.map((cat, i) => {
-              const active = cat === activeCategory;
+            {CATEGORIES.map((category) => {
+              const active = activeCategory === category;
               return (
                 <TouchableOpacity
-                  key={cat}
-                  style={[
-                    styles.pill,
-                    active && styles.pillActive,
-                    i > 0 && { marginLeft: Spacing.sm },
-                  ]}
-                  onPress={() => setActiveCategory(cat)}
-                  activeOpacity={0.75}
+                  key={category}
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => setActiveCategory(category)}
                 >
-                  <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                    {cat}
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                    {category}
                   </Text>
                 </TouchableOpacity>
               );
@@ -264,249 +307,309 @@ export function HomeScreen(_props: HomeScreenProps) {
           </ScrollView>
         </View>
 
-        {/* Lista de serviço/evento */}
-        <FlatList
-          data={visibleItems}
-          keyExtractor={(item) => item.id}
-          renderItem={renderServiceItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-        />
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: 24 }} color={Colors.primary} />
+        ) : (
+          <ScrollView
+            style={styles.list}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />
+            }
+          >
+            {filtered.length === 0 ? (
+              <Text style={styles.empty}>Nenhum registro encontrado.</Text>
+            ) : (
+              filtered.map((locationItem) => (
+                <TouchableOpacity
+                  key={locationItem._id}
+                  style={styles.card}
+                  onPress={() => handleItemPress(locationItem)}
+                >
+                  <View
+                    style={[
+                      styles.cardIcon,
+                      { backgroundColor: locationItem.tipo_servico === 'Eventos' ? Colors.highlight : colorForTipo(locationItem.tipo_servico) },
+                    ]}
+                  >
+                    <Ionicons
+                      name={locationItem.tipo_servico === 'Eventos' ? 'calendar' : iconForTipo(locationItem.tipo_servico)}
+                      size={22}
+                      color={Colors.surface}
+                    />
+                  </View>
+                  <View style={styles.cardBody}>
+                    <Text style={styles.cardTitle}>{locationItem.nome}</Text>
+                    {locationItem.tipo_servico === 'Eventos' && locationItem.data ? (
+                      <Text style={styles.cardDate}>{formatDate(locationItem.data)}</Text>
+                    ) : null}
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>
+                        {locationItem.tipo_servico === 'Eventos' ? 'Evento' : shortTipoServico(locationItem.tipo_servico)}
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={Colors.muted} />
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
+        )}
       </View>
 
-      {/* Botão de cadastro de serviço/evento */}
-      <TouchableOpacity
-        style={styles.fabButton}
-        activeOpacity={0.9}
-        onPress={() => navigation.navigate('NovoServico')}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
       >
-        <Ionicons name="add" size={32} color={Colors.text} style={styles.fabIcon} />
-      </TouchableOpacity>
+        <Pressable style={styles.modalBackdrop} onPress={() => setModalVisible(false)}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{selectedItem?.nome}</Text>
+            <Text style={styles.modalSubtitle}>O que você deseja acessar?</Text>
 
-    </SafeAreaView>
+            <TouchableOpacity style={styles.modalOption} onPress={() => handleNavigate('Detalhes')}>
+              <Ionicons name="map-outline" size={24} color={Colors.primary} />
+              <Text style={styles.modalOptionText}>Ver Detalhes e Rota</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalOption} onPress={() => handleNavigate('Avaliacoes')}>
+              <Ionicons name="star-outline" size={24} color={Colors.primary} />
+              <Text style={styles.modalOptionText}>Ver Avaliações</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
   );
 }
 
-
 const styles = StyleSheet.create({
-  safe: {
+  root: { flex: 1, backgroundColor: '#E5E7EB' },
+  mapContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Colors.border,
+  },
+  centeredMapState: {
     flex: 1,
-    backgroundColor: Colors.background,
-  },
-  topContainer: {
-    paddingHorizontal: Spacing.containerPadding,
-    backgroundColor: Colors.background,
-    zIndex: 10, 
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  greeting: {
-    fontFamily: FontFamily.headingBold,
-    fontSize: FontSize.xl,
-    color: Colors.text,
-  },
-  subGreeting: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  bellButton: {
-    width: 42,
-    height: 42,
-    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontFamily: FontFamily.bodyMedium,
+    color: '#DC3545',
+    textAlign: 'center',
+    padding: 20,
+  },
+  mapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    pointerEvents: 'none',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
   },
   searchBar: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.md,
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderRadius: BorderRadius.full,
     paddingHorizontal: Spacing.lg,
     height: 48,
-    marginBottom: Spacing.md,
-  },
-  searchIcon: {
-    marginRight: Spacing.sm,
+    ...Shadow.md,
   },
   searchInput: {
     flex: 1,
     fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.sm,
     color: Colors.text,
+    paddingVertical: 0,
   },
-
-  // ── Mapa ────────────────────────────────────────────────────
-  mapWrapper: {
-    flex: 1,
-    backgroundColor: Colors.border, 
-  },
-  loadingText: {
-    textAlign: 'center',
-    marginTop: 90,
-    fontFamily: FontFamily.bodyMedium,
-    color: Colors.textSecondary,
-  },
-  errorText: {
-    textAlign: 'center',
-    fontFamily: FontFamily.bodyMedium,
-    color: '#DC3545',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  filterBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.surface,
     alignItems: 'center',
-    padding: Spacing.lg,
+    justifyContent: 'center',
+    ...Shadow.md,
   },
-  instructionText: {
-    textAlign: 'center',
-    fontSize: FontSize.sm,
-    fontFamily: FontFamily.bodyRegular,
-    color: Colors.textSecondary,
-    marginTop: 8,
-    marginBottom: Spacing.md,
-  },
-  settingsButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 10,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-  },
-  settingsButtonText: {
-    color: Colors.surface,
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.sm,
-  },
-
-  // ── Bottom sheet ────────────────────────────────────────────
-  bottomSheet: {
+  fabs: {
     position: 'absolute',
-    bottom: 0,
+    right: Spacing.lg,
+    bottom: SCREEN_HEIGHT * 0.38,
+    zIndex: 15,
+  },
+  fabYellow: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.highlight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.lg,
+  },
+  sheet: {
+    position: 'absolute',
     left: 0,
     right: 0,
-    backgroundColor: Colors.background,
+    bottom: 0,
+    minHeight: 250,
+    backgroundColor: Colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    zIndex: 20,
     ...Shadow.lg,
-    elevation: 20,
   },
-  dragHandleContainer: {
+  dragArea: {
     width: '100%',
     alignItems: 'center',
     paddingVertical: Spacing.md,
   },
-  dragHandle: {
-    width: 40,
+  handle: {
+    width: 48,
     height: 4,
-    backgroundColor: Colors.border,
     borderRadius: 2,
+    backgroundColor: '#D1D5DB',
   },
-
-  // ── Categorias ──────────────────────────────────────────────
-  categoriesWrapper: {
-    marginBottom: Spacing.md,
+  chips: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+    paddingBottom: Spacing.md,
   },
-  categoriesContent: {
-    paddingHorizontal: Spacing.containerPadding,
-  },
-  pill: {
+  chip: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: '#F3F4F6',
   },
-  pillActive: {
-    backgroundColor: Colors.highlight,
-    borderColor: Colors.highlight,
-  },
-  pillText: {
-    fontFamily: FontFamily.bodyMedium,
+  chipActive: { backgroundColor: Colors.highlight },
+  chipText: {
+    fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
-  pillTextActive: {
     color: Colors.text,
   },
-
-  // ── Lista de Eventos ────────────────────────────────────────
+  chipTextActive: { fontFamily: FontFamily.headingSemiBold },
+  list: { flex: 1 },
   listContent: {
-    paddingHorizontal: Spacing.containerPadding,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    gap: Spacing.md,
   },
-  eventCard: {
+  empty: {
+    textAlign: 'center',
+    color: Colors.textSecondary,
+    fontFamily: FontFamily.bodyRegular,
+    marginTop: Spacing.lg,
+  },
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    marginBottom: Spacing.md,
-    padding: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    gap: Spacing.md,
+    backgroundColor: Colors.inputBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
   },
-  eventImage: {
-    width: 60,
-    height: 60,
-    borderRadius: BorderRadius.sm,
-  },
-  eventInfo: {
-    flex: 1,
-    marginLeft: Spacing.md,
+  cardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  eventTitle: {
+  cardBody: { flex: 1 },
+  cardTitle: {
     fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.sm,
+    fontSize: FontSize.md,
     color: Colors.text,
+    marginBottom: 4,
   },
-  eventCategory: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.xs,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  eventDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  eventDate: {
+  cardDate: {
     fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.xs,
-    color: Colors.textSecondary,
+    color: Colors.primary,
+    marginBottom: 4,
   },
-  eventChevron: {
-    paddingLeft: Spacing.sm,
+  badge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E5E7EB',
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
   },
-
-  // ── FAB ────────────────────
-  fabButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: Colors.highlight,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
+  badgeText: {
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.xs,
+    color: Colors.text,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
-    ...Shadow.md,
-    elevation: 8,
+    padding: Spacing.containerPadding,
   },
-  fabIcon: {
-    marginLeft: 2,
+  modalCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    ...Shadow.lg,
+  },
+  modalTitle: {
+    fontFamily: FontFamily.headingSemiBold,
+    fontSize: FontSize.lg,
+    color: Colors.text,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.lg,
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.inputBackground,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.md,
+  },
+  modalOptionText: {
+    fontFamily: FontFamily.headingSemiBold,
+    fontSize: FontSize.md,
+    color: Colors.primary,
+  },
+  modalCancel: {
+    alignItems: 'center',
+    padding: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  modalCancelText: {
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
   },
 });

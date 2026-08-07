@@ -1,28 +1,5 @@
-/**
- * AppNavigator.tsx — Stack Navigator raiz
- *
- * Hierarquia de navegação:
- *
- *   NavigationContainer
- *   └── Stack (RootStackParamList)
- *       ├── Login              ← rota inicial (headerShown: false)
- *       ├── Tabs               ← Bottom Tab Navigator (headerShown: false)
- *       ├── GerenciarEventos
- *       ├── NovoServico
- *       ├── GerenciarServicos
- *       ├── Avaliacoes
- *       └── Sobre
- *
- * Instale as dependências antes de rodar:
- *   npx expo install \
- *     @react-navigation/native \
- *     @react-navigation/native-stack \
- *     @react-navigation/bottom-tabs \
- *     react-native-screens \
- *     react-native-safe-area-context \
- *     @expo/vector-icons
- */
 import React from 'react';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -30,10 +7,14 @@ import { TabNavigator } from './TabNavigator';
 import { LoginScreen } from '../screens/LoginScreen';
 import { GerenciarEventosScreen } from '../screens/GerenciarEventosScreen';
 import { NovoServicoScreen } from '../screens/NovoServicoScreen';
+import { NovoEventoScreen } from '../screens/NovoEventoScreen';
 import { GerenciarServicosScreen } from '../screens/GerenciarServicosScreen';
 import { AvaliacoesScreen } from '../screens/AvaliacoesScreen';
 import { SobreScreen } from '../screens/SobreScreen';
-import { DetalhesScreen } from '@/screens/DetalhesScreen';
+import { DetalhesScreen } from '../screens/DetalhesScreen';
+import { MinhasInformacoesScreen } from '../screens/MinhasInformacoesScreen';
+import { NotificacoesScreen } from '../screens/NotificacoesScreen';
+import { useAuth } from '../context/AuthContext';
 
 import { Colors } from '../theme/colors';
 import type { RootStackParamList } from './types';
@@ -56,56 +37,92 @@ const DEFAULT_HEADER_OPTIONS = {
 } as const;
 
 export function AppNavigator() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={styles.boot}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Login"
-        screenOptions={DEFAULT_HEADER_OPTIONS}
-      >
-        {/* ── Telas sem cabeçalho ───────────────────────────────── */}
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Tabs"
-          component={TabNavigator}
-          options={{ headerShown: false }}
-        />
+      <Stack.Navigator screenOptions={DEFAULT_HEADER_OPTIONS}>
+        {!isAuthenticated ? (
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+        ) : (
+          <>
+            {/* ── Telas sem cabeçalho ───────────────────────────────── */}
+            <Stack.Screen
+              name="Tabs"
+              component={TabNavigator}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="GerenciarEventos"
+              component={GerenciarEventosScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="NovoServico"
+              component={NovoServicoScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="NovoEvento"
+              component={NovoEventoScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="GerenciarServicos"
+              component={GerenciarServicosScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Avaliacoes"
+              component={AvaliacoesScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Sobre"
+              component={SobreScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="MinhasInformacoes"
+              component={MinhasInformacoesScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Notificacoes"
+              component={NotificacoesScreen}
+              options={{ headerShown: false }}
+            />
 
-        {/* ── Telas com cabeçalho padrão ───────────────────────── */}
-        <Stack.Screen
-          name="GerenciarEventos"
-          component={GerenciarEventosScreen}
-          options={{ title: 'Gerenciar Eventos' }}
-        />
-        <Stack.Screen
-          name="NovoServico"
-          component={NovoServicoScreen}
-          options={{ title: 'Novo Serviço' }}
-        />
-        <Stack.Screen
-          name="GerenciarServicos"
-          component={GerenciarServicosScreen}
-          options={{ title: 'Gerenciar Serviços' }}
-        />
-        <Stack.Screen
-          name="Avaliacoes"
-          component={AvaliacoesScreen}
-          options={{ title: 'Avaliações' }}
-        />
-        <Stack.Screen
-          name="Sobre"
-          component={SobreScreen}
-          options={{ title: 'Sobre' }}
-        />
-        <Stack.Screen
-        name="Detalhes"
-        component={DetalhesScreen}
-        options={{ title: 'Detalhes'}}
-        />
+            {/* ── Telas com cabeçalho padrão ───────────────────────── */}
+            <Stack.Screen
+              name="Detalhes"
+              component={DetalhesScreen}
+              options={{ title: 'Detalhes' }}
+            />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  boot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+  },
+});

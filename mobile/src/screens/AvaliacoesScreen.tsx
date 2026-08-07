@@ -1,368 +1,411 @@
-import React, { useState, useMemo, useLayoutEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
-  Image,
+  TextInput,
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ListRenderItem,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
+import { Spacing, BorderRadius } from '../theme/spacing';
+import { useAuth } from '../context/AuthContext';
+import {
+  Avaliacao,
+  createAvaliacaoRequest,
+  listAvaliacoes,
+  listAvaliacoesByRef,
+} from '../services/avaliacaoService';
+import { ApiError } from '../services/apiClient';
+import { formatRelativeDate } from '../utils/format';
 import type { AvaliacoesScreenProps } from '../navigation/types';
 
-// ── Tipos ────────────────────────────────────────────────────────
-type Filtro = 'Todas' | 'Positivas' | 'Críticas';
-
-type Avaliacao = {
-  id: string;
-  avatar: string;
-  nome: string;
-  data: string;
-  nota: number; // 1–5
-  texto: string;
-};
-
-// ── Dados mock ───────────────────────────────────────────────────
-const MOCK_AVALIACOES: Avaliacao[] = [
-  {
-    id: '1',
-    avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100',
-    nome: 'Carlos Mendes',
-    data: '12 Mai 2026',
-    nota: 5,
-    texto: 'Lugar incrível! A comida estava deliciosa e o atendimento foi impecável. Com certeza voltarei em breve.',
-  },
-  {
-    id: '2',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100',
-    nome: 'Ana Beatriz',
-    data: '08 Mai 2026',
-    nota: 4,
-    texto: 'Muito bom! O ambiente é acolhedor e os preços são justos. Recomendo para famílias.',
-  },
-  {
-    id: '3',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-    nome: 'Roberto Lima',
-    data: '01 Mai 2026',
-    nota: 2,
-    texto: 'O serviço demorou bastante e o local estava desorganizado. Esperava mais com base nas avaliações.',
-  },
-  {
-    id: '4',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100',
-    nome: 'Mariana Costa',
-    data: '28 Abr 2026',
-    nota: 5,
-    texto: 'Experiência maravilhosa! Os guias são muito atenciosos e o roteiro foi perfeito.',
-  },
-  {
-    id: '5',
-    avatar: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=100',
-    nome: 'Paulo Neto',
-    data: '20 Abr 2026',
-    nota: 3,
-    texto: 'Regular. Há espaço para melhorias no atendimento, mas a localização compensa.',
-  },
-];
-
-const NOTA_GERAL = 4.5;
-const TOTAL_AVALIACOES = 128;
-
-// ── Subcomponente: estrelas ───────────────────────────────────────
-function StarRow({ nota, size = 14 }: { nota: number; size?: number }) {
+function Stars({
+  rating,
+  size = 16,
+  onPress,
+}: {
+  rating: number;
+  size?: number;
+  onPress?: (value: number) => void;
+}) {
   return (
-    <View style={styles.starRow}>
-      {Array.from({ length: 5 }, (_, i) => {
-        const filled = i < Math.floor(nota);
-        const half   = !filled && i < nota;
-        return (
-          <Ionicons
-            key={i}
-            name={filled ? 'star' : half ? 'star-half' : 'star-outline'}
-            size={size}
-            color={Colors.highlight}
-          />
-        );
-      })}
-    </View>
-  );
-}
-
-// ── Tela principal ───────────────────────────────────────────────
-export function AvaliacoesScreen({ navigation }: AvaliacoesScreenProps) {
-  const [filtro, setFiltro] = useState<Filtro>('Todas');
-
-  useLayoutEffect(() => {
-    navigation.setOptions({ headerShown: false });
-  }, [navigation]);
-
-  // Filtragem reativa sem re-criar o array a cada render
-  const avaliacoesFiltradas = useMemo(() => {
-    if (filtro === 'Positivas') return MOCK_AVALIACOES.filter(a => a.nota >= 4);
-    if (filtro === 'Críticas')  return MOCK_AVALIACOES.filter(a => a.nota <= 3);
-    return MOCK_AVALIACOES;
-  }, [filtro]);
-
-  // ── Card de avaliação ─────────────────────────────────────────
-  const renderItem: ListRenderItem<Avaliacao> = ({ item }) => (
-    <View style={styles.card}>
-      {/* Linha superior: avatar + nome + data */}
-      <View style={styles.cardHeader}>
-        <Image source={{ uri: item.avatar }} style={styles.avatar} resizeMode="cover" />
-        <View style={styles.cardHeaderInfo}>
-          <Text style={styles.cardNome}>{item.nome}</Text>
-          <Text style={styles.cardData}>{item.data}</Text>
-        </View>
-      </View>
-
-      {/* Estrelas da avaliação */}
-      <StarRow nota={item.nota} size={14} />
-
-      {/* Texto do comentário */}
-      <Text style={styles.cardTexto}>{item.texto}</Text>
-
-      {/* Botão "Responder" */}
-      <TouchableOpacity
-        style={styles.responderButton}
-        onPress={() => Alert.alert('Responder', `Respondendo a ${item.nome}...`)}
-        hitSlop={{ top: 6, bottom: 6 }}
-      >
-        <Text style={styles.responderText}>Responder</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-
-      {/* ── Cabeçalho ──────────────────────────────────────────── */}
-      <View style={styles.header}>
+    <View style={styles.stars}>
+      {[1, 2, 3, 4, 5].map(star => (
         <TouchableOpacity
-          style={styles.headerSide}
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Voltar"
+          key={star}
+          disabled={!onPress}
+          onPress={() => onPress?.(star)}
         >
-          <Ionicons name="chevron-back" size={22} color={Colors.text} />
+          <Ionicons
+            name={star <= rating ? 'star' : 'star-outline'}
+            size={size}
+            color={star <= rating ? Colors.warning : '#D1D5DB'}
+          />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Avaliações</Text>
-        <View style={styles.headerSide} />
-      </View>
-
-      <FlatList
-        data={avaliacoesFiltradas}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <>
-            {/* ── Visão geral de nota ──────────────────────────── */}
-            <View style={styles.overviewCard}>
-              <Text style={styles.notaGrande}>{NOTA_GERAL.toFixed(1)}</Text>
-              <StarRow nota={NOTA_GERAL} size={24} />
-              <Text style={styles.totalText}>
-                Baseado em {TOTAL_AVALIACOES} avaliações
-              </Text>
-            </View>
-
-            {/* ── Abas de filtro ───────────────────────────────── */}
-            <View style={styles.filtroRow}>
-              {(['Todas', 'Positivas', 'Críticas'] as Filtro[]).map(tab => {
-                const active = tab === filtro;
-                return (
-                  <TouchableOpacity
-                    key={tab}
-                    style={[styles.filtroTab, active && styles.filtroTabActive]}
-                    onPress={() => setFiltro(tab)}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={[styles.filtroText, active && styles.filtroTextActive]}>
-                      {tab}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </>
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubble-outline" size={48} color={Colors.border} />
-            <Text style={styles.emptyText}>Nenhuma avaliação encontrada.</Text>
-          </View>
-        }
-      />
-    </SafeAreaView>
+      ))}
+    </View>
   );
 }
 
-// ── Estilos ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  listContent: {
-    paddingBottom: Spacing.xl,
-  },
+function userName(item: Avaliacao): string {
+  if (item.usuarioId && typeof item.usuarioId === 'object') {
+    return item.usuarioId.nome || 'Usuário';
+  }
+  return 'Usuário';
+}
 
-  // ── Cabeçalho ────────────────────────────────────────────────
+function initials(nome: string) {
+  return nome
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+export function AvaliacoesScreen({ navigation, route }: AvaliacoesScreenProps) {
+  const { token, isAuthenticated } = useAuth();
+  const params = route.params;
+  const [items, setItems] = useState<Avaliacao[]>([]);
+  const [media, setMedia] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [comentario, setComentario] = useState('');
+  const [nota, setNota] = useState(5);
+  const [sending, setSending] = useState(false);
+
+  const title = params?.titulo || 'Avaliações';
+
+  const load = useCallback(
+    async (isRefresh = false) => {
+      try {
+        if (isRefresh) setRefreshing(true);
+        else setLoading(true);
+
+        if (params?.tipo && params?.referenciaId) {
+          const res = await listAvaliacoesByRef(
+            params.tipo,
+            params.referenciaId,
+          );
+          setItems(res.items || []);
+          setMedia(res.stats?.media ?? 0);
+          setTotal(res.stats?.total ?? 0);
+        } else {
+          const res = await listAvaliacoes();
+          const list = Array.isArray(res) ? res : [];
+          setItems(list);
+          setTotal(list.length);
+          const avg =
+            list.length > 0
+              ? list.reduce((acc, a) => acc + a.nota, 0) / list.length
+              : 0;
+          setMedia(Number(avg.toFixed(1)));
+        }
+      } catch (error) {
+        Alert.alert(
+          'Erro',
+          error instanceof ApiError
+            ? error.message
+            : 'Falha ao carregar avaliações.',
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [params?.tipo, params?.referenciaId],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
+  const handleSend = async () => {
+    if (!params?.tipo || !params?.referenciaId) {
+      Alert.alert(
+        'Atenção',
+        'Abra as avaliações a partir de um serviço ou evento para comentar.',
+      );
+      return;
+    }
+    if (!isAuthenticated) {
+      Alert.alert('Atenção', 'Faça login para avaliar.');
+      return;
+    }
+
+    setSending(true);
+    try {
+      await createAvaliacaoRequest(
+        {
+          tipo: params.tipo,
+          referenciaId: params.referenciaId,
+          nota,
+          comentario: comentario.trim() || undefined,
+        },
+        token,
+      );
+      setComentario('');
+      setNota(5);
+      await load(true);
+    } catch (error) {
+      Alert.alert(
+        'Erro',
+        error instanceof ApiError
+          ? error.message
+          : 'Não foi possível enviar a avaliação.',
+      );
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const renderItem: ListRenderItem<Avaliacao> = ({ item }) => {
+    const nome = userName(item);
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initials(nome)}</Text>
+          </View>
+          <View style={styles.cardMeta}>
+            <Text style={styles.cardName}>{nome}</Text>
+            <Text style={styles.cardDate}>
+              {formatRelativeDate(item.criadoEm || item.createdAt)}
+            </Text>
+          </View>
+          <Stars rating={item.nota} size={14} />
+        </View>
+        {!!item.comentario && (
+          <Text style={styles.cardComment}>{item.comentario}</Text>
+        )}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.root}>
+      <SafeAreaView edges={['top']} style={styles.headerSafe}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color={Colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {title}
+          </Text>
+          <View style={styles.headerBtn}>
+            <Ionicons name="star" size={22} color={Colors.warning} />
+          </View>
+        </View>
+      </SafeAreaView>
+
+      <View style={styles.summary}>
+        <Text style={styles.summaryScore}>
+          {Number.isFinite(media) ? media.toFixed(1) : '0.0'}
+        </Text>
+        <Stars rating={Math.round(media || 0)} size={24} />
+        <Text style={styles.summaryCount}>{total} avaliações</Text>
+      </View>
+
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} color={Colors.primary} />
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={item => item._id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />
+          }
+          ListEmptyComponent={
+            <Text style={styles.empty}>Nenhuma avaliação ainda.</Text>
+          }
+        />
+      )}
+
+      {params?.tipo && params?.referenciaId ? (
+        <SafeAreaView edges={['bottom']} style={styles.composerSafe}>
+          <View style={styles.ratingRow}>
+            <Text style={styles.ratingLabel}>Sua nota:</Text>
+            <Stars rating={nota} size={22} onPress={setNota} />
+          </View>
+          <View style={styles.composer}>
+            <TextInput
+              style={styles.composerInput}
+              placeholder="Adicione um comentário..."
+              placeholderTextColor={Colors.muted}
+              value={comentario}
+              onChangeText={setComentario}
+            />
+            <TouchableOpacity
+              style={[styles.sendBtn, sending && { opacity: 0.7 }]}
+              onPress={handleSend}
+              disabled={sending}
+            >
+              {sending ? (
+                <ActivityIndicator color={Colors.surface} />
+              ) : (
+                <Ionicons name="send" size={18} color={Colors.surface} />
+              )}
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      ) : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: Colors.surface },
+  headerSafe: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.containerPadding,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
   },
-  headerSide: {
-    width: 36,
-    height: 36,
+  headerBtn: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontFamily: FontFamily.headingSemiBold,
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: FontFamily.headingBold,
     fontSize: FontSize.lg,
     color: Colors.text,
   },
-
-  // ── Visão geral ───────────────────────────────────────────────
-  overviewCard: {
+  summary: {
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-    marginHorizontal: Spacing.containerPadding,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingVertical: Spacing.xl,
-    ...Shadow.sm,
+    paddingVertical: Spacing.containerPadding,
+    backgroundColor: '#FFFBEB',
   },
-  notaGrande: {
+  summaryScore: {
     fontFamily: FontFamily.headingBold,
-    fontSize: 56,
+    fontSize: 48,
     color: Colors.text,
-    lineHeight: 64,
     marginBottom: Spacing.sm,
   },
-  starRow: {
-    flexDirection: 'row',
-    gap: 3,
-    marginBottom: Spacing.sm,
-  },
-  totalText: {
+  summaryCount: {
+    marginTop: Spacing.sm,
     fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    color: '#4B5563',
   },
-
-  // ── Filtro ────────────────────────────────────────────────────
-  filtroRow: {
-    flexDirection: 'row',
-    marginHorizontal: Spacing.containerPadding,
-    marginBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-  filtroTab: {
-    flex: 1,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  filtroTabActive: {
-    backgroundColor: Colors.primary,
-  },
-  filtroText: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
-  filtroTextActive: {
-    fontFamily: FontFamily.headingSemiBold,
-    color: Colors.surface,
-  },
-
-  // ── Card de comentário ────────────────────────────────────────
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginHorizontal: Spacing.containerPadding,
-    marginBottom: Spacing.md,
+  stars: { flexDirection: 'row', gap: 2 },
+  list: {
     padding: Spacing.lg,
-    ...Shadow.sm,
+    gap: Spacing.lg,
+    paddingBottom: Spacing.xl,
+  },
+  empty: {
+    textAlign: 'center',
+    color: Colors.textSecondary,
+    fontFamily: FontFamily.bodyRegular,
+    marginTop: Spacing.xl,
+  },
+  card: {
+    backgroundColor: Colors.inputBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
   },
   cardHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: Spacing.sm,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: Spacing.md,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
   },
-  cardHeaderInfo: {
-    flex: 1,
-  },
-  cardNome: {
+  avatarText: {
     fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,         // 16px
+    fontSize: FontSize.sm,
+    color: '#4B5563',
+  },
+  cardMeta: { flex: 1 },
+  cardName: {
+    fontFamily: FontFamily.headingSemiBold,
+    fontSize: FontSize.sm,
     color: Colors.text,
   },
-  cardData: {
+  cardDate: {
     fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.xs,         // 12px
+    fontSize: FontSize.xs,
     color: Colors.textSecondary,
-    marginTop: 2,
   },
-  cardTexto: {
+  cardComment: {
     fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.sm,         // 14px
-    color: Colors.text,
-    lineHeight: FontSize.sm * 1.6,
-    marginTop: Spacing.sm,
+    fontSize: FontSize.sm,
+    color: '#374151',
+    lineHeight: 20,
   },
-  responderButton: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.md,
+  composerSafe: {
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    backgroundColor: Colors.surface,
   },
-  responderText: {
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+  },
+  ratingLabel: {
     fontFamily: FontFamily.bodyMedium,
     fontSize: FontSize.sm,
-    color: Colors.primary,         // #0D6EFD Azul Vibrante
+    color: Colors.text,
   },
-
-  // ── Empty ─────────────────────────────────────────────────────
-  emptyContainer: {
+  composer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Spacing.huge,
     gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
   },
-  emptyText: {
+  composerInput: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 12,
     fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.md,
-    color: Colors.textSecondary,
+    color: Colors.text,
+  },
+  sendBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
