@@ -9,7 +9,10 @@ import { GerenciarEventosScreen } from '../screens/GerenciarEventosScreen';
 import { NovoServicoScreen } from '../screens/NovoServicoScreen';
 import { NovoEventoScreen } from '../screens/NovoEventoScreen';
 import { GerenciarServicosScreen } from '../screens/GerenciarServicosScreen';
+import { GerenciarServicosDetailScreen } from '../screens/GerenciarServicosDetailScreen';
 import { AvaliacoesScreen } from '../screens/AvaliacoesScreen';
+import { AvaliacoesDestaqueScreen } from '../screens/AvaliacoesDestaqueScreen';
+import { PerfilDashboardScreen } from '../screens/PerfilDashboardScreen';
 import { SobreScreen } from '../screens/SobreScreen';
 import { DetalhesScreen } from '../screens/DetalhesScreen';
 import { MinhasInformacoesScreen } from '../screens/MinhasInformacoesScreen';
@@ -85,8 +88,23 @@ export function AppNavigator() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="GerenciarServicosDetail"
+              component={GerenciarServicosDetailScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="Avaliacoes"
               component={AvaliacoesScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AvaliacoesDestaque"
+              component={AvaliacoesDestaqueScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="PerfilDashboard"
+              component={PerfilDashboardScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

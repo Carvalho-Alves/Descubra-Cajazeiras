@@ -16,9 +16,12 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// MapView só funciona em mobile, comentado para web
+// import MapView, { Marker } from 'react-native-maps';
+const MapView = null; // Placeholder para web
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';

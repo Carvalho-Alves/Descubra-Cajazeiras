@@ -1,10 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../theme/colors';
+
+// MapView só funciona em mobile, comentado para web
+// import MapView, { Marker, Polyline } from 'react-native-maps';
+const MapView = null; // Placeholder para web
 
 export function DetalhesScreen() {
     const route = useRoute<any>();

@@ -34,6 +34,7 @@ export type RootStackParamList = {
   NovoServico: undefined;
   NovoEvento: undefined;
   GerenciarServicos: undefined;
+  GerenciarServicosDetail: { servicoId: string };
   Avaliacoes:
     | {
         tipo: AvaliacaoTipo;
@@ -41,6 +42,8 @@ export type RootStackParamList = {
         titulo?: string;
       }
     | undefined;
+  AvaliacoesDestaque: undefined;
+  PerfilDashboard: undefined;
   Sobre: undefined;
   Detalhes: { item: any };
   MinhasInformacoes: undefined;
@@ -63,7 +66,10 @@ export type GerenciarEventosScreenProps = NativeStackScreenProps<RootStackParamL
 export type NovoServicoScreenProps = NativeStackScreenProps<RootStackParamList, 'NovoServico'>;
 export type NovoEventoScreenProps = NativeStackScreenProps<RootStackParamList, 'NovoEvento'>;
 export type GerenciarServicosScreenProps = NativeStackScreenProps<RootStackParamList, 'GerenciarServicos'>;
+export type GerenciarServicosDetailScreenProps = NativeStackScreenProps<RootStackParamList, 'GerenciarServicosDetail'>;
 export type AvaliacoesScreenProps = NativeStackScreenProps<RootStackParamList, 'Avaliacoes'>;
+export type AvaliacoesDestaqueScreenProps = NativeStackScreenProps<RootStackParamList, 'AvaliacoesDestaque'>;
+export type PerfilDashboardScreenProps = NativeStackScreenProps<RootStackParamList, 'PerfilDashboard'>;
 export type SobreScreenProps = NativeStackScreenProps<RootStackParamList, 'Sobre'>;
 export type MinhasInformacoesScreenProps = NativeStackScreenProps<RootStackParamList, 'MinhasInformacoes'>;
 export type NotificacoesScreenProps = NativeStackScreenProps<RootStackParamList, 'Notificacoes'>;

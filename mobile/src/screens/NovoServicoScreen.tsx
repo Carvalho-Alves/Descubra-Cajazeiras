@@ -16,8 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import MapView, { Marker, MapPressEvent, MarkerDragStartEndEvent } from 'react-native-maps';
 import { useNavigation } from '@react-navigation/native';
+
+// MapView só funciona em mobile, comentado para web
+// import MapView, { Marker, MapPressEvent, MarkerDragStartEndEvent } from 'react-native-maps';
 
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
@@ -253,6 +255,8 @@ export function NovoServicoScreen() {
             </TouchableOpacity>
 
             <View style={styles.mapContainer}>
+              {/* MapView só funciona em mobile - comentado para web */}
+              {/*
               <MapView
                 style={styles.map}
                 region={{
@@ -270,6 +274,13 @@ export function NovoServicoScreen() {
                   title="Localização"
                 />
               </MapView>
+              */}
+              <View style={[styles.map, { backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }]}>
+                <Text style={{ color: Colors.textSecondary }}>Mapa disponível apenas em mobile</Text>
+                <Text style={{ color: Colors.textSecondary, fontSize: 12, marginTop: 8 }}>
+                  Latitude: {latitude} | Longitude: {longitude}
+                </Text>
+              </View>
             </View>
           </View>
         </ScrollView>
