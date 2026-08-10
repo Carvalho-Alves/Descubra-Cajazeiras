@@ -27,6 +27,7 @@ import { Spacing, BorderRadius } from '../theme/spacing';
 import { useAuth } from '../context/AuthContext';
 import { createServicoRequest } from '../services/servicoService';
 import { ApiError } from '../services/apiClient';
+import { useFormValidation, servicoSchema } from '../hooks/useFormValidation';
 
 const CATEGORIES = ['Hospedagem', 'Alimentação/Lazer', 'Ponto Turístico'];
 
@@ -38,6 +39,7 @@ const CAJAZEIRAS_INITIAL_REGION = {
 export function NovoServicoScreen() {
   const navigation = useNavigation();
   const { token } = useAuth();
+  const { validateField } = useFormValidation();
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
@@ -50,6 +52,7 @@ export function NovoServicoScreen() {
   const [longitude, setLongitude] = useState(CAJAZEIRAS_INITIAL_REGION.longitude.toString());
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -99,15 +102,29 @@ export function NovoServicoScreen() {
   };
 
   const handleSave = async () => {
-    if (!title.trim()) {
-      Alert.alert('Atenção', 'Por favor, preencha o nome do estabelecimento.');
-      return;
-    }
     if (!image) {
       Alert.alert('Atenção', 'Por favor, escolha uma foto.');
       return;
     }
 
+    // Validar dados com Yup
+    const { isValid, errors: validationErrors } = await validateField(servicoSchema, {
+      nome: title.trim(),
+      tipo_servico: category,
+      descricao: descricao.trim(),
+      telefone: telefone.trim(),
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+    });
+
+    if (!isValid) {
+      setErrors(validationErrors);
+      const firstError = Object.values(validationErrors)[0];
+      Alert.alert('Validação', firstError || 'Preencha os campos corretamente');
+      return;
+    }
+
+    setErrors({});
     setSaving(true);
 
     try {

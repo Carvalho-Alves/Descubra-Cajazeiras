@@ -210,35 +210,42 @@ export function HomeScreen() {
     <View style={styles.root}>
       <View style={styles.mapContainer}>
         {location ? (
-          <MapView
-            style={StyleSheet.absoluteFillObject}
-            initialRegion={{
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              latitudeDelta: 0.009,
-              longitudeDelta: 0.009,
-            }}
-            showsPointsOfInterest={false}
-          >
-            <Marker
-              coordinate={{
+          // MapView só funciona em mobile - comentado para web
+          MapView ? (
+            <MapView
+              style={StyleSheet.absoluteFillObject}
+              initialRegion={{
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
+                latitudeDelta: 0.009,
+                longitudeDelta: 0.009,
               }}
-              title="Você está aqui!"
-            />
-            {filtered.map((item) => (
+              showsPointsOfInterest={false}
+            >
               <Marker
-                key={item._id}
                 coordinate={{
-                  latitude: item.localizacao?.latitude || 0,
-                  longitude: item.localizacao?.longitude || 0,
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
                 }}
-                title={item.nome}
-                description={item.tipo_servico}
+                title="Você está aqui!"
               />
-            ))}
-          </MapView>
+              {filtered.map((item) => (
+                <Marker
+                  key={item._id}
+                  coordinate={{
+                    latitude: item.localizacao?.latitude || 0,
+                    longitude: item.localizacao?.longitude || 0,
+                  }}
+                  title={item.nome}
+                  description={item.tipo_servico}
+                />
+              ))}
+            </MapView>
+          ) : (
+            <View style={[styles.centeredMapState, { backgroundColor: '#f0f0f0' }]}>
+              <Text style={styles.errorText}>Mapa disponível apenas em mobile</Text>
+            </View>
+          )
         ) : errorMsg ? (
           <View style={styles.centeredMapState}>
             <Text style={styles.errorText}>{errorMsg}</Text>

@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -82,10 +83,10 @@ export function LoginScreen(_props: LoginScreenProps) {
         style={styles.hero}
       >
         <SafeAreaView edges={['top']} style={styles.heroSafe}>
-          <View style={styles.logoCircle}>
-            <Ionicons name="location" size={40} color={Colors.highlight} />
-          </View>
-          <Text style={styles.brandTitle}>Descubra+ Cajazeiras</Text>
+          <Image
+            source={require('../../assets/logotipo.png')}
+            style={styles.logoImage}
+          />
           <Text style={styles.brandSubtitle}>
             Explore e conecte-se com a cidade
           </Text>
@@ -245,9 +246,9 @@ export function LoginScreen(_props: LoginScreenProps) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.surface },
   hero: {
-    minHeight: 260,
+    minHeight: 320,
     paddingHorizontal: Spacing.containerPadding,
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.md,
   },
   heroSafe: {
     alignItems: 'center',
@@ -262,6 +263,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.lg,
+  },
+  logoImage: {
+    width: 220,
+    height: 160,
+    resizeMode: 'contain',
+    marginBottom: Spacing.md,
   },
   brandTitle: {
     fontFamily: FontFamily.headingBold,

@@ -33,6 +33,10 @@ function resolveApiOrigin(): string {
     return 'http://10.0.2.2:3333';
   }
 
+  if (Platform.OS === 'web') {
+    return 'http://localhost:3333';
+  }
+
   return 'http://192.168.2.1:3333';
 }
 

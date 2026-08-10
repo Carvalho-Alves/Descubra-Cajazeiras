@@ -289,9 +289,10 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.lg,
   },
   chip: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.full,
+    minHeight: 36,
   },
   chipActive: { backgroundColor: Colors.highlight },
   chipIdle: {
