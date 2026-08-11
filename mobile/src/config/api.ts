@@ -48,3 +48,11 @@ export const CAJAZEIRAS_CENTER = {
   latitude: -6.89,
   longitude: -38.56,
 } as const;
+
+/** Limites do município de Cajazeiras–PB para restrição do mapa */
+export const CAJAZEIRAS_BOUNDS = {
+  minLat: -6.98,  // Sul
+  maxLat: -6.80,  // Norte
+  minLng: -38.65, // Oeste
+  maxLng: -38.47, // Leste
+} as const;

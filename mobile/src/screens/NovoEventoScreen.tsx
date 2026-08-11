@@ -19,10 +19,18 @@ import * as Location from 'expo-location';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 
-// MapView só funciona em mobile, comentado para web
-// import MapView, { Marker, MapPressEvent, MarkerDragStartEndEvent } from 'react-native-maps';
+// MapView: web usa placeholder, mobile nativo usa MapView
+let MapView: any = null;
+let Marker: any = null;
+
+if (Platform.OS !== 'web') {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+}
 
 import { Colors } from '../theme/colors';
+import { CAJAZEIRAS_CENTER, CAJAZEIRAS_BOUNDS } from '../config/api';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius } from '../theme/spacing';
 import { useAuth } from '../context/AuthContext';
@@ -317,32 +325,32 @@ export function NovoEventoScreen() {
             </TouchableOpacity>
 
             <View style={styles.mapContainer}>
-              {/* MapView só funciona em mobile - comentado para web */}
-              {/*
-              <MapView
-                style={styles.map}
-                region={{
-                  latitude: parsedLat,
-                  longitude: parsedLong,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
-                onPress={handleMapPress}
-              >
-                <Marker
-                  draggable
-                  coordinate={{ latitude: parsedLat, longitude: parsedLong }}
-                  onDragEnd={handleMarkerDragEnd}
-                  title="Localização do Evento"
-                />
-              </MapView>
-              */}
-              <View style={[styles.map, { backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }]}>
-                <Text style={{ color: Colors.textSecondary }}>Mapa disponível apenas em mobile</Text>
-                <Text style={{ color: Colors.textSecondary, fontSize: 12, marginTop: 8 }}>
-                  Latitude: {latitude} | Longitude: {longitude}
-                </Text>
-              </View>
+              {MapView ? (
+                <MapView
+                  style={styles.map}
+                  region={{
+                    latitude: parsedLat,
+                    longitude: parsedLong,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                  onPress={handleMapPress}
+                >
+                  <Marker
+                    draggable
+                    coordinate={{ latitude: parsedLat, longitude: parsedLong }}
+                    onDragEnd={handleMarkerDragEnd}
+                    title="Localização do Evento"
+                  />
+                </MapView>
+              ) : (
+                <View style={[styles.map, { backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }]}>
+                  <Text style={{ color: Colors.textSecondary }}>Mapa disponível apenas em mobile</Text>
+                  <Text style={{ color: Colors.textSecondary, fontSize: 12, marginTop: 8 }}>
+                    {endereco || 'Endereço não definido'}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </ScrollView>

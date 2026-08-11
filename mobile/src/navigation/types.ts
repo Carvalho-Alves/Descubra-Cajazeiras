@@ -35,6 +35,7 @@ export type RootStackParamList = {
   NovoEvento: undefined;
   GerenciarServicos: undefined;
   GerenciarServicosDetail: { servicoId: string };
+  GerenciarEventosDetail: { eventoId: string };
   Avaliacoes:
     | {
         tipo: AvaliacaoTipo;
@@ -67,6 +68,7 @@ export type NovoServicoScreenProps = NativeStackScreenProps<RootStackParamList, 
 export type NovoEventoScreenProps = NativeStackScreenProps<RootStackParamList, 'NovoEvento'>;
 export type GerenciarServicosScreenProps = NativeStackScreenProps<RootStackParamList, 'GerenciarServicos'>;
 export type GerenciarServicosDetailScreenProps = NativeStackScreenProps<RootStackParamList, 'GerenciarServicosDetail'>;
+export type GerenciarEventosDetailScreenProps = NativeStackScreenProps<RootStackParamList, 'GerenciarEventosDetail'>;
 export type AvaliacoesScreenProps = NativeStackScreenProps<RootStackParamList, 'Avaliacoes'>;
 export type AvaliacoesDestaqueScreenProps = NativeStackScreenProps<RootStackParamList, 'AvaliacoesDestaque'>;
 export type PerfilDashboardScreenProps = NativeStackScreenProps<RootStackParamList, 'PerfilDashboard'>;

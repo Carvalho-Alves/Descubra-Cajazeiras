@@ -18,8 +18,17 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 
-// MapView só funciona em mobile, comentado para web
-// import MapView, { Marker, MapPressEvent, MarkerDragStartEndEvent } from 'react-native-maps';
+// MapView: web usa placeholder, mobile nativo usa MapView
+let MapView: any = null;
+let Marker: any = null;
+let MapPressEvent: any = null;
+let MarkerDragStartEndEvent: any = null;
+
+if (Platform.OS !== 'web') {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+}
 
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
@@ -28,12 +37,13 @@ import { useAuth } from '../context/AuthContext';
 import { createServicoRequest } from '../services/servicoService';
 import { ApiError } from '../services/apiClient';
 import { useFormValidation, servicoSchema } from '../hooks/useFormValidation';
+import { CAJAZEIRAS_CENTER, CAJAZEIRAS_BOUNDS } from '../config/api';
 
 const CATEGORIES = ['Hospedagem', 'Alimentação/Lazer', 'Ponto Turístico'];
 
 const CAJAZEIRAS_INITIAL_REGION = {
-  latitude: -6.8889,
-  longitude: -38.5606,
+  latitude: CAJAZEIRAS_CENTER.latitude,
+  longitude: CAJAZEIRAS_CENTER.longitude,
 };
 
 export function NovoServicoScreen() {
@@ -50,6 +60,7 @@ export function NovoServicoScreen() {
 
   const [latitude, setLatitude] = useState(CAJAZEIRAS_INITIAL_REGION.latitude.toString());
   const [longitude, setLongitude] = useState(CAJAZEIRAS_INITIAL_REGION.longitude.toString());
+  const [endereco, setEndereco] = useState('');
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -82,8 +93,60 @@ export function NovoServicoScreen() {
       const loc = await Location.getCurrentPositionAsync({});
       setLatitude(loc.coords.latitude.toFixed(6));
       setLongitude(loc.coords.longitude.toFixed(6));
+
+      // Buscar endereço reverso
+      try {
+        const addresses = await Location.reverseGeocodeAsync({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+        if (addresses.length > 0) {
+          const addr = addresses[0];
+          const enderecoFormatado = `${addr.street || ''} ${addr.streetNumber || ''}`.trim();
+          setEndereco(enderecoFormatado);
+        }
+      } catch (err) {
+        console.warn('Erro ao buscar endereço reverso:', err);
+      }
     } catch {
       Alert.alert('Erro', 'Não foi possível obter sua localização atual.');
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const handleGeocodeAddress = async () => {
+    if (!endereco.trim()) {
+      Alert.alert('Atenção', 'Digite um endereço para buscar.');
+      return;
+    }
+
+    try {
+      setLoadingLocation(true);
+      const results = await Location.geocodeAsync(endereco.trim());
+
+      if (results.length === 0) {
+        Alert.alert('Não encontrado', 'Endereço não encontrado. Tente outro.');
+        return;
+      }
+
+      const { latitude: lat, longitude: lng } = results[0];
+
+      // Verificar se está dentro dos bounds de Cajazeiras
+      if (
+        lat >= CAJAZEIRAS_BOUNDS.minLat &&
+        lat <= CAJAZEIRAS_BOUNDS.maxLat &&
+        lng >= CAJAZEIRAS_BOUNDS.minLng &&
+        lng <= CAJAZEIRAS_BOUNDS.maxLng
+      ) {
+        setLatitude(lat.toFixed(6));
+        setLongitude(lng.toFixed(6));
+        Alert.alert('Sucesso', 'Localização atualizada!');
+      } else {
+        Alert.alert('Atenção', 'Este endereço está fora de Cajazeiras. Use um endereço na cidade.');
+      }
+    } catch (err) {
+      Alert.alert('Erro', 'Não foi possível geocodificar este endereço.');
     } finally {
       setLoadingLocation(false);
     }
@@ -255,6 +318,33 @@ export function NovoServicoScreen() {
           </View>
 
           <View style={styles.field}>
+            <Text style={styles.label}>Endereço (Opcional)</Text>
+            <View style={styles.addressInputContainer}>
+              <TextInput
+                style={styles.addressInput}
+                placeholder="Rua, número, bairro..."
+                placeholderTextColor={Colors.muted}
+                value={endereco}
+                onChangeText={setEndereco}
+              />
+              <TouchableOpacity
+                style={styles.searchBtn}
+                onPress={handleGeocodeAddress}
+                disabled={loadingLocation}
+              >
+                {loadingLocation ? (
+                  <ActivityIndicator color={Colors.primary} size={20} />
+                ) : (
+                  <Ionicons name="search" size={20} color={Colors.primary} />
+                )}
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.helperText}>
+              Digite o endereço e clique na lupa. Deve estar em Cajazeiras!
+            </Text>
+          </View>
+
+          <View style={styles.field}>
             <Text style={styles.label}>Localização no Mapa</Text>
             <Text style={styles.helperText}>
               Toque no botão abaixo para usar o GPS ou segure o pino para mover.
@@ -272,32 +362,38 @@ export function NovoServicoScreen() {
             </TouchableOpacity>
 
             <View style={styles.mapContainer}>
-              {/* MapView só funciona em mobile - comentado para web */}
-              {/*
-              <MapView
-                style={styles.map}
-                region={{
-                  latitude: parsedLat,
-                  longitude: parsedLong,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
-                onPress={handleMapPress}
-              >
-                <Marker
-                  draggable
-                  coordinate={{ latitude: parsedLat, longitude: parsedLong }}
-                  onDragEnd={handleMarkerDragEnd}
-                  title="Localização"
-                />
-              </MapView>
-              */}
-              <View style={[styles.map, { backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }]}>
-                <Text style={{ color: Colors.textSecondary }}>Mapa disponível apenas em mobile</Text>
-                <Text style={{ color: Colors.textSecondary, fontSize: 12, marginTop: 8 }}>
-                  Latitude: {latitude} | Longitude: {longitude}
-                </Text>
-              </View>
+              {MapView ? (
+                <MapView
+                  style={styles.map}
+                  region={{
+                    latitude: parsedLat,
+                    longitude: parsedLong,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                  onPress={handleMapPress}
+                  minZoomLevel={11}
+                  maxZoomLevel={18}
+                  scrollEnabled={true}
+                  zoomEnabled={true}
+                  rotateEnabled={false}
+                  pitchEnabled={false}
+                >
+                  <Marker
+                    draggable
+                    coordinate={{ latitude: parsedLat, longitude: parsedLong }}
+                    onDragEnd={handleMarkerDragEnd}
+                    title="Localização"
+                  />
+                </MapView>
+              ) : (
+                <View style={[styles.map, { backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }]}>
+                  <Text style={{ color: Colors.textSecondary }}>Mapa disponível apenas em mobile</Text>
+                  <Text style={{ color: Colors.textSecondary, fontSize: 12, marginTop: 8 }}>
+                    {endereco || 'Endereço não definido'}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </ScrollView>
@@ -339,6 +435,34 @@ const styles = StyleSheet.create({
   field: { gap: Spacing.sm },
   label: { fontFamily: 'Poppins_600SemiBold', fontSize: FontSize.sm, color: '#4B5563' },
   helperText: { fontSize: 12, color: Colors.textSecondary, marginBottom: 4 },
+  addressInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  addressInput: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 12,
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.md,
+    color: Colors.text,
+  },
+  searchBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.md,
+    backgroundColor: '#F0E6FF',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   input: {
     backgroundColor: Colors.surface,
     borderWidth: 1,

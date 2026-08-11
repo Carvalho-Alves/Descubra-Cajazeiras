@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { HomeScreen } from '../screens/HomeScreen';
 import { FavoritosScreen } from '../screens/FavoritosScreen';
 import { ServicosTabScreen } from '../screens/ServicosTabScreen';
+import { EventosTabScreen } from '../screens/EventosTabScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { Colors } from '../theme/colors';
 import type { TabParamList } from './types';
@@ -77,7 +78,7 @@ export function TabNavigator() {
     >
       <Tab.Screen name="Mapa" component={HomeScreen} />
       <Tab.Screen name="Servicos" component={ServicosTabScreen} />
-      <Tab.Screen name="Eventos" component={FavoritosScreen} />
+      <Tab.Screen name="Eventos" component={EventosTabScreen} />
       <Tab.Screen name="Perfil" component={DashboardScreen} />
     </Tab.Navigator>
   );

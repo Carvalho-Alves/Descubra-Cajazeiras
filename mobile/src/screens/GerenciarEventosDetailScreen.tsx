@@ -8,7 +8,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Dimensions,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -29,47 +28,60 @@ if (Platform.OS !== 'web') {
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
-import { getServicoById, Servico } from '../services/servicoService';
+import { getEventoById, Evento } from '../services/eventoService';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/apiClient';
 import { firstImage } from '../utils/resolveAssetUrl';
-import { shortTipoServico } from '../utils/format';
-import type { GerenciarServicosDetailScreenProps } from '../navigation/types';
+import { formatDateBR, labelEventoStatus } from '../utils/format';
+import type { GerenciarEventosDetailScreenProps } from '../navigation/types';
 
-export function GerenciarServicosDetailScreen({
+function statusColor(status?: string) {
+  switch ((status || 'ativo').toLowerCase()) {
+    case 'ativo':
+      return Colors.success;
+    case 'cancelado':
+      return Colors.error;
+    case 'encerrado':
+      return Colors.textSecondary;
+    default:
+      return Colors.textSecondary;
+  }
+}
+
+export function GerenciarEventosDetailScreen({
   navigation,
   route,
-}: GerenciarServicosDetailScreenProps) {
+}: GerenciarEventosDetailScreenProps) {
   const { token } = useAuth();
-  const { servicoId } = route.params;
-  const [servico, setServico] = useState<Servico | null>(null);
+  const { eventoId } = route.params;
+  const [evento, setEvento] = useState<Evento | null>(null);
   const [loading, setLoading] = useState(true);
   const [endereco, setEndereco] = useState<string>('');
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getServicoById(servicoId, token);
-      setServico(data);
+      const data = await getEventoById(eventoId, token);
+      setEvento(data);
     } catch (error) {
       Alert.alert(
         'Erro',
         error instanceof ApiError
           ? error.message
-          : 'Falha ao carregar serviço.',
+          : 'Falha ao carregar evento.',
       );
     } finally {
       setLoading(false);
     }
-  }, [servicoId, token]);
+  }, [eventoId, token]);
 
   useEffect(() => {
-    if (servico && servico.localizacao) {
+    if (evento) {
       const reverseGeocode = async () => {
         try {
           const result = await Location.reverseGeocodeAsync({
-            latitude: servico.localizacao.latitude,
-            longitude: servico.localizacao.longitude,
+            latitude: evento.latitude,
+            longitude: evento.longitude,
           });
           if (result.length > 0) {
             const addr = result[0];
@@ -77,12 +89,12 @@ export function GerenciarServicosDetailScreen({
             setEndereco(addressStr);
           }
         } catch (error) {
-          setEndereco(`${servico.localizacao.latitude.toFixed(4)}, ${servico.localizacao.longitude.toFixed(4)}`);
+          setEndereco(`${evento.latitude.toFixed(4)}, ${evento.longitude.toFixed(4)}`);
         }
       };
       reverseGeocode();
     }
-  }, [servico]);
+  }, [evento]);
 
   useFocusEffect(useCallback(() => {
     load();
@@ -96,16 +108,17 @@ export function GerenciarServicosDetailScreen({
     );
   }
 
-  if (!servico) {
+  if (!evento) {
     return (
       <View style={[styles.root, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.errorText}>Serviço não encontrado</Text>
+        <Text style={styles.errorText}>Evento não encontrado</Text>
       </View>
     );
   }
 
-  const image = firstImage(servico.imagem);
-  const avgRating = servico.avaliacao_media || 0;
+  const image = firstImage(evento.imagem);
+  const avgRating = evento.avaliacao_media || 0;
+  const statusColor_ = statusColor(evento.status);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -113,7 +126,7 @@ export function GerenciarServicosDetailScreen({
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detalhes</Text>
+        <Text style={styles.headerTitle}>Detalhes do Evento</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -123,16 +136,16 @@ export function GerenciarServicosDetailScreen({
           <Image source={{ uri: image }} style={styles.heroImage} />
         ) : (
           <View style={[styles.heroImage, styles.heroImageFallback]}>
-            <Ionicons name="storefront" size={48} color={Colors.muted} />
+            <Ionicons name="calendar" size={48} color={Colors.muted} />
           </View>
         )}
 
-        {/* Title & Badge */}
+        {/* Title & Status Badge */}
         <View style={styles.titleSection}>
-          <Text style={styles.title}>{servico.nome}</Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>
-              {shortTipoServico(servico.tipo_servico)}
+          <Text style={styles.title}>{evento.nome}</Text>
+          <View style={[styles.badge, { backgroundColor: `${statusColor_}20` }]}>
+            <Text style={[styles.badgeText, { color: statusColor_ }]}>
+              {labelEventoStatus(evento.status)}
             </Text>
           </View>
         </View>
@@ -142,74 +155,98 @@ export function GerenciarServicosDetailScreen({
           <View style={styles.ratingBox}>
             <Ionicons name="star" size={20} color="#FFB800" />
             <Text style={styles.ratingValue}>{avgRating.toFixed(1)}</Text>
-            <Text style={styles.ratingLabel}>({servico.total_avaliacoes || 0})</Text>
+            <Text style={styles.ratingLabel}>({evento.total_avaliacoes || 0})</Text>
           </View>
+        </View>
+
+        {/* Event Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Informações do Evento</Text>
+
+          <View style={styles.infoRow}>
+            <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
+            <View style={styles.infoContent}>
+              <Text style={styles.infoLabel}>Data</Text>
+              <Text style={styles.infoText}>{formatDateBR(evento.data)}</Text>
+            </View>
+          </View>
+
+          {evento.horario && (
+            <View style={styles.infoRow}>
+              <Ionicons name="time-outline" size={20} color={Colors.primary} />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Horário</Text>
+                <Text style={styles.infoText}>{evento.horario}</Text>
+              </View>
+            </View>
+          )}
+
+          {evento.local && (
+            <View style={styles.infoRow}>
+              <Ionicons name="location-outline" size={20} color={Colors.primary} />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Local</Text>
+                <Text style={styles.infoText}>{evento.local}</Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Map Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Localização no Mapa</Text>
+
+          {/* Map Container */}
+          {MapView ? (
+            <View style={styles.mapContainer}>
+              <MapView
+                style={styles.map}
+                region={{
+                  latitude: evento.latitude,
+                  longitude: evento.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: evento.latitude,
+                    longitude: evento.longitude,
+                  }}
+                  title={evento.nome}
+                />
+              </MapView>
+            </View>
+          ) : (
+            <View style={[styles.mapContainer, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={{ color: Colors.textSecondary }}>Mapa disponível apenas em mobile</Text>
+            </View>
+          )}
+
+          {/* Address */}
+          <View style={styles.addressBox}>
+            <Ionicons name="location-outline" size={18} color={Colors.primary} />
+            <Text style={styles.addressText}>{endereco || 'Carregando endereço...'}</Text>
+          </View>
+
+          {evento.telefone && (
+            <View style={styles.infoRow}>
+              <Ionicons name="call-outline" size={20} color={Colors.primary} />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Contato</Text>
+                <Text style={styles.infoText}>{evento.telefone}</Text>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Description */}
-        {servico.descricao && (
+        {evento.descricao && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Sobre</Text>
-            <Text style={styles.description}>{servico.descricao}</Text>
-          </View>
-        )}
-
-        {/* Contact Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informações</Text>
-          {servico.telefone && (
-            <TouchableOpacity style={styles.infoRow}>
-              <Ionicons name="call-outline" size={20} color={Colors.primary} />
-              <Text style={styles.infoText}>{servico.telefone}</Text>
-            </TouchableOpacity>
-          )}
-          {servico.horario && (
-            <View style={styles.infoRow}>
-              <Ionicons name="time-outline" size={20} color={Colors.primary} />
-              <Text style={styles.infoText}>{servico.horario}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Location */}
-        {servico.localizacao && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Localização</Text>
-
-            {/* Map Container */}
-            {MapView ? (
-              <View style={styles.mapContainer}>
-                <MapView
-                  style={styles.map}
-                  region={{
-                    latitude: servico.localizacao.latitude,
-                    longitude: servico.localizacao.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                  }}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                >
-                  <Marker
-                    coordinate={{
-                      latitude: servico.localizacao.latitude,
-                      longitude: servico.localizacao.longitude,
-                    }}
-                    title={servico.nome}
-                  />
-                </MapView>
-              </View>
-            ) : (
-              <View style={[styles.mapContainer, { backgroundColor: '#f0f0f0', justifyContent: 'center', alignItems: 'center' }]}>
-                <Text style={{ color: Colors.textSecondary }}>Mapa disponível apenas em mobile</Text>
-              </View>
-            )}
-
-            {/* Address */}
-            <View style={styles.addressBox}>
-              <Ionicons name="location-outline" size={18} color={Colors.primary} />
-              <Text style={styles.addressText}>{endereco || 'Carregando endereço...'}</Text>
-            </View>
+            <Text style={styles.sectionTitle}>Sobre o Evento</Text>
+            <Text style={styles.description}>{evento.descricao}</Text>
           </View>
         )}
 
@@ -223,9 +260,9 @@ export function GerenciarServicosDetailScreen({
           style={styles.reviewButton}
           onPress={() =>
             navigation.navigate('Avaliacoes', {
-              tipo: 'servico',
-              referenciaId: servico._id,
-              titulo: servico.nome,
+              tipo: 'evento',
+              referenciaId: evento._id,
+              titulo: evento.nome,
             })
           }
         >
@@ -279,7 +316,6 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FFD50033',
     borderRadius: BorderRadius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: 4,
@@ -287,7 +323,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: FontFamily.headingSemiBold,
     fontSize: FontSize.sm,
-    color: Colors.text,
   },
   ratingSection: {
     paddingHorizontal: Spacing.lg,
@@ -332,37 +367,23 @@ const styles = StyleSheet.create({
   },
   infoRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Spacing.md,
     marginBottom: Spacing.md,
+  },
+  infoContent: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginBottom: 2,
   },
   infoText: {
     fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.md,
     color: Colors.text,
-  },
-  mapContainer: {
-    height: 200,
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-  },
-  map: { flex: 1 },
-  addressBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-  },
-  addressText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-    flex: 1,
   },
   errorText: {
     fontFamily: FontFamily.bodyRegular,
@@ -389,5 +410,28 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.headingSemiBold,
     fontSize: FontSize.md,
     color: Colors.surface,
+  },
+  mapContainer: {
+    height: 200,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  map: { flex: 1 },
+  addressBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+  },
+  addressText: {
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.md,
+    color: Colors.text,
+    flex: 1,
   },
 });

@@ -55,3 +55,23 @@ export async function createAvaliacaoRequest(
     token,
   });
 }
+
+export async function listAvaliacoesByServico(
+  servicoId: string,
+  page = 1,
+  limit = 50,
+) {
+  return apiRequest<AvaliacoesPorRefResponse>(
+    `/avaliacoes/referencia/servico/${servicoId}?page=${page}&limit=${limit}`,
+  );
+}
+
+export async function listAvaliacoesByEvento(
+  eventoId: string,
+  page = 1,
+  limit = 50,
+) {
+  return apiRequest<AvaliacoesPorRefResponse>(
+    `/avaliacoes/referencia/evento/${eventoId}?page=${page}&limit=${limit}`,
+  );
+}

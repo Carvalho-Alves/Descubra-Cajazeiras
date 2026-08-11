@@ -18,23 +18,31 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
-import { listServicos, Servico } from '../services/servicoService';
+import { listEventos, Evento } from '../services/eventoService';
 import { ApiError } from '../services/apiClient';
-import {
-  colorForTipo,
-  iconForTipo,
-  shortTipoServico,
-  mapTipoFilterToApi,
-} from '../utils/format';
-import type { ServicosTabScreenProps } from '../navigation/types';
+import { formatDateBR, labelEventoStatus } from '../utils/format';
+import type { EventosTabScreenProps } from '../navigation/types';
 
-const FILTERS = ['Todos', 'Hospedagem', 'Alimentação', 'Turístico'] as const;
+const FILTERS = ['Todos', 'Ativo', 'Cancelado', 'Encerrado'] as const;
 
-export function ServicosTabScreen({ navigation }: ServicosTabScreenProps) {
-  const [servicos, setServicos] = useState<Servico[]>([]);
+function statusColor(status?: string) {
+  switch ((status || 'ativo').toLowerCase()) {
+    case 'ativo':
+      return Colors.success;
+    case 'cancelado':
+      return Colors.error;
+    case 'encerrado':
+      return Colors.textSecondary;
+    default:
+      return Colors.textSecondary;
+  }
+}
+
+export function EventosTabScreen({ navigation }: EventosTabScreenProps) {
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedServico, setSelectedServico] = useState<Servico | null>(null);
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [activeFilter, setActiveFilter] = useState<(typeof FILTERS)[number]>('Todos');
 
@@ -42,12 +50,12 @@ export function ServicosTabScreen({ navigation }: ServicosTabScreenProps) {
     try {
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
-      const data = await listServicos();
-      setServicos(Array.isArray(data) ? data : []);
+      const data = await listEventos();
+      setEventos(Array.isArray(data) ? data : []);
     } catch (error) {
       Alert.alert(
         'Erro',
-        error instanceof ApiError ? error.message : 'Falha ao carregar serviços.',
+        error instanceof ApiError ? error.message : 'Falha ao carregar eventos.',
       );
     } finally {
       setLoading(false);
@@ -61,59 +69,64 @@ export function ServicosTabScreen({ navigation }: ServicosTabScreenProps) {
     }, [load]),
   );
 
-  const filtered = servicos.filter((servico) => {
+  const filtered = eventos.filter((evento) => {
     if (activeFilter === 'Todos') return true;
-    const apiTipo = mapTipoFilterToApi(activeFilter);
-    return servico.tipo_servico === apiTipo;
+    return labelEventoStatus(evento.status) === activeFilter;
   });
 
-  const handleServicoPress = (servico: Servico) => {
-    setSelectedServico(servico);
+  const handleEventoPress = (evento: Evento) => {
+    setSelectedEvento(evento);
     setModalVisible(true);
   };
 
   const handleNavigate = (screen: 'Detalhes' | 'Avaliacoes') => {
     setModalVisible(false);
-    if (!selectedServico) return;
+    if (!selectedEvento) return;
 
     if (screen === 'Detalhes') {
-      navigation.navigate('GerenciarServicosDetail', {
-        servicoId: selectedServico._id,
+      navigation.navigate('GerenciarEventosDetail', {
+        eventoId: selectedEvento._id,
       });
     } else {
       navigation.navigate('Avaliacoes', {
-        tipo: 'servico',
-        referenciaId: selectedServico._id,
-        titulo: selectedServico.nome,
+        tipo: 'evento',
+        referenciaId: selectedEvento._id,
+        titulo: selectedEvento.nome,
       });
     }
   };
 
-  const renderItem: ListRenderItem<Servico> = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => handleServicoPress(item)}
-    >
-      <View style={[styles.iconCircle, { backgroundColor: colorForTipo(item.tipo_servico) }]}>
-        <Ionicons name={iconForTipo(item.tipo_servico)} size={24} color={Colors.surface} />
-      </View>
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle}>{item.nome}</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{shortTipoServico(item.tipo_servico)}</Text>
+  const renderItem: ListRenderItem<Evento> = ({ item }) => {
+    const color = statusColor(item.status);
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => handleEventoPress(item)}
+      >
+        <View style={[styles.iconCircle, { backgroundColor: Colors.highlight }]}>
+          <Ionicons name="calendar" size={24} color={Colors.surface} />
         </View>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.muted} />
-    </TouchableOpacity>
-  );
+        <View style={styles.cardBody}>
+          <Text style={styles.cardTitle}>{item.nome}</Text>
+          <Text style={styles.cardDate}>{formatDateBR(item.data)}</Text>
+          <View style={[styles.badge, { backgroundColor: `${color}20` }]}>
+            <Text style={[styles.badgeText, { color }]}>
+              {labelEventoStatus(item.status)}
+            </Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={Colors.muted} />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Serviços</Text>
+        <Text style={styles.headerTitle}>Eventos</Text>
         <TouchableOpacity
           style={styles.addBtn}
-          onPress={() => navigation.navigate('NovoServico')}
+          onPress={() => navigation.navigate('NovoEvento')}
         >
           <Ionicons name="add" size={24} color={Colors.text} />
         </TouchableOpacity>
@@ -157,7 +170,7 @@ export function ServicosTabScreen({ navigation }: ServicosTabScreenProps) {
             <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />
           }
           ListEmptyComponent={
-            <Text style={styles.empty}>Nenhum serviço cadastrado ainda.</Text>
+            <Text style={styles.empty}>Nenhum evento cadastrado ainda.</Text>
           }
         />
       )}
@@ -170,7 +183,7 @@ export function ServicosTabScreen({ navigation }: ServicosTabScreenProps) {
       >
         <Pressable style={styles.modalBackdrop} onPress={() => setModalVisible(false)}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{selectedServico?.nome}</Text>
+            <Text style={styles.modalTitle}>{selectedEvento?.nome}</Text>
             <Text style={styles.modalSubtitle}>O que você deseja acessar?</Text>
 
             <TouchableOpacity style={styles.modalOption} onPress={() => handleNavigate('Detalhes')}>
@@ -282,9 +295,14 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: 4,
   },
+  cardDate: {
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
   badge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#E5E7EB',
     borderRadius: BorderRadius.sm,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
@@ -292,7 +310,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: FontFamily.bodyRegular,
     fontSize: FontSize.xs,
-    color: Colors.text,
   },
   modalBackdrop: {
     flex: 1,

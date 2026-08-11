@@ -13,6 +13,9 @@ export type Servico = {
   horario?: string;
   horario_funcionamento?: string;
   funcionamento?: string;
+  imagem?: string | string[];
+  avaliacao_media?: number;
+  total_avaliacoes?: number;
 };
 
 export async function listServicos() {
@@ -30,6 +33,10 @@ export async function searchServicos(q: string) {
 
 export async function getServico(id: string) {
   return apiRequest<Servico>(`/servicos/${id}`);
+}
+
+export async function getServicoById(id: string, token?: string | null) {
+  return apiRequest<Servico>(`/servicos/${id}`, { token });
 }
 
 export async function createServicoRequest(

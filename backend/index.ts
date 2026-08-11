@@ -21,7 +21,12 @@ import estatisticasRoutes from './routes/estatisticasRoutes';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  credentials: false,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Configuração do Helmet para permitir CDNs e estilos em linha
 app.use(helmet({

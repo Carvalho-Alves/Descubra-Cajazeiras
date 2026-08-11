@@ -19,23 +19,29 @@ import {
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// MapView só funciona em mobile, comentado para web
-// import MapView, { Marker } from 'react-native-maps';
-const MapView = null; // Placeholder para web
+// MapView: web usa placeholder, mobile nativo usa MapView
+let MapView: any = null;
+let Marker: any = null;
+if (Platform.OS !== 'web') {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+}
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
 import { useAuth } from '../context/AuthContext';
+import { listServicos } from '../services/servicoService';
+import { listEventos } from '../services/eventoService';
+import { CAJAZEIRAS_CENTER, CAJAZEIRAS_BOUNDS } from '../config/api';
 import {
   colorForTipo,
   iconForTipo,
   mapTipoFilterToApi,
   shortTipoServico,
 } from '../utils/format';
-
-const BASE_URL = 'http://10.220.0.89:3333';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CATEGORIES = ['Todos', 'Eventos', 'Hospedagem', 'Alimentação', 'Turístico'];
 
@@ -70,21 +76,17 @@ export function HomeScreen() {
 
   const [selectedItem, setSelectedItem] = useState<UnifiedItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const mapRef = React.useRef<any>(null);
 
   const load = useCallback(async (isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
 
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const [resServicos, resEventos] = await Promise.all([
-        fetch(`${BASE_URL}/api/servicos`, { headers }),
-        fetch(`${BASE_URL}/api/eventos`, { headers })
+      const [servicosData, eventosData] = await Promise.all([
+        listServicos().catch(() => []),
+        listEventos().catch(() => [])
       ]);
-
-      const servicosData = await resServicos.json();
-      const eventosData = await resEventos.json();
 
       let combined: UnifiedItem[] = [];
 
@@ -158,6 +160,33 @@ export function HomeScreen() {
     setIsExpanded(!isExpanded);
   };
 
+  const handleRegionChangeComplete = (region: any) => {
+    // Verifica se saiu dos bounds de Cajazeiras
+    const lat = region.latitude;
+    const lng = region.longitude;
+    const latDelta = region.latitudeDelta;
+    const lngDelta = region.longitudeDelta;
+
+    const isOutOfBounds =
+      lat - latDelta / 2 < CAJAZEIRAS_BOUNDS.minLat ||
+      lat + latDelta / 2 > CAJAZEIRAS_BOUNDS.maxLat ||
+      lng - lngDelta / 2 < CAJAZEIRAS_BOUNDS.minLng ||
+      lng + lngDelta / 2 > CAJAZEIRAS_BOUNDS.maxLng;
+
+    if (isOutOfBounds) {
+      // Volta ao centro se sair
+      mapRef.current?.animateToRegion(
+        {
+          latitude: CAJAZEIRAS_CENTER.latitude,
+          longitude: CAJAZEIRAS_CENTER.longitude,
+          latitudeDelta: 0.018,
+          longitudeDelta: 0.018,
+        },
+        500
+      );
+    }
+  };
+
   const handleItemPress = (item: UnifiedItem) => {
     setSelectedItem(item);
     setModalVisible(true);
@@ -168,7 +197,15 @@ export function HomeScreen() {
     if (!selectedItem) return;
 
     if (screen === 'Detalhes') {
-      navigation.navigate('Detalhes', { item: selectedItem });
+      if (selectedItem.tipo_servico === 'Eventos') {
+        navigation.navigate('GerenciarEventosDetail', {
+          eventoId: selectedItem._id,
+        });
+      } else {
+        navigation.navigate('GerenciarServicosDetail', {
+          servicoId: selectedItem._id,
+        });
+      }
     } else {
       navigation.navigate('Avaliacoes', {
         tipo: selectedItem.tipo_servico === 'Eventos' ? 'evento' : 'servico',
@@ -193,7 +230,16 @@ export function HomeScreen() {
       !search.trim() ||
       item.nome.toLowerCase().includes(search.trim().toLowerCase());
 
-    return matchCat && matchSearch;
+    // Filtrar por bounds de Cajazeiras
+    const lat = item.localizacao?.latitude || CAJAZEIRAS_CENTER.latitude;
+    const lng = item.localizacao?.longitude || CAJAZEIRAS_CENTER.longitude;
+    const withinBounds =
+      lat >= CAJAZEIRAS_BOUNDS.minLat &&
+      lat <= CAJAZEIRAS_BOUNDS.maxLat &&
+      lng >= CAJAZEIRAS_BOUNDS.minLng &&
+      lng <= CAJAZEIRAS_BOUNDS.maxLng;
+
+    return matchCat && matchSearch && withinBounds;
   });
 
   const formatDate = (dateString?: string) => {
@@ -213,14 +259,26 @@ export function HomeScreen() {
           // MapView só funciona em mobile - comentado para web
           MapView ? (
             <MapView
+              ref={mapRef}
               style={StyleSheet.absoluteFillObject}
               initialRegion={{
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.009,
-                longitudeDelta: 0.009,
+                latitude: CAJAZEIRAS_CENTER.latitude,
+                longitude: CAJAZEIRAS_CENTER.longitude,
+                latitudeDelta: 0.018,
+                longitudeDelta: 0.018,
               }}
               showsPointsOfInterest={false}
+              mapType="standard"
+              scrollEnabled={true}
+              zoomEnabled={true}
+              rotateEnabled={false}
+              pitchEnabled={false}
+              minZoomLevel={11}
+              maxZoomLevel={18}
+              onRegionChangeComplete={handleRegionChangeComplete}
+              moveOnMarkerPress={false}
+              loadingIndicatorColor={Colors.primary}
+              loadingEnabled={true}
             >
               <Marker
                 coordinate={{
@@ -229,17 +287,22 @@ export function HomeScreen() {
                 }}
                 title="Você está aqui!"
               />
-              {filtered.map((item) => (
-                <Marker
-                  key={item._id}
-                  coordinate={{
-                    latitude: item.localizacao?.latitude || 0,
-                    longitude: item.localizacao?.longitude || 0,
-                  }}
-                  title={item.nome}
-                  description={item.tipo_servico}
-                />
-              ))}
+              {filtered
+                .filter(item => item.localizacao?.latitude && item.localizacao?.longitude)
+                .map((item) => (
+                  <Marker
+                    key={item._id}
+                    coordinate={{
+                      latitude: item.localizacao!.latitude,
+                      longitude: item.localizacao!.longitude,
+                    }}
+                    title={item.nome}
+                    onPress={() => {
+                      setSelectedItem(item);
+                      setModalVisible(true);
+                    }}
+                  />
+                ))}
             </MapView>
           ) : (
             <View style={[styles.centeredMapState, { backgroundColor: '#f0f0f0' }]}>

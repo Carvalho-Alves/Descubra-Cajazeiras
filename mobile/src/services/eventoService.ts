@@ -9,10 +9,14 @@ export type Evento = {
   descricao?: string;
   data: string;
   horario?: string;
+  local?: string;
+  telefone?: string;
   localizacao?: { latitude?: number; longitude?: number };
-  imagem?: string;
+  imagem?: string | string[];
   status?: EventoStatus;
   usuario?: { _id?: string; nome?: string; email?: string } | string;
+  avaliacao_media?: number;
+  total_avaliacoes?: number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -32,6 +36,10 @@ export async function searchEventos(q: string) {
 
 export async function getEvento(id: string) {
   return apiRequest<Evento>(`/eventos/${id}`);
+}
+
+export async function getEventoById(id: string, token?: string | null) {
+  return apiRequest<Evento>(`/eventos/${id}`, { token });
 }
 
 export async function createEventoRequest(

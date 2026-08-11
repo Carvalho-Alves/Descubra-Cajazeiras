@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Alert,
   ListRenderItem,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -112,10 +113,8 @@ export function GerenciarServicosScreen({
         <TouchableOpacity
           style={styles.cardBody}
           onPress={() =>
-            navigation.navigate('Avaliacoes', {
-              tipo: 'servico',
-              referenciaId: item._id,
-              titulo: item.nome,
+            navigation.navigate('GerenciarServicosDetail', {
+              servicoId: item._id,
             })
           }
         >
@@ -143,26 +142,37 @@ export function GerenciarServicosScreen({
         <View style={styles.headerBtn} />
       </SafeAreaView>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filters}
-      >
-        {FILTERS.map(filter => {
-          const active = activeFilter === filter;
-          return (
-            <TouchableOpacity
-              key={filter}
-              style={[styles.chip, active ? styles.chipActive : styles.chipIdle]}
-              onPress={() => setActiveFilter(filter)}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {filter}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.filtersWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersContainer}
+        >
+          {FILTERS.map(filter => {
+            const active = activeFilter === filter;
+            return (
+              <TouchableOpacity
+                key={filter}
+                style={[
+                  styles.filterButton,
+                  active && styles.filterButtonActive,
+                ]}
+                onPress={() => setActiveFilter(filter)}
+              >
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    active && styles.filterButtonTextActive,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {filter}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color={Colors.primary} />
@@ -214,30 +224,42 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     color: Colors.text,
   },
-  filters: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: Spacing.lg,
+  filtersWrapper: {
     paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.background,
   },
-  chipActive: { backgroundColor: Colors.highlight },
-  chipIdle: {
+  filtersContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    gap: 6,
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: BorderRadius.md,
     backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: '#E0E0E0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  chipText: {
+  filterButtonActive: {
+    backgroundColor: Colors.highlight,
+    borderColor: Colors.highlight,
+  },
+  filterButtonText: {
     fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.sm,
+    fontSize: 12,
     color: Colors.text,
   },
-  chipTextActive: { fontFamily: FontFamily.headingSemiBold },
+  filterButtonTextActive: {
+    fontFamily: FontFamily.headingSemiBold,
+    fontSize: 11,
+    color: Colors.text,
+  },
   list: {
     paddingHorizontal: Spacing.lg,
+    paddingTop: 0,
     paddingBottom: 100,
     gap: Spacing.md,
   },

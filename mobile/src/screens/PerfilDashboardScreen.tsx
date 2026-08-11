@@ -68,44 +68,36 @@ function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
 export function PerfilDashboardScreen({
   navigation,
 }: PerfilDashboardScreenProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>('Resumo');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<UserStats>({
-    avaliacoesFez: 12,
-    favoritos: 8,
-    visitas: 15,
-    contribuicao: 450,
-    mediaNotas: 4.3,
-    tipoFavorito: 'Gastronomia',
-    distintivos: [
-      { nome: 'Explorador', icone: 'compass', descricao: 'Visitou 10 locais' },
-      { nome: 'Crítico', icone: 'star', descricao: 'Fez 5 avaliações' },
-      { nome: 'Mochileiro', icone: 'backpack', descricao: 'Visitou 3 tipos diferentes' },
-    ],
-    atividades: [
-      {
-        tipo: 'avaliacao',
-        descricao: 'Avaliou Pousada Casa Colonial',
-        data: new Date(),
-      },
-      {
-        tipo: 'favorito',
-        descricao: 'Salvou Restaurante Sabor Sertanejo',
-        data: new Date(),
-      },
-    ],
-    locaisFavoritos: [
-      { nome: 'Pousada Casa Colonial', tipo: 'Hospedagem', nota: 5 },
-      { nome: 'Restaurante Sabor Sertanejo', tipo: 'Alimentação', nota: 4.5 },
-    ],
+    avaliacoesFez: 0,
+    favoritos: 0,
+    visitas: 0,
+    contribuicao: 0,
+    mediaNotas: 0,
+    tipoFavorito: 'Nenhum',
+    distintivos: [],
+    atividades: [],
+    locaisFavoritos: [],
   });
+
+  const loadUserStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      // Por enquanto, deixa os valores padrão
+      setLoading(false);
+    } catch (error) {
+      console.log('Erro ao carregar stats:', error);
+      setLoading(false);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      // Carregar dados do usuário
-      setLoading(false);
-    }, []),
+      loadUserStats();
+    }, [loadUserStats]),
   );
 
   const handleLogout = () => {
@@ -185,77 +177,15 @@ export function PerfilDashboardScreen({
         {/* Tab Content */}
         {activeTab === 'Resumo' && (
           <>
-            {/* Stats Cards */}
+            {/* Stats Cards - Meus Serviços e Eventos */}
             <View style={styles.statsGrid}>
               <View style={[styles.statCard, { flex: 1 }]}>
-                <Text style={styles.statNumber}>{stats.avaliacoesFez}</Text>
-                <Text style={styles.statLabel}>Avaliações</Text>
-              </View>
-              <View style={[styles.statCard, { flex: 1 }]}>
-                <Text style={styles.statNumber}>{stats.favoritos}</Text>
-                <Text style={styles.statLabel}>Favoritos</Text>
+                <Text style={styles.statNumber}>{stats.contribuicao}</Text>
+                <Text style={styles.statLabel}>Meus Serviços</Text>
               </View>
               <View style={[styles.statCard, { flex: 1 }]}>
                 <Text style={styles.statNumber}>{stats.visitas}</Text>
-                <Text style={styles.statLabel}>Visitas</Text>
-              </View>
-              <View style={[styles.statCard, { flex: 1 }]}>
-                <Text style={styles.statNumber}>{stats.contribuicao}</Text>
-                <Text style={styles.statLabel}>Pontos</Text>
-              </View>
-            </View>
-
-            {/* Distintivos */}
-            {stats.distintivos.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  <Ionicons name="trophy" size={16} color={Colors.warning} /> Distintivos
-                </Text>
-                <View style={styles.distintivosGrid}>
-                  {stats.distintivos.map((d, i) => (
-                    <View key={i} style={styles.distinctiveCard}>
-                      <View
-                        style={[
-                          styles.distinctiveIcon,
-                          { backgroundColor: Colors.warning + '20' },
-                        ]}
-                      >
-                        <Ionicons
-                          name={d.icone as any}
-                          size={24}
-                          color={Colors.warning}
-                        />
-                      </View>
-                      <Text style={styles.distinctiveName}>{d.nome}</Text>
-                      <Text style={styles.distinctiveDesc}>{d.descricao}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Suas Estatísticas */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                <Ionicons name="flame" size={16} color={Colors.error} /> Suas Estatísticas
-              </Text>
-              <View style={styles.statisticsCard}>
-                <View style={styles.statisticsItem}>
-                  <Text style={styles.statisticsLabel}>Média de Notas</Text>
-                  <View style={styles.statisticsValue}>
-                    <Text style={styles.statisticsNumber}>
-                      {stats.mediaNotas.toFixed(1)}
-                    </Text>
-                    <Stars rating={stats.mediaNotas} size={12} />
-                  </View>
-                </View>
-
-                <View style={styles.statisticsItem}>
-                  <Text style={styles.statisticsLabel}>Tipo Favorito</Text>
-                  <View style={styles.typeBadge}>
-                    <Text style={styles.typeBadgeText}>{stats.tipoFavorito}</Text>
-                  </View>
-                </View>
+                <Text style={styles.statLabel}>Meus Eventos</Text>
               </View>
             </View>
           </>

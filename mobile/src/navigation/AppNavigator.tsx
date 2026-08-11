@@ -10,6 +10,7 @@ import { NovoServicoScreen } from '../screens/NovoServicoScreen';
 import { NovoEventoScreen } from '../screens/NovoEventoScreen';
 import { GerenciarServicosScreen } from '../screens/GerenciarServicosScreen';
 import { GerenciarServicosDetailScreen } from '../screens/GerenciarServicosDetailScreen';
+import { GerenciarEventosDetailScreen } from '../screens/GerenciarEventosDetailScreen';
 import { AvaliacoesScreen } from '../screens/AvaliacoesScreen';
 import { AvaliacoesDestaqueScreen } from '../screens/AvaliacoesDestaqueScreen';
 import { PerfilDashboardScreen } from '../screens/PerfilDashboardScreen';
@@ -90,6 +91,11 @@ export function AppNavigator() {
             <Stack.Screen
               name="GerenciarServicosDetail"
               component={GerenciarServicosDetailScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="GerenciarEventosDetail"
+              component={GerenciarEventosDetailScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

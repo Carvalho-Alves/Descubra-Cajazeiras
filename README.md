@@ -3,13 +3,14 @@
 Aplicação web para centralizar e disponibilizar informações turísticas de Cajazeiras–PB: serviços (hospedagem, alimentação/lazer, pontos turísticos), eventos, mapa interativo, avaliações por estrelas e dashboard.
 
 Stack:
-- Node.js + Express + TypeScript
-- MongoDB (Mongoose)
-- Neo4j (opcional)
-- JWT, Helmet, CORS, Rate Limit, Multer
-- Frontend: Vanilla JS + Bootstrap + Leaflet + Chart.js
+- **Backend**: Node.js + Express + TypeScript
+- **Banco de Dados**: MongoDB (Mongoose)
+- **Mobile**: React Native + Expo + TypeScript
+- **Segurança**: JWT, Helmet, CORS, Rate Limit, Multer
 
 ## Principais novidades desta versão
+
+### Backend & Frontend Web
 
 - Avaliações por estrelas para serviços e eventos
 	- Modal único reutilizável nas páginas Home, Serviços e Eventos.
@@ -35,6 +36,49 @@ Stack:
 
 - Segurança e CSP
 	- Helmet com CSP para permitir CDNs e inline mínimos necessários.
+
+### App Mobile (React Native + Expo)
+
+- Mapa interativo com limites de Cajazeiras
+	- Restrição de zoom e pan apenas dentro do município
+	- Marcadores de serviços e eventos em tempo real
+	- Modal com opções ao clicar em um ponto
+
+- Telas de detalhes completas
+	- Página de detalhes de Serviço: informações completas, imagem, rating, contato
+	- Página de detalhes de Evento: data, local, horário, rating, contato
+	- Acesso direto a avaliações a partir das telas de detalhes
+
+- Validação de formulários com Yup
+	- Schemas de validação para Serviço e Evento
+	- Feedback em tempo real ao usuário
+	- Integração com formulários de criação
+
+- Geolocalização e Maps
+	- Captura de localização atual do dispositivo
+	- Botão “Usar Minha Localização” nos formulários
+	- Integração com react-native-maps (mobile) e fallback para web
+
+- Filtros dinâmicos
+	- Filtros por categoria de Serviço (Todos, Hospedagem, Alimentação, Turístico)
+	- Filtros por status de Evento (Todos, Ativo, Cancelado, Encerrado)
+	- Busca por nome em tempo real
+
+- Dashboard de Perfil
+	- Abas: Resumo, Atividades, Favoritos, Configurações
+	- Estatísticas do usuário
+	- Gerenciamento de favoritos
+	- Edição de informações pessoais
+
+- Cache local com AsyncStorage
+	- Persistência de autenticação
+	- Armazenamento de favoritos
+	- Dados offline
+
+- Sistema completo de avaliações
+	- Visualização de avaliações por serviço/evento
+	- Listagem de avaliações em destaque
+	- Criação de novas avaliações com rating e comentários
 
 ## Estrutura do Projeto
 
@@ -143,32 +187,13 @@ Authorization: Bearer <token>
 - A centralização “Minha Localização” usa `navigator.geolocation`.
 - Em produção, geolocalização exige HTTPS (ou `localhost` em dev).
 
-## Funcionalidades que Utilizam Redux
+## Funcionalidades de Cache Local (Mobile)
 
-No frontend React (`frontend1/`), o Redux Toolkit gerencia o estado global para:
+No app mobile, o AsyncStorage gerencia persistência de dados:
 
-- **Autenticação (auth)**: Controle de login, tokens JWT e dados do usuário.
-- **Eventos (eventos)**: Estado de listagem, criação e edição de eventos.
-- **Serviços (servicos)**: Estado de listagem, criação e edição de serviços.
-
-Configurado em `frontend1/src/store/store.ts`, com slices em `features/`. Use Redux DevTools no navegador para inspecionar mudanças de estado.
-
-## Funcionalidades que Utilizam Cache com Service Worker
-
-O Service Worker (via vite-plugin-pwa/Workbox) implementa cache offline no frontend React (`frontend1/`):
-
-- Cache de requisições GET para `/api/servicos` e `/api/eventos`, permitindo acesso rápido/offline a listagens.
-- Para demonstrar: Build o app (`npm run build` em `frontend1/`), sirva com `npm run preview`, desconecte internet e recarregue – dados persistem.
-
-## Componentes no Storybook
-
-O Storybook documenta componentes React isoladamente (`frontend1/src/stories/`):
-
-- **Header/Footer**: Layouts responsivos.
-- **ServiceCard/EventCard**: Cards para serviços/eventos com avaliações.
-- **RatingModal**: Modal para avaliações por estrelas.
-- **ListaItems**: Listas filtráveis.
-- Execute com `npm run storybook` em `frontend1/` (porta 6006) para visualizar e testar props/estados.
+- **Autenticação**: Armazena JWT e dados do usuário logado
+- **Favoritos**: Salvamento de serviços/eventos favoritados
+- **Cache de listagens**: Dados offline disponíveis quando sem conexão
 
 ## Tutorial de Execução do Projeto
 
@@ -178,36 +203,24 @@ O Storybook documenta componentes React isoladamente (`frontend1/src/stories/`):
 3. Configure `.env` (veja exemplo acima).
 4. Execute: `npm run dev` (porta 3333). Ou com Docker: `docker-compose up` (inclui MongoDB/Neo4j).
 
-### Frontend1 (React)
-1. Navegue para `frontend1/`: `cd frontend1`
+### App Mobile (React Native + Expo)
+1. Navegue para `mobile/`: `cd mobile`
 2. Instale dependências: `npm install`
-3. Execute em dev: `npm run dev` (porta 5173, proxy para API).
-4. Para PWA: `npm run build` e `npm run preview` (porta 4173).
-
-### Storybook
-1. Em `frontend1/`: `npm run storybook` (porta 6006).
-
-### Testes
-- **Unitários**: `npm run test` (Vitest + React Testing Library).
-- **E2E**: `npm run test:e2e` (Playwright).
+3. Execute em dev: `npm run dev` (inicia servidor Expo em LAN).
+4. Escaneie o QR Code com Expo Go no seu celular.
 
 ## Demonstração do Sistema e Funcionalidades
 
-Execute o backend e frontend1. Explore:
+Execute o backend e o app mobile. Explore:
 
-- **Cadastro/Login**: Crie conta, faça login.
-- **Serviços/Eventos**: Liste, crie, edite, delete; busque/filtre.
-- **Avaliações**: Adicione estrelas/comentários via modal.
-- **Mapa**: Visualize marcadores, clique para detalhes/avaliações.
-- **Dashboard**: Estatísticas em `/estatisticas`.
-- **Offline**: Em PWA, teste cache desconectando internet.
-
-## Execução dos Testes Unitários e de Sistema
-
-- **Unitários**: Cobrem componentes e lógica (ex.: auth, CRUD). Execute `npm run test` em `frontend1/` para ver cobertura.
-- **E2E**: Testam fluxos completos (login, criação de itens). Execute `npm run test:e2e` para simular usuário real.
-
-Esses pontos destacam os requisitos atendidos (SPA, Redux, PWA, testes, etc.).
+- **Cadastro/Login**: Crie conta, faça login com seus dados.
+- **Mapa Interativo**: Visualize serviços e eventos em tempo real, limitado a Cajazeiras.
+- **Serviços/Eventos**: Liste, crie, edite, delete; busque/filtre por categoria.
+- **Detalhes Completos**: Clique em um item do mapa ou da lista para ver detalhes completos com minimap.
+- **Avaliações**: Veja e crie avaliações com estrelas e comentários.
+- **Dashboard**: Visualize seu perfil com estatísticas, atividades, favoritos e configurações.
+- **Geolocalização**: Use "Minha Localização" para capturar sua posição ao criar novos itens.
+- **Offline**: Seus dados em cache permanecem disponíveis mesmo sem conexão.
 
 ---
 
@@ -261,6 +274,26 @@ npm install
 
 5. O app carregará automaticamente no seu celular. Mudanças no código são refletidas em tempo real (Fast Refresh).
 
+### Funcionalidades implementadas (Mobile)
+
+- **Mapa Interativo**: Visualização de todos os serviços e eventos em tempo real, limitado ao município de Cajazeiras
+- **Filtros dinâmicos**: Por categoria de serviço e status de evento
+- **Busca**: Busca rápida de serviços e eventos pelo nome
+- **Detalhes completos**: Cada serviço e evento tem página de detalhes com:
+  - Imagem principal
+  - Descrição
+  - Avaliação média (rating)
+  - Informações de contato (telefone, horário, local)
+  - Minimap com localização
+  - Botão direto para ver avaliações
+- **Validação de formulários**: Usando Yup para validação de dados nos formulários de cadastro
+- **Cache local**: AsyncStorage para persistência de dados (autenticação, favoritos)
+- **Geolocalização**: 
+  - Posicionamento atual do usuário no mapa
+  - Captura de localização ao cadastrar serviço/evento
+- **Avaliações**: Sistema completo de avaliações com estrelas (1-5) e comentários
+- **Dashboard do usuário**: Perfil com estatísticas, atividades recentes, favoritos e configurações
+
 ### Scripts disponíveis
 
 | Comando | Descrição |
@@ -275,13 +308,17 @@ npm install
 | Tela | Rota | Descrição |
 |---|---|---|
 | Login | `Login` | Autenticação com e-mail e senha |
-| Home | `Tabs > Home` | Descoberta de serviços e eventos |
+| Home | `Tabs > Home` | Mapa interativo com serviços e eventos de Cajazeiras |
 | Favoritos | `Tabs > Favoritos` | Itens salvos pelo usuário |
-| Perfil | `Tabs > Perfil` | Dashboard pessoal do usuário |
-| Gerenciar Eventos | `GerenciarEventos` | CRUD de eventos do usuário |
-| Novo Serviço | `NovoServico` | Formulário de cadastro de serviço |
-| Gerenciar Serviços | `GerenciarServicos` | CRUD de serviços com toggle ativo/inativo |
-| Avaliações | `Avaliacoes` | Listagem e filtro de avaliações |
+| Perfil | `Tabs > Perfil` | Dashboard pessoal do usuário com abas (Resumo, Atividades, Favoritos, Configurações) |
+| Gerenciar Eventos | `GerenciarEventos` | CRUD de eventos do usuário com filtros (Todos, Ativo, Cancelado, Encerrado) |
+| Gerenciar Serviços | `GerenciarServicos` | CRUD de serviços com filtros (Todos, Hospedagem, Alimentação, Turístico) |
+| Detalhes do Serviço | `GerenciarServicosDetail` | Visualização completa de um serviço com mapa mini, rating e botão para avaliações |
+| Detalhes do Evento | `GerenciarEventosDetail` | Visualização completa de um evento com data, local, rating e botão para avaliações |
+| Novo Serviço | `NovoServico` | Formulário de cadastro de serviço com localização via GPS |
+| Novo Evento | `NovoEvento` | Formulário de cadastro de evento com localização via GPS |
+| Avaliações | `Avaliacoes` | Listagem e filtro de avaliações por serviço/evento |
+| Avaliações em Destaque | `AvaliacoesDestaque` | Resenhas destacadas com estatísticas |
 | Sobre | `Sobre` | Informações do app, equipe e links |
 
 ### Solução de problemas comuns

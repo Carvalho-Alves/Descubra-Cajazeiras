@@ -23,7 +23,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F0F8FF"
       },
-      "package": "com.descubracajazeiras.app"
+      "package": "com.descubracajazeiras.app",
+      "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
     },
     "web": {
       "favicon": "./assets/favicon.png"
