@@ -96,3 +96,51 @@ export async function deleteEventoRequest(
     token,
   });
 }
+
+export async function updateEventoRequest(
+  id: string,
+  input: {
+    nome: string;
+    descricao?: string;
+    data: string;
+    horario?: string;
+    latitude?: number;
+    longitude?: number;
+    imageUri?: string | null;
+    status?: EventoStatus;
+  },
+  token?: string | null,
+) {
+  const form = new FormData();
+  form.append('nome', input.nome);
+  if (input.descricao) form.append('descricao', input.descricao);
+  form.append('data', input.data);
+  if (input.horario) form.append('horario', input.horario);
+  
+  if (input.latitude && input.longitude) {
+    form.append('latitude', String(input.latitude));
+    form.append('longitude', String(input.longitude));
+  }
+  
+  if (input.status) form.append('status', input.status);
+
+  // Só envia o arquivo físico de imagem para a API se ele for uma imagem local (do celular). 
+  // Se for um link HTTP (já salva no banco), não envia nada.
+  if (input.imageUri && !input.imageUri.startsWith('http')) {
+    const name = input.imageUri.split('/').pop() || 'evento.jpg';
+    const match = /\.(\w+)$/.exec(name);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    form.append('imagem', {
+      uri: input.imageUri,
+      name,
+      type,
+    } as unknown as Blob);
+  }
+
+  return apiRequest<Evento>(`/eventos/${id}`, {
+    method: 'PUT',
+    body: form,
+    formData: true,
+    token,
+  });
+}

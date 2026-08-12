@@ -9,7 +9,6 @@ import {
   Platform,
   StyleSheet,
   Alert,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,11 +17,8 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 
-// MapView: web usa placeholder, mobile nativo usa MapView
 let MapView: any = null;
 let Marker: any = null;
-let MapPressEvent: any = null;
-let MarkerDragStartEndEvent: any = null;
 
 if (Platform.OS !== 'web') {
   const maps = require('react-native-maps');
@@ -38,6 +34,10 @@ import { createServicoRequest } from '../services/servicoService';
 import { ApiError } from '../services/apiClient';
 import { useFormValidation, servicoSchema } from '../hooks/useFormValidation';
 import { CAJAZEIRAS_CENTER, CAJAZEIRAS_BOUNDS } from '../config/api';
+
+import { CustomHeader } from '../components/CustomHeader';
+import { CustomInput } from '../components/CustomInput';
+import { ImagePickerBox } from '../components/ImagePickerBox';
 
 const CATEGORIES = ['Hospedagem', 'Alimentação/Lazer', 'Ponto Turístico'];
 
@@ -94,7 +94,6 @@ export function NovoServicoScreen() {
       setLatitude(loc.coords.latitude.toFixed(6));
       setLongitude(loc.coords.longitude.toFixed(6));
 
-      // Buscar endereço reverso
       try {
         const addresses = await Location.reverseGeocodeAsync({
           latitude: loc.coords.latitude,
@@ -102,11 +101,10 @@ export function NovoServicoScreen() {
         });
         if (addresses.length > 0) {
           const addr = addresses[0];
-          const enderecoFormatado = `${addr.street || ''} ${addr.streetNumber || ''}`.trim();
-          setEndereco(enderecoFormatado);
+          setEndereco(`${addr.street || ''} ${addr.streetNumber || ''}`.trim());
         }
       } catch (err) {
-        console.warn('Erro ao buscar endereço reverso:', err);
+        console.warn('Erro ao buscar endereço:', err);
       }
     } catch {
       Alert.alert('Erro', 'Não foi possível obter sua localização atual.');
@@ -132,7 +130,6 @@ export function NovoServicoScreen() {
 
       const { latitude: lat, longitude: lng } = results[0];
 
-      // Verificar se está dentro dos bounds de Cajazeiras
       if (
         lat >= CAJAZEIRAS_BOUNDS.minLat &&
         lat <= CAJAZEIRAS_BOUNDS.maxLat &&
@@ -143,22 +140,16 @@ export function NovoServicoScreen() {
         setLongitude(lng.toFixed(6));
         Alert.alert('Sucesso', 'Localização atualizada!');
       } else {
-        Alert.alert('Atenção', 'Este endereço está fora de Cajazeiras. Use um endereço na cidade.');
+        Alert.alert('Atenção', 'Este endereço está fora de Cajazeiras.');
       }
     } catch (err) {
-      Alert.alert('Erro', 'Não foi possível geocodificar este endereço.');
+      Alert.alert('Erro', 'Não foi possível buscar este endereço.');
     } finally {
       setLoadingLocation(false);
     }
   };
 
-  const handleMapPress = (e: MapPressEvent) => {
-    const { latitude: lat, longitude: long } = e.nativeEvent.coordinate;
-    setLatitude(lat.toFixed(6));
-    setLongitude(long.toFixed(6));
-  };
-
-  const handleMarkerDragEnd = (e: MarkerDragStartEndEvent) => {
+  const handleMapPress = (e: any) => {
     const { latitude: lat, longitude: long } = e.nativeEvent.coordinate;
     setLatitude(lat.toFixed(6));
     setLongitude(long.toFixed(6));
@@ -170,7 +161,6 @@ export function NovoServicoScreen() {
       return;
     }
 
-    // Validar dados com Yup
     const { isValid, errors: validationErrors } = await validateField(servicoSchema, {
       nome: title.trim(),
       tipo_servico: category,
@@ -191,30 +181,22 @@ export function NovoServicoScreen() {
     setSaving(true);
 
     try {
-      await createServicoRequest(
-        {
-          nome: title.trim(),
-          descricao: descricao.trim() || undefined,
-          tipo_servico: category,
-          telefone: telefone.trim() || undefined,
-          horario: operatingHours.trim() || undefined,
-          latitude: Number(latitude),
-          longitude: Number(longitude),
-          imageUri: image,
-        },
-        token,
-      );
+      await createServicoRequest({
+        nome: title.trim(),
+        descricao: descricao.trim() || undefined,
+        tipo_servico: category,
+        telefone: telefone.trim() || undefined,
+        horario: operatingHours.trim() || undefined,
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+        imageUri: image,
+      }, token);
 
       Alert.alert('Sucesso!', 'Serviço cadastrado com sucesso!', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
     } catch (error) {
-      Alert.alert(
-        'Erro',
-        error instanceof ApiError
-          ? error.message
-          : 'Não foi possível salvar os dados do serviço.',
-      );
+      Alert.alert('Erro', error instanceof ApiError ? error.message : 'Falha ao salvar.');
     } finally {
       setSaving(false);
     }
@@ -225,33 +207,17 @@ export function NovoServicoScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} disabled={saving}>
-          <Text style={styles.cancel}>Cancelar</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Novo Serviço</Text>
-        <TouchableOpacity onPress={handleSave} disabled={saving}>
-          {saving ? (
-            <ActivityIndicator color={Colors.primary} />
-          ) : (
-            <Text style={styles.save}>Salvar</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      <CustomHeader 
+        title="Novo Serviço" 
+        onCancel={() => navigation.goBack()} 
+        onSave={handleSave} 
+        isSaving={saving} 
+      />
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           
-          <TouchableOpacity style={styles.upload} onPress={handlePickImage}>
-            {image ? (
-              <Image source={{ uri: image }} style={styles.preview} />
-            ) : (
-              <>
-                <Ionicons name="camera-outline" size={48} color={Colors.muted} />
-                <Text style={styles.uploadText}>Toque para adicionar uma foto</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <ImagePickerBox imageUri={image} onPress={handlePickImage} />
 
           <View style={styles.field}>
             <Text style={styles.label}>Categoria</Text>
@@ -262,60 +228,46 @@ export function NovoServicoScreen() {
                   style={[styles.categoryButton, category === cat && styles.categoryButtonActive]}
                   onPress={() => setCategory(cat)}
                 >
-                  <Text style={[styles.categoryText, category === cat && styles.categoryTextActive]}>
-                    {cat}
-                  </Text>
+                  <Text style={[styles.categoryText, category === cat && styles.categoryTextActive]}>{cat}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Nome do Estabelecimento</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite o nome"
-              placeholderTextColor={Colors.muted}
-              value={title}
-              onChangeText={setTitle}
-            />
-          </View>
+          <CustomInput 
+            label="Nome do Estabelecimento"
+            placeholder="Digite o nome"
+            value={title}
+            onChangeText={setTitle}
+            error={errors.nome}
+          />
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Dias e Horários de Funcionamento</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Seg a Sáb · 08h às 18h"
-              placeholderTextColor={Colors.muted}
-              value={operatingHours}
-              onChangeText={setOperatingHours}
-            />
-          </View>
+          <CustomInput 
+            label="Dias e Horários de Funcionamento"
+            placeholder="Ex: Seg a Sáb · 08h às 18h"
+            value={operatingHours}
+            onChangeText={setOperatingHours}
+          />
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Descrição (Opcional)</Text>
-            <TextInput
-              style={[styles.input, styles.textarea]}
-              placeholder="Descreva os detalhes..."
-              placeholderTextColor={Colors.muted}
-              value={descricao}
-              onChangeText={setDescricao}
-              multiline
-              textAlignVertical="top"
-            />
-          </View>
+          <CustomInput 
+            label="Descrição (Opcional)"
+            placeholder="Descreva os detalhes..."
+            value={descricao}
+            onChangeText={setDescricao}
+            multiline
+            textAlignVertical="top"
+            style={styles.textarea}
+            error={errors.descricao}
+          />
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Telefone (Opcional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="(00) 00000-0000"
-              placeholderTextColor={Colors.muted}
-              value={telefone}
-              onChangeText={setTelefone}
-              keyboardType="phone-pad"
-            />
-          </View>
+          <CustomInput 
+            label="Telefone (Opcional)"
+            placeholder="(00) 00000-0000"
+            value={telefone}
+            onChangeText={setTelefone}
+            keyboardType="phone-pad"
+            error={errors.telefone}
+          />
 
           <View style={styles.field}>
             <Text style={styles.label}>Endereço (Opcional)</Text>
@@ -327,11 +279,7 @@ export function NovoServicoScreen() {
                 value={endereco}
                 onChangeText={setEndereco}
               />
-              <TouchableOpacity
-                style={styles.searchBtn}
-                onPress={handleGeocodeAddress}
-                disabled={loadingLocation}
-              >
+              <TouchableOpacity style={styles.searchBtn} onPress={handleGeocodeAddress} disabled={loadingLocation}>
                 {loadingLocation ? (
                   <ActivityIndicator color={Colors.primary} size={20} />
                 ) : (
@@ -339,25 +287,20 @@ export function NovoServicoScreen() {
                 )}
               </TouchableOpacity>
             </View>
-            <Text style={styles.helperText}>
-              Digite o endereço e clique na lupa. Deve estar em Cajazeiras!
-            </Text>
+            <Text style={styles.helperText}>Digite o endereço e clique na lupa.</Text>
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Localização no Mapa</Text>
-            <Text style={styles.helperText}>
-              Toque no botão abaixo para usar o GPS ou segure o pino para mover.
-            </Text>
-
+            
             <TouchableOpacity style={styles.gpsButton} onPress={handleGetCurrentLocation} disabled={loadingLocation}>
               {loadingLocation ? (
                 <ActivityIndicator color={Colors.primary} />
               ) : (
-                <>
+                <View style={styles.gpsButtonInner}>
                   <Ionicons name="location-outline" size={18} color={Colors.primary} />
                   <Text style={styles.gpsButtonText}>Usar Minha Localização Atual</Text>
-                </>
+                </View>
               )}
             </TouchableOpacity>
 
@@ -372,26 +315,17 @@ export function NovoServicoScreen() {
                     longitudeDelta: 0.01,
                   }}
                   onPress={handleMapPress}
-                  minZoomLevel={11}
-                  maxZoomLevel={18}
-                  scrollEnabled={true}
-                  zoomEnabled={true}
-                  rotateEnabled={false}
-                  pitchEnabled={false}
                 >
                   <Marker
                     draggable
                     coordinate={{ latitude: parsedLat, longitude: parsedLong }}
-                    onDragEnd={handleMarkerDragEnd}
+                    onDragEnd={handleMapPress}
                     title="Localização"
                   />
                 </MapView>
               ) : (
-                <View style={[styles.map, { backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }]}>
-                  <Text style={{ color: Colors.textSecondary }}>Mapa disponível apenas em mobile</Text>
-                  <Text style={{ color: Colors.textSecondary, fontSize: 12, marginTop: 8 }}>
-                    {endereco || 'Endereço não definido'}
-                  </Text>
+                <View style={[styles.map, styles.mapFallback]}>
+                  <Text style={{ color: Colors.textSecondary }}>Mapa indisponível</Text>
                 </View>
               )}
             </View>
@@ -405,42 +339,11 @@ export function NovoServicoScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   flex: { flex: 1 },
-  header: {
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  cancel: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.md, color: '#4B5563' },
-  headerTitle: { fontFamily: FontFamily.headingSemiBold, fontSize: 17, color: Colors.text },
-  save: { fontFamily: FontFamily.headingSemiBold, fontSize: FontSize.md, color: Colors.primary },
   content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl, gap: Spacing.lg },
-  upload: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-    borderStyle: 'dashed',
-    minHeight: 140,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  preview: { width: '100%', height: 160 },
-  uploadText: { marginTop: Spacing.md, fontFamily: FontFamily.bodyRegular, fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center' },
   field: { gap: Spacing.sm },
-  label: { fontFamily: 'Poppins_600SemiBold', fontSize: FontSize.sm, color: '#4B5563' },
+  label: { fontFamily: 'Poppins_600SemiBold', fontSize: FontSize.sm, color: '#4B5563', marginBottom: Spacing.sm },
   helperText: { fontSize: 12, color: Colors.textSecondary, marginBottom: 4 },
-  addressInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
+  addressInputContainer: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   addressInput: {
     flex: 1,
     backgroundColor: Colors.surface,
@@ -463,25 +366,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  input: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
   textarea: { minHeight: 96 },
   categoryContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   categoryButton: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: '#F5F5F5', borderWidth: 1, borderColor: '#E5E5E5' },
   categoryButtonActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   categoryText: { fontSize: 14, color: Colors.textSecondary },
   categoryTextActive: { color: Colors.surface, fontFamily: 'Poppins_600SemiBold' },
-  gpsButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, backgroundColor: '#F0E6FF', borderWidth: 1, borderColor: Colors.primary, marginBottom: 8, gap: 6 },
+  gpsButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    backgroundColor: '#F0E6FF',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    marginBottom: 8,
+  },
+  gpsButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   gpsButtonText: { color: Colors.primary, fontSize: 14, fontFamily: 'Poppins_600SemiBold' },
   mapContainer: { height: 180, borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#E5E5E5' },
   map: { flex: 1 },
+  mapFallback: {
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

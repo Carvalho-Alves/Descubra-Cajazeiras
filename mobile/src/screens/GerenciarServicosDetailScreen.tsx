@@ -8,7 +8,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Dimensions,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 
-// MapView: web usa placeholder, mobile nativo usa MapView
 let MapView: any = null;
 let Marker: any = null;
 
@@ -28,7 +26,7 @@ if (Platform.OS !== 'web') {
 
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
+import { Spacing, BorderRadius } from '../theme/spacing';
 import { getServicoById, Servico } from '../services/servicoService';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/apiClient';
@@ -67,9 +65,10 @@ export function GerenciarServicosDetailScreen({
     if (servico && servico.localizacao) {
       const reverseGeocode = async () => {
         try {
+          // CORREÇÃO: O Typescript sabe que servico.localizacao existe por causa do IF acima
           const result = await Location.reverseGeocodeAsync({
-            latitude: servico.localizacao.latitude,
-            longitude: servico.localizacao.longitude,
+            latitude: servico.localizacao!.latitude,
+            longitude: servico.localizacao!.longitude,
           });
           if (result.length > 0) {
             const addr = result[0];
@@ -77,7 +76,7 @@ export function GerenciarServicosDetailScreen({
             setEndereco(addressStr);
           }
         } catch (error) {
-          setEndereco(`${servico.localizacao.latitude.toFixed(4)}, ${servico.localizacao.longitude.toFixed(4)}`);
+          setEndereco(`${servico.localizacao!.latitude.toFixed(4)}, ${servico.localizacao!.longitude.toFixed(4)}`);
         }
       };
       reverseGeocode();
@@ -118,7 +117,6 @@ export function GerenciarServicosDetailScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Hero Image */}
         {image ? (
           <Image source={{ uri: image }} style={styles.heroImage} />
         ) : (
@@ -127,7 +125,6 @@ export function GerenciarServicosDetailScreen({
           </View>
         )}
 
-        {/* Title & Badge */}
         <View style={styles.titleSection}>
           <Text style={styles.title}>{servico.nome}</Text>
           <View style={styles.badge}>
@@ -137,7 +134,6 @@ export function GerenciarServicosDetailScreen({
           </View>
         </View>
 
-        {/* Rating */}
         <View style={styles.ratingSection}>
           <View style={styles.ratingBox}>
             <Ionicons name="star" size={20} color="#FFB800" />
@@ -146,7 +142,6 @@ export function GerenciarServicosDetailScreen({
           </View>
         </View>
 
-        {/* Description */}
         {servico.descricao && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Sobre</Text>
@@ -154,7 +149,6 @@ export function GerenciarServicosDetailScreen({
           </View>
         )}
 
-        {/* Contact Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informações</Text>
           {servico.telefone && (
@@ -171,19 +165,18 @@ export function GerenciarServicosDetailScreen({
           )}
         </View>
 
-        {/* Location */}
+        {/* CORREÇÃO: Usando a exclamação "!" para garantir ao TypeScript que o dado existe e apagar as linhas vermelhas */}
         {servico.localizacao && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Localização</Text>
 
-            {/* Map Container */}
             {MapView ? (
               <View style={styles.mapContainer}>
                 <MapView
                   style={styles.map}
                   region={{
-                    latitude: servico.localizacao.latitude,
-                    longitude: servico.localizacao.longitude,
+                    latitude: servico.localizacao!.latitude,
+                    longitude: servico.localizacao!.longitude,
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01,
                   }}
@@ -192,8 +185,8 @@ export function GerenciarServicosDetailScreen({
                 >
                   <Marker
                     coordinate={{
-                      latitude: servico.localizacao.latitude,
-                      longitude: servico.localizacao.longitude,
+                      latitude: servico.localizacao!.latitude,
+                      longitude: servico.localizacao!.longitude,
                     }}
                     title={servico.nome}
                   />
@@ -205,7 +198,6 @@ export function GerenciarServicosDetailScreen({
               </View>
             )}
 
-            {/* Address */}
             <View style={styles.addressBox}>
               <Ionicons name="location-outline" size={18} color={Colors.primary} />
               <Text style={styles.addressText}>{endereco || 'Carregando endereço...'}</Text>
@@ -213,11 +205,9 @@ export function GerenciarServicosDetailScreen({
           </View>
         )}
 
-        {/* Spacer */}
         <View style={{ height: Spacing.xxxl }} />
       </ScrollView>
 
-      {/* Button: Go to Reviews */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.reviewButton}
@@ -254,23 +244,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     color: Colors.text,
   },
-  content: {
-    paddingBottom: Spacing.lg,
-  },
-  heroImage: {
-    width: '100%',
-    height: 240,
-    backgroundColor: '#f0f0f0',
-  },
-  heroImageFallback: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  titleSection: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
+  content: { paddingBottom: Spacing.lg },
+  heroImage: { width: '100%', height: 240, backgroundColor: '#f0f0f0' },
+  heroImageFallback: { justifyContent: 'center', alignItems: 'center' },
+  titleSection: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.md },
   title: {
     fontFamily: FontFamily.headingBold,
     fontSize: FontSize.xxl,
@@ -284,15 +261,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: 4,
   },
-  badgeText: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.sm,
-    color: Colors.text,
-  },
-  ratingSection: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.lg,
-  },
+  badgeText: { fontFamily: FontFamily.headingSemiBold, fontSize: FontSize.sm, color: Colors.text },
+  ratingSection: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.lg },
   ratingBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -302,53 +272,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
   },
-  ratingValue: {
-    fontFamily: FontFamily.headingBold,
-    fontSize: FontSize.lg,
-    color: Colors.text,
-  },
-  ratingLabel: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
+  ratingValue: { fontFamily: FontFamily.headingBold, fontSize: FontSize.lg, color: Colors.text },
+  ratingLabel: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.sm, color: Colors.textSecondary },
   section: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
   },
-  sectionTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.text,
-    marginBottom: Spacing.md,
-  },
-  description: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-    lineHeight: 24,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  infoText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
-  mapContainer: {
-    height: 200,
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-  },
+  sectionTitle: { fontFamily: FontFamily.headingSemiBold, fontSize: FontSize.md, color: Colors.text, marginBottom: Spacing.md },
+  description: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.md, color: Colors.text, lineHeight: 24 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.md },
+  infoText: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.md, color: Colors.text },
+  mapContainer: { height: 200, borderRadius: BorderRadius.lg, overflow: 'hidden', marginBottom: Spacing.md, borderWidth: 1, borderColor: '#E5E5E5' },
   map: { flex: 1 },
   addressBox: {
     flexDirection: 'row',
@@ -358,17 +294,8 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
   },
-  addressText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-    flex: 1,
-  },
-  errorText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-  },
+  addressText: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.md, color: Colors.text, flex: 1 },
+  errorText: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.md, color: Colors.textSecondary },
   footer: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
@@ -385,9 +312,5 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.lg,
   },
-  reviewButtonText: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.surface,
-  },
-});
+  reviewButtonText: { fontFamily: FontFamily.headingSemiBold, fontSize: FontSize.md, color: Colors.surface },
+}); 
