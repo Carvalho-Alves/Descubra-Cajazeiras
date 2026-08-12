@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 
-// MapView: web usa placeholder, mobile nativo usa MapView
 let MapView: any = null;
 let Marker: any = null;
 
@@ -27,7 +26,7 @@ if (Platform.OS !== 'web') {
 
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
+import { Spacing, BorderRadius } from '../theme/spacing';
 import { getEventoById, Evento } from '../services/eventoService';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/apiClient';
@@ -75,13 +74,23 @@ export function GerenciarEventosDetailScreen({
     }
   }, [eventoId, token]);
 
+  // CORREÇÃO: Extração segura das coordenadas independente da alteração da sua colega
+  const getCoordinates = (evt: Evento | null) => {
+    const data = evt as any;
+    const lat = Number(data?.localizacao?.latitude || data?.latitude) || -6.8889;
+    const lng = Number(data?.localizacao?.longitude || data?.longitude) || -38.5606;
+    return { lat, lng };
+  };
+
   useEffect(() => {
     if (evento) {
+      const { lat, lng } = getCoordinates(evento);
+      
       const reverseGeocode = async () => {
         try {
           const result = await Location.reverseGeocodeAsync({
-            latitude: evento.latitude,
-            longitude: evento.longitude,
+            latitude: lat,
+            longitude: lng,
           });
           if (result.length > 0) {
             const addr = result[0];
@@ -89,7 +98,7 @@ export function GerenciarEventosDetailScreen({
             setEndereco(addressStr);
           }
         } catch (error) {
-          setEndereco(`${evento.latitude.toFixed(4)}, ${evento.longitude.toFixed(4)}`);
+          setEndereco(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
         }
       };
       reverseGeocode();
@@ -119,6 +128,7 @@ export function GerenciarEventosDetailScreen({
   const image = firstImage(evento.imagem);
   const avgRating = evento.avaliacao_media || 0;
   const statusColor_ = statusColor(evento.status);
+  const { lat, lng } = getCoordinates(evento);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -131,7 +141,6 @@ export function GerenciarEventosDetailScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Hero Image */}
         {image ? (
           <Image source={{ uri: image }} style={styles.heroImage} />
         ) : (
@@ -140,7 +149,6 @@ export function GerenciarEventosDetailScreen({
           </View>
         )}
 
-        {/* Title & Status Badge */}
         <View style={styles.titleSection}>
           <Text style={styles.title}>{evento.nome}</Text>
           <View style={[styles.badge, { backgroundColor: `${statusColor_}20` }]}>
@@ -150,7 +158,6 @@ export function GerenciarEventosDetailScreen({
           </View>
         </View>
 
-        {/* Rating */}
         <View style={styles.ratingSection}>
           <View style={styles.ratingBox}>
             <Ionicons name="star" size={20} color="#FFB800" />
@@ -159,10 +166,8 @@ export function GerenciarEventosDetailScreen({
           </View>
         </View>
 
-        {/* Event Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informações do Evento</Text>
-
           <View style={styles.infoRow}>
             <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
             <View style={styles.infoContent}>
@@ -192,18 +197,16 @@ export function GerenciarEventosDetailScreen({
           )}
         </View>
 
-        {/* Map Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Localização no Mapa</Text>
 
-          {/* Map Container */}
           {MapView ? (
             <View style={styles.mapContainer}>
               <MapView
                 style={styles.map}
                 region={{
-                  latitude: evento.latitude,
-                  longitude: evento.longitude,
+                  latitude: lat,
+                  longitude: lng,
                   latitudeDelta: 0.01,
                   longitudeDelta: 0.01,
                 }}
@@ -212,8 +215,8 @@ export function GerenciarEventosDetailScreen({
               >
                 <Marker
                   coordinate={{
-                    latitude: evento.latitude,
-                    longitude: evento.longitude,
+                    latitude: lat,
+                    longitude: lng,
                   }}
                   title={evento.nome}
                 />
@@ -225,7 +228,6 @@ export function GerenciarEventosDetailScreen({
             </View>
           )}
 
-          {/* Address */}
           <View style={styles.addressBox}>
             <Ionicons name="location-outline" size={18} color={Colors.primary} />
             <Text style={styles.addressText}>{endereco || 'Carregando endereço...'}</Text>
@@ -242,19 +244,15 @@ export function GerenciarEventosDetailScreen({
           )}
         </View>
 
-        {/* Description */}
         {evento.descricao && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Sobre o Evento</Text>
             <Text style={styles.description}>{evento.descricao}</Text>
           </View>
         )}
-
-        {/* Spacer */}
         <View style={{ height: Spacing.xxxl }} />
       </ScrollView>
 
-      {/* Button: Go to Reviews */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.reviewButton}
@@ -291,23 +289,10 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     color: Colors.text,
   },
-  content: {
-    paddingBottom: Spacing.lg,
-  },
-  heroImage: {
-    width: '100%',
-    height: 240,
-    backgroundColor: '#f0f0f0',
-  },
-  heroImageFallback: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  titleSection: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
+  content: { paddingBottom: Spacing.lg },
+  heroImage: { width: '100%', height: 240, backgroundColor: '#f0f0f0' },
+  heroImageFallback: { justifyContent: 'center', alignItems: 'center' },
+  titleSection: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: Spacing.md },
   title: {
     fontFamily: FontFamily.headingBold,
     fontSize: FontSize.xxl,
@@ -320,14 +305,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: 4,
   },
-  badgeText: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.sm,
-  },
-  ratingSection: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.lg,
-  },
+  badgeText: { fontFamily: FontFamily.headingSemiBold, fontSize: FontSize.sm },
+  ratingSection: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.lg },
   ratingBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -337,59 +316,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
   },
-  ratingValue: {
-    fontFamily: FontFamily.headingBold,
-    fontSize: FontSize.lg,
-    color: Colors.text,
-  },
-  ratingLabel: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.sm,
-    color: Colors.textSecondary,
-  },
+  ratingValue: { fontFamily: FontFamily.headingBold, fontSize: FontSize.lg, color: Colors.text },
+  ratingLabel: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.sm, color: Colors.textSecondary },
   section: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
   },
-  sectionTitle: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.text,
-    marginBottom: Spacing.md,
-  },
-  description: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-    lineHeight: 24,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  infoContent: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.xs,
-    color: Colors.textSecondary,
-    marginBottom: 2,
-  },
-  infoText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-  },
-  errorText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-  },
+  sectionTitle: { fontFamily: FontFamily.headingSemiBold, fontSize: FontSize.md, color: Colors.text, marginBottom: Spacing.md },
+  description: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.md, color: Colors.text, lineHeight: 24 },
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.md, marginBottom: Spacing.md },
+  infoContent: { flex: 1 },
+  infoLabel: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.xs, color: Colors.textSecondary, marginBottom: 2 },
+  infoText: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.md, color: Colors.text },
+  errorText: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.md, color: Colors.textSecondary },
   footer: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
@@ -406,19 +347,8 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     paddingVertical: Spacing.lg,
   },
-  reviewButtonText: {
-    fontFamily: FontFamily.headingSemiBold,
-    fontSize: FontSize.md,
-    color: Colors.surface,
-  },
-  mapContainer: {
-    height: 200,
-    borderRadius: BorderRadius.lg,
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-  },
+  reviewButtonText: { fontFamily: FontFamily.headingSemiBold, fontSize: FontSize.md, color: Colors.surface },
+  mapContainer: { height: 200, borderRadius: BorderRadius.lg, overflow: 'hidden', marginBottom: Spacing.md, borderWidth: 1, borderColor: '#E5E5E5' },
   map: { flex: 1 },
   addressBox: {
     flexDirection: 'row',
@@ -428,10 +358,5 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
   },
-  addressText: {
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-    flex: 1,
-  },
+  addressText: { fontFamily: FontFamily.bodyRegular, fontSize: FontSize.md, color: Colors.text, flex: 1 },
 });

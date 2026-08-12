@@ -11,7 +11,6 @@ import {
   RefreshControl,
   Alert,
   ListRenderItem,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +28,8 @@ import { ApiError } from '../services/apiClient';
 import { firstImage } from '../utils/resolveAssetUrl';
 import { formatDateBR, labelEventoStatus } from '../utils/format';
 import type { GerenciarEventosScreenProps } from '../navigation/types';
+
+import { FloatingActionButton } from '../components/FloatingActionButton';
 
 const FILTERS = ['Todos', 'Ativo', 'Cancelado', 'Encerrado'] as const;
 
@@ -151,9 +152,18 @@ export function GerenciarEventosScreen({
             </Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.moreBtn} onPress={() => handleDelete(item)}>
-          <Ionicons name="trash-outline" size={18} color={Colors.error} />
-        </TouchableOpacity>
+
+        <View style={styles.actionsRow}>
+          <TouchableOpacity 
+            style={styles.moreBtn} 
+            onPress={() => navigation.navigate('EditarEvento', { eventoId: item._id })}
+          >
+            <Ionicons name="pencil-outline" size={18} color={Colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.moreBtn} onPress={() => handleDelete(item)}>
+            <Ionicons name="trash-outline" size={18} color={Colors.error} />
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -187,7 +197,6 @@ export function GerenciarEventosScreen({
         </View>
       </View>
 
-      {/* Filtros por Status */}
       <View style={styles.filtersWrapper}>
         <ScrollView
           horizontal
@@ -237,12 +246,7 @@ export function GerenciarEventosScreen({
         />
       )}
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('NovoEvento')}
-      >
-        <Ionicons name="add" size={28} color={Colors.text} />
-      </TouchableOpacity>
+      <FloatingActionButton onPress={() => navigation.navigate('NovoEvento')} />
     </View>
   );
 }
@@ -324,7 +328,7 @@ const styles = StyleSheet.create({
   },
   filterButtonTextActive: {
     fontFamily: FontFamily.headingSemiBold,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.text,
   },
   list: {
@@ -377,22 +381,15 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.headingSemiBold,
     fontSize: FontSize.xs,
   },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   moreBtn: {
     width: 32,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  fab: {
-    position: 'absolute',
-    right: Spacing.containerPadding,
-    bottom: Spacing.containerPadding,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.highlight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadow.lg,
   },
 });

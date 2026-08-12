@@ -95,3 +95,53 @@ export async function deleteServicoRequest(
     token,
   });
 }
+
+export async function updateServicoRequest(
+  id: string,
+  input: {
+    nome: string;
+    descricao?: string;
+    tipo_servico: string;
+    telefone?: string;
+    horario?: string;
+    latitude?: number;
+    longitude?: number;
+    imageUri?: string | null;
+  },
+  token?: string | null,
+) {
+  const form = new FormData();
+  form.append('nome', input.nome);
+  if (input.descricao) form.append('descricao', input.descricao);
+  form.append('tipo_servico', input.tipo_servico);
+  if (input.telefone) form.append('telefone', input.telefone);
+  if (input.horario) form.append('horario', input.horario);
+  
+  if (input.latitude && input.longitude) {
+    form.append(
+      'localizacao',
+      JSON.stringify({
+        latitude: input.latitude,
+        longitude: input.longitude,
+      }),
+    );
+  }
+
+  if (input.imageUri && !input.imageUri.startsWith('http')) {
+    const name = input.imageUri.split('/').pop() || 'servico.jpg';
+    const match = /\.(\w+)$/.exec(name);
+    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    form.append('imagem', {
+      uri: input.imageUri,
+      name,
+      type,
+    } as unknown as Blob);
+  }
+
+  return apiRequest<Servico>(`/servicos/${id}`, {
+    method: 'PUT',
+    body: form,
+    formData: true,
+    token,
+  });
+}

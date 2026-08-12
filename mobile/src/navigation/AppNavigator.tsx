@@ -11,6 +11,8 @@ import { NovoEventoScreen } from '../screens/NovoEventoScreen';
 import { GerenciarServicosScreen } from '../screens/GerenciarServicosScreen';
 import { GerenciarServicosDetailScreen } from '../screens/GerenciarServicosDetailScreen';
 import { GerenciarEventosDetailScreen } from '../screens/GerenciarEventosDetailScreen';
+import { EditarServicoScreen } from '../screens/EditarServicoScreen';
+import { EditarEventoScreen } from '../screens/EditarEventoScreen';
 import { AvaliacoesScreen } from '../screens/AvaliacoesScreen';
 import { AvaliacoesDestaqueScreen } from '../screens/AvaliacoesDestaqueScreen';
 import { PerfilDashboardScreen } from '../screens/PerfilDashboardScreen';
@@ -25,7 +27,6 @@ import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-/** Opções padrão de cabeçalho aplicadas a todas as telas Stack */
 const DEFAULT_HEADER_OPTIONS = {
   headerStyle: {
     backgroundColor: Colors.surface,
@@ -62,7 +63,6 @@ export function AppNavigator() {
           />
         ) : (
           <>
-            {/* ── Telas sem cabeçalho ───────────────────────────────── */}
             <Stack.Screen
               name="Tabs"
               component={TabNavigator}
@@ -99,6 +99,16 @@ export function AppNavigator() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="EditarServico"
+              component={EditarServicoScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="EditarEvento"
+              component={EditarEventoScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="Avaliacoes"
               component={AvaliacoesScreen}
               options={{ headerShown: false }}
@@ -128,8 +138,6 @@ export function AppNavigator() {
               component={NotificacoesScreen}
               options={{ headerShown: false }}
             />
-
-            {/* ── Telas com cabeçalho padrão ───────────────────────── */}
             <Stack.Screen
               name="Detalhes"
               component={DetalhesScreen}

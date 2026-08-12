@@ -19,7 +19,6 @@ import {
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// MapView: web usa placeholder, mobile nativo usa MapView
 let MapView: any = null;
 let Marker: any = null;
 if (Platform.OS !== 'web') {
@@ -42,6 +41,7 @@ import {
   mapTipoFilterToApi,
   shortTipoServico,
 } from '../utils/format';
+
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CATEGORIES = ['Todos', 'Eventos', 'Hospedagem', 'Alimentação', 'Turístico'];
 
@@ -161,7 +161,6 @@ export function HomeScreen() {
   };
 
   const handleRegionChangeComplete = (region: any) => {
-    // Verifica se saiu dos bounds de Cajazeiras
     const lat = region.latitude;
     const lng = region.longitude;
     const latDelta = region.latitudeDelta;
@@ -174,7 +173,6 @@ export function HomeScreen() {
       lng + lngDelta / 2 > CAJAZEIRAS_BOUNDS.maxLng;
 
     if (isOutOfBounds) {
-      // Volta ao centro se sair
       mapRef.current?.animateToRegion(
         {
           latitude: CAJAZEIRAS_CENTER.latitude,
@@ -226,11 +224,19 @@ export function HomeScreen() {
       matchCat = !apiTipo || item.tipo_servico === apiTipo;
     }
 
+    // REGRA NOVA: Se for um evento, exibe apenas se o status for estritamente 'ativo' 
+    // (Caso venha sem status definido da API, consideramos 'ativo' por padrão)
+    if (item.tipo_servico === 'Eventos') {
+      const eventoStatus = (item as any).status ? (item as any).status.toLowerCase() : 'ativo';
+      if (eventoStatus !== 'ativo') {
+        return false;
+      }
+    }
+
     const matchSearch =
       !search.trim() ||
       item.nome.toLowerCase().includes(search.trim().toLowerCase());
 
-    // Filtrar por bounds de Cajazeiras
     const lat = item.localizacao?.latitude || CAJAZEIRAS_CENTER.latitude;
     const lng = item.localizacao?.longitude || CAJAZEIRAS_CENTER.longitude;
     const withinBounds =
@@ -256,7 +262,6 @@ export function HomeScreen() {
     <View style={styles.root}>
       <View style={styles.mapContainer}>
         {location ? (
-          // MapView só funciona em mobile - comentado para web
           MapView ? (
             <MapView
               ref={mapRef}
@@ -286,6 +291,7 @@ export function HomeScreen() {
                   longitude: location.coords.longitude,
                 }}
                 title="Você está aqui!"
+                pinColor="blue"
               />
               {filtered
                 .filter(item => item.localizacao?.latitude && item.localizacao?.longitude)
@@ -338,15 +344,6 @@ export function HomeScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-
-      <View style={styles.fabs} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.fabYellow}
-          onPress={() => navigation.navigate('NovoServico')}
-        >
-          <Ionicons name="add" size={28} color={Colors.text} />
-        </TouchableOpacity>
-      </View>
 
       <View style={[styles.sheet, { height: isExpanded ? '65%' : SCREEN_HEIGHT * 0.35 }]}>
         <TouchableOpacity
@@ -524,21 +521,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadow.md,
-  },
-  fabs: {
-    position: 'absolute',
-    right: Spacing.lg,
-    bottom: SCREEN_HEIGHT * 0.38,
-    zIndex: 15,
-  },
-  fabYellow: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.highlight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadow.lg,
   },
   sheet: {
     position: 'absolute',
