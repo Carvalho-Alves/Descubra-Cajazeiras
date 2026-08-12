@@ -61,20 +61,20 @@ export function GerenciarEventosDetailScreen({
     try {
       setLoading(true);
       const data = await getEventoById(eventoId, token);
+      
+      // Regra de tempo: exibe como encerrado nos detalhes
+      if (data.status !== 'cancelado' && data.data && new Date(data.data) < new Date()) {
+        data.status = 'encerrado';
+      }
+
       setEvento(data);
     } catch (error) {
-      Alert.alert(
-        'Erro',
-        error instanceof ApiError
-          ? error.message
-          : 'Falha ao carregar evento.',
-      );
+      Alert.alert('Erro', 'Falha ao carregar evento.');
     } finally {
       setLoading(false);
     }
   }, [eventoId, token]);
 
-  // CORREÇÃO: Extração segura das coordenadas independente da alteração da sua colega
   const getCoordinates = (evt: Evento | null) => {
     const data = evt as any;
     const lat = Number(data?.localizacao?.latitude || data?.latitude) || -6.8889;

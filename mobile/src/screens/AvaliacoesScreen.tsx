@@ -73,7 +73,7 @@ function initials(nome: string) {
 }
 
 export function AvaliacoesScreen({ navigation, route }: AvaliacoesScreenProps) {
-  const { token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated, user } = useAuth();
   const params = route.params;
   const [items, setItems] = useState<Avaliacao[]>([]);
   const [media, setMedia] = useState(0);
@@ -102,13 +102,21 @@ export function AvaliacoesScreen({ navigation, route }: AvaliacoesScreenProps) {
           setTotal(res.stats?.total ?? 0);
         } else {
           const res = await listAvaliacoes();
-          const list = Array.isArray(res) ? res : [];
-          setItems(list);
-          setTotal(list.length);
-          const avg =
-            list.length > 0
-              ? list.reduce((acc, a) => acc + a.nota, 0) / list.length
-              : 0;
+          const list = Array.isArray(res) ? res : (res as any)?.items || [];
+          
+          const myId = user?._id || (user as any)?.id;
+          const userReviews = myId 
+            ? list.filter((a: any) => {
+                const authorId = typeof a.usuarioId === 'object' ? a.usuarioId?._id : a.usuarioId;
+                return String(authorId) === String(myId);
+              })
+            : list;
+
+          setItems(userReviews);
+          setTotal(userReviews.length);
+          
+          const soma = userReviews.reduce((acc: number, a: any) => acc + (a.nota || 0), 0);
+          const avg = userReviews.length > 0 ? soma / userReviews.length : 0;
           setMedia(Number(avg.toFixed(1)));
         }
       } catch (error) {
@@ -123,7 +131,7 @@ export function AvaliacoesScreen({ navigation, route }: AvaliacoesScreenProps) {
         setRefreshing(false);
       }
     },
-    [params?.tipo, params?.referenciaId],
+    [params?.tipo, params?.referenciaId, user],
   );
 
   useFocusEffect(

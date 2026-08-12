@@ -95,11 +95,21 @@ export function HomeScreen() {
       }
 
       if (Array.isArray(eventosData)) {
-        const eventosFormatados = eventosData.map((e: any) => ({
-          ...e,
-          nome: e.nome || e.titulo,
-          tipo_servico: 'Eventos',
-        }));
+        const now = new Date();
+        const eventosFormatados = eventosData.map((e: any) => {
+          let realStatus = e.status || 'ativo';
+          
+          if (realStatus !== 'cancelado' && e.data && new Date(e.data) < now) {
+            realStatus = 'encerrado';
+          }
+          
+          return {
+            ...e,
+            nome: e.nome || e.titulo,
+            tipo_servico: 'Eventos',
+            status: realStatus
+          };
+        });
         combined = combined.concat(eventosFormatados);
       }
 
@@ -224,8 +234,6 @@ export function HomeScreen() {
       matchCat = !apiTipo || item.tipo_servico === apiTipo;
     }
 
-    // REGRA NOVA: Se for um evento, exibe apenas se o status for estritamente 'ativo' 
-    // (Caso venha sem status definido da API, consideramos 'ativo' por padrão)
     if (item.tipo_servico === 'Eventos') {
       const eventoStatus = (item as any).status ? (item as any).status.toLowerCase() : 'ativo';
       if (eventoStatus !== 'ativo') {

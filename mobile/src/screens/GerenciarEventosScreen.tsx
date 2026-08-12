@@ -60,14 +60,20 @@ export function GerenciarEventosScreen({
         if (isRefresh) setRefreshing(true);
         else setLoading(true);
         const data = await listMyEventos(token);
-        setEventos(Array.isArray(data) ? data : []);
+
+        // Regra de tempo: atualiza para encerrado se a data passou
+        const now = new Date();
+        const parsedData = (Array.isArray(data) ? data : []).map(e => {
+          let realStatus = e.status || 'ativo';
+          if (realStatus !== 'cancelado' && e.data && new Date(e.data) < now) {
+            realStatus = 'encerrado';
+          }
+          return { ...e, status: realStatus };
+        });
+
+        setEventos(parsedData);
       } catch (error) {
-        Alert.alert(
-          'Erro',
-          error instanceof ApiError
-            ? error.message
-            : 'Falha ao carregar seus eventos.',
-        );
+        Alert.alert('Erro', 'Falha ao carregar seus eventos.');
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -154,8 +160,8 @@ export function GerenciarEventosScreen({
         </TouchableOpacity>
 
         <View style={styles.actionsRow}>
-          <TouchableOpacity 
-            style={styles.moreBtn} 
+          <TouchableOpacity
+            style={styles.moreBtn}
             onPress={() => navigation.navigate('EditarEvento', { eventoId: item._id })}
           >
             <Ionicons name="pencil-outline" size={18} color={Colors.primary} />

@@ -21,9 +21,11 @@ import { useAuth } from '../context/AuthContext';
 import { getEstatisticas } from '../services/statsService';
 import { listMyServicos } from '../services/servicoService';
 import { listMyEventos } from '../services/eventoService';
+import { listAvaliacoes } from '../services/avaliacaoService';
 import { ApiError } from '../services/apiClient';
 import { resolveAssetUrl } from '../utils/resolveAssetUrl';
 import type { DashboardScreenProps } from '../navigation/types';
+
 
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -94,35 +96,42 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
         if (isRefresh) setRefreshing(true);
         else setLoading(true);
 
-        const [estatisticas, meusServicos, meusEventos] = await Promise.all([
-          getEstatisticas(),
+        const [meusServicos, meusEventos, todasAvaliacoes] = await Promise.all([
           listMyServicos(token).catch(() => []),
           listMyEventos(token).catch(() => []),
+          listAvaliacoes().catch(() => []),
         ]);
 
+        // Filtra apenas as avaliações feitas pelo usuário logado
+        let userReviews: any[] = [];
+        const listAv = Array.isArray(todasAvaliacoes) ? todasAvaliacoes : (todasAvaliacoes as any)?.items || [];
+
+        const myId = user?._id || (user as any)?.id;
+        if (myId) {
+          userReviews = listAv.filter((av: any) => {
+            const authorId = typeof av.usuarioId === 'object' ? av.usuarioId?._id : av.usuarioId;
+            return String(authorId) === String(myId);
+          });
+        }
+
+        const totalAvaliacoes = userReviews.length;
+        const somaNotas = userReviews.reduce((acc, curr) => acc + (curr.nota || 0), 0);
+        const media = totalAvaliacoes > 0 ? somaNotas / totalAvaliacoes : 0;
+
         setStats({
-          servicos: Array.isArray(meusServicos)
-            ? meusServicos.length
-            : estatisticas.totalPontos,
-          eventos: Array.isArray(meusEventos)
-            ? meusEventos.length
-            : estatisticas.totalEventos,
-          avaliacoes: estatisticas.totalAvaliacoes,
-          media: estatisticas.mediaGeral,
+          servicos: Array.isArray(meusServicos) ? meusServicos.length : 0,
+          eventos: Array.isArray(meusEventos) ? meusEventos.length : 0,
+          avaliacoes: totalAvaliacoes,
+          media: media,
         });
       } catch (error) {
-        Alert.alert(
-          'Erro',
-          error instanceof ApiError
-            ? error.message
-            : 'Falha ao carregar o perfil.',
-        );
+        Alert.alert('Erro', 'Falha ao carregar o perfil.');
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [token],
+    [token, user],
   );
 
   useFocusEffect(
