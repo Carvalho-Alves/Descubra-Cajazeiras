@@ -16,6 +16,9 @@ import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
 import { useAuth } from '../context/AuthContext';
+import { listMyServicos } from '../services/servicoService';
+import { listMyEventos } from '../services/eventoService';
+import { listAvaliacoes } from '../services/avaliacaoService';
 import type { PerfilDashboardScreenProps } from '../navigation/types';
 
 interface UserStats {
@@ -84,15 +87,62 @@ export function PerfilDashboardScreen({
   });
 
   const loadUserStats = useCallback(async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      // Por enquanto, deixa os valores padrão
-      setLoading(false);
+
+      const [meusServicos, meusEventos, todasAvaliacoes] = await Promise.all([
+        listMyServicos(token).catch(() => []),
+        listMyEventos(token).catch(() => []),
+        listAvaliacoes().catch(() => []),
+      ]);
+
+      const myId = user?._id || (user as { id?: string })?.id;
+      const listAv = Array.isArray(todasAvaliacoes)
+        ? todasAvaliacoes
+        : (todasAvaliacoes as { items?: typeof todasAvaliacoes })?.items || [];
+
+      const userReviews = myId
+        ? listAv.filter((av) => {
+            const authorId =
+              typeof av.usuarioId === 'object' ? av.usuarioId?._id : av.usuarioId;
+            return String(authorId) === String(myId);
+          })
+        : [];
+
+      const totalNotas = userReviews.reduce((acc, curr) => acc + (curr.nota || 0), 0);
+      const mediaNotas =
+        userReviews.length > 0 ? totalNotas / userReviews.length : 0;
+
+      setStats({
+        avaliacoesFez: userReviews.length,
+        favoritos: 0,
+        visitas: meusEventos.length,
+        contribuicao: meusServicos.length,
+        mediaNotas,
+        tipoFavorito: meusServicos[0]?.tipo_servico || 'Nenhum',
+        distintivos: [],
+        atividades: userReviews.map((av) => ({
+          tipo: 'avaliacao' as const,
+          descricao: `Avaliação ${av.nota}★${av.comentario ? `: ${av.comentario}` : ''}`,
+          data: new Date(av.criadoEm || av.createdAt || Date.now()),
+        })),
+        locaisFavoritos: meusServicos.slice(0, 5).map((s) => ({
+          nome: s.nome,
+          tipo: s.tipo_servico,
+          nota: s.avaliacao_media || 0,
+        })),
+      });
     } catch (error) {
       console.log('Erro ao carregar stats:', error);
+    } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -127,7 +177,7 @@ export function PerfilDashboardScreen({
         <Text style={styles.headerTitle}>Meu Perfil</Text>
         <TouchableOpacity
           style={styles.headerBtn}
-          onPress={() => Alert.alert('Editar', 'Funcionalidade em desenvolvimento')}
+          onPress={() => navigation.navigate('MinhasInformacoes')}
         >
           <Ionicons name="pencil-outline" size={20} color={Colors.text} />
         </TouchableOpacity>
@@ -148,7 +198,7 @@ export function PerfilDashboardScreen({
             <Text style={styles.profileEmail}>{user?.email}</Text>
             <View style={styles.roleBadge}>
               <Text style={styles.roleBadgeText}>
-                {user?.role === 'admin' ? 'Administrador' : 'Turista'}
+                {user?.role === 'Admin' ? 'Administrador' : 'Turista'}
               </Text>
             </View>
           </View>
@@ -175,6 +225,12 @@ export function PerfilDashboardScreen({
         </View>
 
         {/* Tab Content */}
+        {loading ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+          </View>
+        ) : null}
+
         {activeTab === 'Resumo' && (
           <>
             {/* Stats Cards - Meus Serviços e Eventos */}
@@ -256,9 +312,7 @@ export function PerfilDashboardScreen({
           <View style={styles.section}>
             <TouchableOpacity
               style={styles.configItem}
-              onPress={() =>
-                Alert.alert('Alterar Senha', 'Funcionalidade em desenvolvimento')
-              }
+              onPress={() => navigation.navigate('MinhasInformacoes')}
             >
               <Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />
               <Text style={styles.configItemText}>Alterar Senha</Text>
@@ -267,7 +321,7 @@ export function PerfilDashboardScreen({
 
             <TouchableOpacity
               style={styles.configItem}
-              onPress={() => Alert.alert('Notificações', 'Funcionalidade em desenvolvimento')}
+              onPress={() => navigation.navigate('Notificacoes')}
             >
               <Ionicons name="notifications-outline" size={20} color={Colors.primary} />
               <Text style={styles.configItemText}>Notificações</Text>
@@ -276,12 +330,10 @@ export function PerfilDashboardScreen({
 
             <TouchableOpacity
               style={styles.configItem}
-              onPress={() =>
-                Alert.alert('Privacidade', 'Funcionalidade em desenvolvimento')
-              }
+              onPress={() => navigation.navigate('Sobre')}
             >
               <Ionicons name="shield-checkmark-outline" size={20} color={Colors.primary} />
-              <Text style={styles.configItemText}>Privacidade</Text>
+              <Text style={styles.configItemText}>Sobre o App</Text>
               <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
             </TouchableOpacity>
 
@@ -553,5 +605,9 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     paddingVertical: Spacing.lg,
+  },
+  loadingBox: {
+    paddingVertical: Spacing.lg,
+    alignItems: 'center',
   },
 });

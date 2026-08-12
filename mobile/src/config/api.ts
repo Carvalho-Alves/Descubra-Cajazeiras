@@ -1,13 +1,17 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
+const API_PORT = process.env.EXPO_PUBLIC_API_PORT?.trim() || '3333';
+
 /**
  * Origem da API (sem /api).
+ * Configure EXPO_PUBLIC_API_ORIGIN no mobile/.env (veja .env.example).
+ *
  * Prioridade:
  *  1. EXPO_PUBLIC_API_ORIGIN
  *  2. Host do Metro (mesma rede do Expo)
  *  3. Emulador Android → 10.0.2.2
- *  4. Fallback LAN
+ *  4. Expo Web → localhost
  */
 function resolveApiOrigin(): string {
   const fromEnv = process.env.EXPO_PUBLIC_API_ORIGIN?.trim();
@@ -25,19 +29,23 @@ function resolveApiOrigin(): string {
       host !== '127.0.0.1' &&
       !host.includes('exp.direct')
     ) {
-      return `http://${host}:3333`;
+      return `http://${host}:${API_PORT}`;
     }
   }
 
   if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:3333';
+    return `http://10.0.2.2:${API_PORT}`;
   }
 
   if (Platform.OS === 'web') {
-    return 'http://localhost:3333';
+    return `http://localhost:${API_PORT}`;
   }
 
-  return 'http://192.168.2.1:3333';
+  // Dispositivo físico sem .env: tenta IP do Metro ou avisa no console
+  console.warn(
+    '[API] Defina EXPO_PUBLIC_API_ORIGIN no mobile/.env (ex.: http://192.168.x.x:3333)',
+  );
+  return `http://localhost:${API_PORT}`;
 }
 
 export const API_ORIGIN = resolveApiOrigin();

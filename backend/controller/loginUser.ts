@@ -12,7 +12,10 @@ export const loginController = async (req: Request, res: Response, next: NextFun
         email: user.email,
         role: user.role
     };
-    const secret = (env as any).JWT_ACCESS_SECRET || 'dev-secret';
+    const secret =
+      (env as { JWT_ACCESS_SECRET?: string }).JWT_ACCESS_SECRET ||
+      env.JWT_SECRET ||
+      'dev-secret';
     const token = jwt.sign(payload, secret, {
         expiresIn: '1h'
     });

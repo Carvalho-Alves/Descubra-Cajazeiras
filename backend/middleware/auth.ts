@@ -25,8 +25,8 @@ export function ensureAuth(req: Request, res: Response, next: NextFunction) {
     }
 
     const secret =
-      (env as any).JWT_ACCESS_SECRET ||
-      (env as any).JWT_SECRET ||
+      env.JWT_ACCESS_SECRET ||
+      env.JWT_SECRET ||
       'dev-secret';
 
     const payload = jwt.verify(token, secret) as any;
@@ -53,4 +53,25 @@ export function ensureAuth(req: Request, res: Response, next: NextFunction) {
     console.error('Erro na autenticação:', error);
     return res.status(500).json({ erro: 'Erro interno na autenticação' });
   }
+}
+
+/** Permite a operação apenas para o próprio usuário (params.id) ou Admin. */
+export function ensureSelfOrAdmin(paramName = 'id') {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const targetId = req.params[paramName];
+    const userId = req.userId || req.user?.sub;
+
+    if (!userId) {
+      return res.status(401).json({ erro: 'Não autenticado' });
+    }
+
+    const isSelf = String(userId) === String(targetId);
+    const isAdmin = req.user?.role === 'Admin';
+
+    if (isSelf || isAdmin) {
+      return next();
+    }
+
+    return res.status(403).json({ erro: 'Sem permissão para esta operação.' });
+  };
 }

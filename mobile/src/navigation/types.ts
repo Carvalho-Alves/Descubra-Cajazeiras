@@ -4,11 +4,9 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { AvaliacaoTipo } from '../services/avaliacaoService';
 
 export type TabParamList = {
-  Home: undefined;
   Mapa: undefined;
-  Favoritos: undefined;
-  Eventos: undefined;
   Servicos: undefined;
+  Eventos: undefined;
   Perfil: undefined;
 };
 
@@ -56,9 +54,9 @@ export type SobreScreenProps = NativeStackScreenProps<RootStackParamList, 'Sobre
 export type MinhasInformacoesScreenProps = NativeStackScreenProps<RootStackParamList, 'MinhasInformacoes'>;
 export type NotificacoesScreenProps = NativeStackScreenProps<RootStackParamList, 'Notificacoes'>;
 
-export type HomeScreenProps = CompositeScreenProps<BottomTabScreenProps<TabParamList, 'Home'>, NativeStackScreenProps<RootStackParamList>>;
-export type MapaScreenProps = CompositeScreenProps<BottomTabScreenProps<TabParamList, 'Mapa'>, NativeStackScreenProps<RootStackParamList>>;
-export type FavoritosScreenProps = CompositeScreenProps<BottomTabScreenProps<TabParamList, 'Favoritos'>, NativeStackScreenProps<RootStackParamList>>;
+export type HomeScreenProps = CompositeScreenProps<BottomTabScreenProps<TabParamList, 'Mapa'>, NativeStackScreenProps<RootStackParamList>>;
+export type MapaScreenProps = HomeScreenProps;
 export type EventosTabScreenProps = CompositeScreenProps<BottomTabScreenProps<TabParamList, 'Eventos'>, NativeStackScreenProps<RootStackParamList>>;
 export type ServicosTabScreenProps = CompositeScreenProps<BottomTabScreenProps<TabParamList, 'Servicos'>, NativeStackScreenProps<RootStackParamList>>;
 export type DashboardScreenProps = CompositeScreenProps<BottomTabScreenProps<TabParamList, 'Perfil'>, NativeStackScreenProps<RootStackParamList>>;
+export type FavoritosScreenProps = EventosTabScreenProps;

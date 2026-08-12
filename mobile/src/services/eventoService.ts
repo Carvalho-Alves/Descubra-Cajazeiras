@@ -71,7 +71,9 @@ export async function createEventoRequest(
   if (input.imageUri) {
     const name = input.imageUri.split('/').pop() || 'evento.jpg';
     const match = /\.(\w+)$/.exec(name);
-    const type = match ? `image/${match[1]}` : 'image/jpeg';
+    const ext = match?.[1]?.toLowerCase() || 'jpeg';
+    const isVideo = ['mp4', 'webm', 'mov', 'm4v'].includes(ext);
+    const type = isVideo ? `video/${ext === 'mov' ? 'quicktime' : ext}` : `image/${ext}`;
     form.append('imagem', {
       uri: input.imageUri,
       name,

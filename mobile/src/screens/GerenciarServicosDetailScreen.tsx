@@ -32,6 +32,7 @@ import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/apiClient';
 import { firstImage } from '../utils/resolveAssetUrl';
 import { shortTipoServico } from '../utils/format';
+import { MediaViewer } from '../components/MediaViewer';
 import type { GerenciarServicosDetailScreenProps } from '../navigation/types';
 
 export function GerenciarServicosDetailScreen({
@@ -117,13 +118,9 @@ export function GerenciarServicosDetailScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {image ? (
-          <Image source={{ uri: image }} style={styles.heroImage} />
-        ) : (
-          <View style={[styles.heroImage, styles.heroImageFallback]}>
-            <Ionicons name="storefront" size={48} color={Colors.muted} />
-          </View>
-        )}
+        <View style={styles.heroImage}>
+          <MediaViewer uri={image} style={styles.heroImage} imageStyle={styles.heroImage} />
+        </View>
 
         <View style={styles.titleSection}>
           <Text style={styles.title}>{servico.nome}</Text>

@@ -52,6 +52,16 @@ export function errorHandler(
     return res.status(400).json(response);
   }
 
+  // Erro de upload (Multer)
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    response.message = 'Arquivo excede o tamanho máximo permitido (10 MB).';
+    return res.status(400).json(response);
+  }
+  if (err.message?.includes('Tipo de arquivo não permitido')) {
+    response.message = err.message;
+    return res.status(400).json(response);
+  }
+
   // Lida com erros lançados pelos serviços com mensagens personalizadas
   if (err.message.includes("Não autorizado")) {
     response.message = err.message;

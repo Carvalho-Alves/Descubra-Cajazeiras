@@ -2,14 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { removerAvaliacao } from "../service/avaliacaoService";
 
 export const removeAvaliacaoController = async (req: Request, res: Response, next: NextFunction) => {
-      const usuarioId = req.user.sub
-      const deleteavaliacao = await removerAvaliacao(req.body, usuarioId);
+  const usuarioId = req.user.sub;
+  const { id } = req.params;
 
-    if (!deleteavaliacao) {
-        const error: any = new Error('Avaliação não encontrada.');
-        error.statusCode = 404;
-        throw error;
-    }
+  await removerAvaliacao(id, usuarioId);
 
-      res.status(200).json(deleteavaliacao);
+  res.status(200).json({ message: 'Avaliação removida com sucesso.' });
 };

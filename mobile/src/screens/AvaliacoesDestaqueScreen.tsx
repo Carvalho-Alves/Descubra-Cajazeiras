@@ -63,8 +63,8 @@ export function AvaliacoesDestaqueScreen({
         if (isRefresh) setRefreshing(true);
         else setLoading(true);
 
-        const res = await listAvaliacoes(token);
-        setItems(Array.isArray(res) ? res : res.items || []);
+        const res = await listAvaliacoes();
+        setItems(Array.isArray(res) ? res : []);
       } catch (error) {
         Alert.alert(
           'Erro',
@@ -89,9 +89,9 @@ export function AvaliacoesDestaqueScreen({
 
     // Filtro por aba
     if (activeTab === 'Serviços') {
-      result = result.filter(a => a.tipo === 'servico' || a.referenciaType === 'Servico');
+      result = result.filter(a => a.tipo === 'servico');
     } else if (activeTab === 'Eventos') {
-      result = result.filter(a => a.tipo === 'evento' || a.referenciaType === 'Evento');
+      result = result.filter(a => a.tipo === 'evento');
     }
 
     // Filtro por busca
@@ -110,8 +110,8 @@ export function AvaliacoesDestaqueScreen({
   // Estatísticas
   const stats = useMemo(() => {
     const total = items.length;
-    const servicos = items.filter(a => a.tipo === 'servico' || a.referenciaType === 'Servico').length;
-    const eventos = items.filter(a => a.tipo === 'evento' || a.referenciaType === 'Evento').length;
+    const servicos = items.filter(a => a.tipo === 'servico').length;
+    const eventos = items.filter(a => a.tipo === 'evento').length;
     const media =
       total > 0 ? (items.reduce((acc, a) => acc + (a.nota || 0), 0) / total).toFixed(1) : 0;
 

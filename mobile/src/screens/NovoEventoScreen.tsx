@@ -33,6 +33,7 @@ import { Spacing, BorderRadius } from '../theme/spacing';
 import { useAuth } from '../context/AuthContext';
 import { createEventoRequest } from '../services/eventoService';
 import { ApiError } from '../services/apiClient';
+import { useFormValidation, eventoFormSchema } from '../hooks/useFormValidation';
 
 import { CustomHeader } from '../components/CustomHeader';
 import { CustomInput } from '../components/CustomInput';
@@ -46,6 +47,8 @@ const CAJAZEIRAS_INITIAL_REGION = {
 export function NovoEventoScreen() {
   const navigation = useNavigation();
   const { token } = useAuth();
+  const { validateField } = useFormValidation();
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [nome, setNome] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -108,10 +111,11 @@ export function NovoEventoScreen() {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ['images', 'videos'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
+      videoMaxDuration: 60,
     });
     if (!result.canceled && result.assets[0]?.uri) {
       setImageUri(result.assets[0].uri);
@@ -189,25 +193,36 @@ export function NovoEventoScreen() {
   };
 
   const handleSave = async () => {
-    if (!nome.trim()) {
-      Alert.alert('Atenção', 'Informe o nome do evento.');
-      return;
-    }
-    const dataMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dataInput);
-    if (!dataMatch) {
-      Alert.alert('Atenção', 'Digite ou selecione uma data válida (DD/MM/AAAA).');
+    const { isValid, errors: validationErrors } = await validateField(
+      eventoFormSchema,
+      {
+        nome: nome.trim(),
+        descricao: descricao.trim(),
+        dataInput,
+        horaInput,
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude),
+      },
+    );
+
+    if (!isValid) {
+      setErrors(validationErrors);
+      const firstError = Object.values(validationErrors)[0];
+      Alert.alert('Validação', firstError || 'Preencha os campos corretamente');
       return;
     }
 
+    setErrors({});
+    const dataMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dataInput)!;
     let dateToSend = new Date();
-    dateToSend.setFullYear(Number(dataMatch[3]), Number(dataMatch[2]) - 1, Number(dataMatch[1]));
+    dateToSend.setFullYear(
+      Number(dataMatch[3]),
+      Number(dataMatch[2]) - 1,
+      Number(dataMatch[1]),
+    );
 
     if (horaInput.trim()) {
-      const horaMatch = /^(\d{2}):(\d{2})$/.exec(horaInput);
-      if (!horaMatch) {
-        Alert.alert('Atenção', 'Digite ou selecione um horário válido (HH:MM).');
-        return;
-      }
+      const horaMatch = /^(\d{2}):(\d{2})$/.exec(horaInput)!;
       dateToSend.setHours(Number(horaMatch[1]), Number(horaMatch[2]), 0, 0);
     } else {
       dateToSend.setHours(0, 0, 0, 0);
@@ -264,6 +279,7 @@ export function NovoEventoScreen() {
             placeholder="Digite o nome"
             value={nome}
             onChangeText={setNome}
+            error={errors.nome}
           />
 
           <View style={styles.row}>

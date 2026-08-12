@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,65 +16,92 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/apiClient';
+import { loginSchema, registerSchema } from '../hooks/useFormValidation';
 import type { LoginScreenProps } from '../navigation/types';
 
 type AuthTab = 'entrar' | 'cadastrar';
 
+type LoginForm = {
+  email: string;
+  senha: string;
+};
+
+type RegisterForm = {
+  nome: string;
+  email: string;
+  senha: string;
+  confirmarSenha: string;
+};
+
 export function LoginScreen(_props: LoginScreenProps) {
   const { login, register } = useAuth();
   const [activeTab, setActiveTab] = useState<AuthTab>('entrar');
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
   const [senhaVisible, setSenhaVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const isCadastrar = activeTab === 'cadastrar';
 
-  const handleSubmit = async () => {
-    if (!email.trim() || !senha) {
-      Alert.alert('Atenção', 'Informe e-mail e senha.');
-      return;
-    }
+  const loginForm = useForm<LoginForm>({
+    resolver: yupResolver(loginSchema),
+    defaultValues: { email: '', senha: '' },
+  });
 
-    if (isCadastrar) {
-      if (!nome.trim()) {
-        Alert.alert('Atenção', 'Informe seu nome completo.');
-        return;
-      }
-      if (senha.length < 6) {
-        Alert.alert('Atenção', 'A senha deve ter no mínimo 6 caracteres.');
-        return;
-      }
-      if (senha !== confirmarSenha) {
-        Alert.alert('Atenção', 'As senhas não coincidem.');
-        return;
-      }
-    }
+  const registerForm = useForm<RegisterForm>({
+    resolver: yupResolver(registerSchema),
+    defaultValues: { nome: '', email: '', senha: '', confirmarSenha: '' },
+  });
 
+  useEffect(() => {
+    loginForm.clearErrors();
+    registerForm.clearErrors();
+  }, [activeTab, loginForm, registerForm]);
+
+  const onSubmitLogin = loginForm.handleSubmit(async (values) => {
     setSubmitting(true);
     try {
-      if (isCadastrar) {
-        await register({ nome, email, senha });
-      } else {
-        await login(email, senha);
-      }
+      await login(values.email, values.senha);
     } catch (error) {
-      const message =
+      Alert.alert(
+        'Erro',
         error instanceof ApiError
           ? error.message
-          : 'Não foi possível autenticar. Verifique a API e tente novamente.';
-      Alert.alert('Erro', message);
+          : 'Não foi possível autenticar. Verifique a API e tente novamente.',
+      );
     } finally {
       setSubmitting(false);
     }
-  };
+  });
+
+  const onSubmitRegister = registerForm.handleSubmit(async (values) => {
+    setSubmitting(true);
+    try {
+      await register({
+        nome: values.nome,
+        email: values.email,
+        senha: values.senha,
+      });
+    } catch (error) {
+      Alert.alert(
+        'Erro',
+        error instanceof ApiError
+          ? error.message
+          : 'Não foi possível cadastrar. Verifique a API e tente novamente.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  });
+
+  const handleSubmit = isCadastrar ? onSubmitRegister : onSubmitLogin;
+  const loginErrors = loginForm.formState.errors;
+  const registerErrors = registerForm.formState.errors;
 
   return (
     <View style={styles.root}>
@@ -136,85 +163,186 @@ export function LoginScreen(_props: LoginScreenProps) {
             </View>
 
             <View style={styles.form}>
-              {isCadastrar && (
-                <View style={styles.inputRow}>
-                  <Ionicons
-                    name="person-outline"
-                    size={20}
-                    color={Colors.muted}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Nome completo"
-                    placeholderTextColor={Colors.muted}
-                    value={nome}
-                    onChangeText={setNome}
-                    autoCapitalize="words"
-                  />
-                </View>
-              )}
+              {isCadastrar ? (
+                <>
+                  <View style={styles.inputRow}>
+                    <Ionicons
+                      name="person-outline"
+                      size={20}
+                      color={Colors.muted}
+                      style={styles.inputIcon}
+                    />
+                    <Controller
+                      control={registerForm.control}
+                      name="nome"
+                      render={({ field: { onChange, value } }) => (
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Nome completo"
+                          placeholderTextColor={Colors.muted}
+                          value={value}
+                          onChangeText={onChange}
+                          autoCapitalize="words"
+                        />
+                      )}
+                    />
+                  </View>
+                  {registerErrors.nome ? (
+                    <Text style={styles.fieldError}>{registerErrors.nome.message}</Text>
+                  ) : null}
 
-              <View style={styles.inputRow}>
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color={Colors.muted}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="E-mail"
-                  placeholderTextColor={Colors.muted}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                />
-              </View>
+                  <View style={styles.inputRow}>
+                    <Ionicons
+                      name="mail-outline"
+                      size={20}
+                      color={Colors.muted}
+                      style={styles.inputIcon}
+                    />
+                    <Controller
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field: { onChange, value } }) => (
+                        <TextInput
+                          style={styles.input}
+                          placeholder="E-mail"
+                          placeholderTextColor={Colors.muted}
+                          value={value}
+                          onChangeText={onChange}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoComplete="email"
+                        />
+                      )}
+                    />
+                  </View>
+                  {registerErrors.email ? (
+                    <Text style={styles.fieldError}>{registerErrors.email.message}</Text>
+                  ) : null}
 
-              <View style={styles.inputRow}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={20}
-                  color={Colors.muted}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Senha"
-                  placeholderTextColor={Colors.muted}
-                  value={senha}
-                  onChangeText={setSenha}
-                  secureTextEntry={!senhaVisible}
-                />
-                <TouchableOpacity onPress={() => setSenhaVisible(v => !v)}>
-                  <Ionicons
-                    name={senhaVisible ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={Colors.muted}
-                  />
-                </TouchableOpacity>
-              </View>
+                  <View style={styles.inputRow}>
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color={Colors.muted}
+                      style={styles.inputIcon}
+                    />
+                    <Controller
+                      control={registerForm.control}
+                      name="senha"
+                      render={({ field: { onChange, value } }) => (
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Senha"
+                          placeholderTextColor={Colors.muted}
+                          value={value}
+                          onChangeText={onChange}
+                          secureTextEntry={!senhaVisible}
+                        />
+                      )}
+                    />
+                    <TouchableOpacity onPress={() => setSenhaVisible(v => !v)}>
+                      <Ionicons
+                        name={senhaVisible ? 'eye-off-outline' : 'eye-outline'}
+                        size={20}
+                        color={Colors.muted}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  {registerErrors.senha ? (
+                    <Text style={styles.fieldError}>{registerErrors.senha.message}</Text>
+                  ) : null}
 
-              {isCadastrar && (
-                <View style={styles.inputRow}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={Colors.muted}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirmar senha"
-                    placeholderTextColor={Colors.muted}
-                    value={confirmarSenha}
-                    onChangeText={setConfirmarSenha}
-                    secureTextEntry={!senhaVisible}
-                  />
-                </View>
+                  <View style={styles.inputRow}>
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color={Colors.muted}
+                      style={styles.inputIcon}
+                    />
+                    <Controller
+                      control={registerForm.control}
+                      name="confirmarSenha"
+                      render={({ field: { onChange, value } }) => (
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Confirmar senha"
+                          placeholderTextColor={Colors.muted}
+                          value={value}
+                          onChangeText={onChange}
+                          secureTextEntry={!senhaVisible}
+                        />
+                      )}
+                    />
+                  </View>
+                  {registerErrors.confirmarSenha ? (
+                    <Text style={styles.fieldError}>
+                      {registerErrors.confirmarSenha.message}
+                    </Text>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <View style={styles.inputRow}>
+                    <Ionicons
+                      name="mail-outline"
+                      size={20}
+                      color={Colors.muted}
+                      style={styles.inputIcon}
+                    />
+                    <Controller
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field: { onChange, value } }) => (
+                        <TextInput
+                          style={styles.input}
+                          placeholder="E-mail"
+                          placeholderTextColor={Colors.muted}
+                          value={value}
+                          onChangeText={onChange}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoComplete="email"
+                        />
+                      )}
+                    />
+                  </View>
+                  {loginErrors.email ? (
+                    <Text style={styles.fieldError}>{loginErrors.email.message}</Text>
+                  ) : null}
+
+                  <View style={styles.inputRow}>
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color={Colors.muted}
+                      style={styles.inputIcon}
+                    />
+                    <Controller
+                      control={loginForm.control}
+                      name="senha"
+                      render={({ field: { onChange, value } }) => (
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Senha"
+                          placeholderTextColor={Colors.muted}
+                          value={value}
+                          onChangeText={onChange}
+                          secureTextEntry={!senhaVisible}
+                        />
+                      )}
+                    />
+                    <TouchableOpacity onPress={() => setSenhaVisible(v => !v)}>
+                      <Ionicons
+                        name={senhaVisible ? 'eye-off-outline' : 'eye-outline'}
+                        size={20}
+                        color={Colors.muted}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  {loginErrors.senha ? (
+                    <Text style={styles.fieldError}>{loginErrors.senha.message}</Text>
+                  ) : null}
+                </>
               )}
             </View>
 
@@ -255,27 +383,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: Spacing.xl,
   },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.text,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.lg,
-  },
   logoImage: {
     width: 220,
     height: 160,
     resizeMode: 'contain',
     marginBottom: Spacing.md,
-  },
-  brandTitle: {
-    fontFamily: FontFamily.headingBold,
-    fontSize: 28,
-    color: Colors.text,
-    textAlign: 'center',
-    lineHeight: 34,
   },
   brandSubtitle: {
     fontFamily: FontFamily.bodyRegular,
@@ -321,7 +433,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.headingSemiBold,
     color: Colors.surface,
   },
-  form: { gap: Spacing.lg, marginBottom: Spacing.lg },
+  form: { gap: Spacing.sm, marginBottom: Spacing.lg },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -339,6 +451,13 @@ const styles = StyleSheet.create({
     fontSize: FontSize.md,
     color: Colors.text,
     paddingVertical: 0,
+  },
+  fieldError: {
+    color: '#DC3545',
+    fontSize: 12,
+    fontFamily: FontFamily.bodyRegular,
+    marginLeft: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   primaryButton: {
     backgroundColor: Colors.primary,

@@ -15,3 +15,11 @@ export function firstImage(
   if (Array.isArray(imagem)) return resolveAssetUrl(imagem[0]);
   return resolveAssetUrl(imagem);
 }
+
+const VIDEO_EXTENSIONS = /\.(mp4|webm|mov|m4v)(\?.*)?$/i;
+
+/** Detecta se a URL/caminho aponta para um arquivo de vídeo */
+export function isVideoUrl(path?: string | null): boolean {
+  if (!path) return false;
+  return VIDEO_EXTENSIONS.test(path);
+}

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,27 +12,49 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, BorderRadius, Shadow } from '../theme/spacing';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/apiClient';
 import { resolveAssetUrl } from '../utils/resolveAssetUrl';
+import { profileSchema } from '../hooks/useFormValidation';
+import { FormTextInput } from '../components/FormTextInput';
 import type { MinhasInformacoesScreenProps } from '../navigation/types';
+
+type ProfileForm = {
+  nome: string;
+  email: string;
+};
 
 export function MinhasInformacoesScreen({
   navigation,
 }: MinhasInformacoesScreenProps) {
   const { user, updateProfile, refreshUser } = useAuth();
-  const [nome, setNome] = useState(user?.nome || '');
-  const [email, setEmail] = useState(user?.email || '');
   const [fotoUri, setFotoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProfileForm>({
+    resolver: yupResolver(profileSchema),
+    defaultValues: {
+      nome: user?.nome || '',
+      email: user?.email || '',
+    },
+  });
+
   useEffect(() => {
-    setNome(user?.nome || '');
-    setEmail(user?.email || '');
-  }, [user?.nome, user?.email]);
+    reset({
+      nome: user?.nome || '',
+      email: user?.email || '',
+    });
+  }, [user?.nome, user?.email, reset]);
 
   const currentFoto = fotoUri || resolveAssetUrl(user?.foto);
 
@@ -52,16 +73,12 @@ export function MinhasInformacoesScreen({
     }
   };
 
-  const handleSave = async () => {
-    if (!nome.trim() || !email.trim()) {
-      Alert.alert('Atenção', 'Nome e e-mail são obrigatórios.');
-      return;
-    }
+  const onSubmit = handleSubmit(async (values) => {
     setSaving(true);
     try {
       await updateProfile({
-        nome: nome.trim(),
-        email: email.trim().toLowerCase(),
+        nome: values.nome.trim(),
+        email: values.email.trim().toLowerCase(),
         fotoUri,
       });
       await refreshUser();
@@ -77,7 +94,7 @@ export function MinhasInformacoesScreen({
     } finally {
       setSaving(false);
     }
-  };
+  });
 
   return (
     <View style={styles.root}>
@@ -98,51 +115,42 @@ export function MinhasInformacoesScreen({
             <Image source={{ uri: currentFoto }} style={styles.avatarImage} />
           ) : (
             <View style={styles.avatar}>
-              <Ionicons name="person" size={48} color="#4B5563" />
+              <Ionicons name="person" size={48} color={Colors.primary} />
             </View>
           )}
           <Pressable style={styles.changePhotoBtn} onPress={pickImage}>
+            <Ionicons name="camera-outline" size={18} color={Colors.primary} />
             <Text style={styles.changePhotoText}>Alterar foto</Text>
           </Pressable>
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Nome completo</Text>
-          <View style={styles.inputRow}>
-            <Ionicons name="person-outline" size={20} color={Colors.muted} />
-            <TextInput
-              style={styles.input}
-              value={nome}
-              onChangeText={setNome}
-              placeholderTextColor={Colors.muted}
-            />
-          </View>
-        </View>
+        <FormTextInput
+          control={control}
+          name="nome"
+          label="Nome completo"
+          placeholder="Seu nome"
+          error={errors.nome?.message}
+        />
 
-        <View style={styles.field}>
-          <Text style={styles.label}>E-mail</Text>
-          <View style={styles.inputRow}>
-            <Ionicons name="mail-outline" size={20} color={Colors.muted} />
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholderTextColor={Colors.muted}
-            />
-          </View>
-        </View>
+        <FormTextInput
+          control={control}
+          name="email"
+          label="E-mail"
+          placeholder="seu@email.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          error={errors.email?.message}
+        />
 
         <Pressable
-          style={[styles.saveButton, saving && { opacity: 0.7 }]}
-          onPress={handleSave}
+          style={[styles.saveBtn, saving && { opacity: 0.7 }]}
+          onPress={onSubmit}
           disabled={saving}
         >
           {saving ? (
             <ActivityIndicator color={Colors.surface} />
           ) : (
-            <Text style={styles.saveLabel}>Salvar alterações</Text>
+            <Text style={styles.saveBtnText}>Salvar alterações</Text>
           )}
         </Pressable>
       </ScrollView>
@@ -151,7 +159,7 @@ export function MinhasInformacoesScreen({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.surface },
+  root: { flex: 1, backgroundColor: Colors.background },
   header: {
     backgroundColor: Colors.primary,
     flexDirection: 'row',
@@ -160,12 +168,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.lg,
   },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
@@ -173,73 +175,50 @@ const styles = StyleSheet.create({
     fontSize: FontSize.lg,
     color: Colors.surface,
   },
-  content: {
-    padding: Spacing.containerPadding,
-    paddingBottom: Spacing.xxxl,
-  },
-  avatarBlock: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
+  headerBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  content: { padding: Spacing.lg, paddingBottom: Spacing.xxxl },
+  avatarBlock: { alignItems: 'center', marginBottom: Spacing.xl },
   avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#D1D5DB',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
-    ...Shadow.sm,
+    ...Shadow.md,
   },
   avatarImage: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    marginBottom: Spacing.md,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: Colors.primary,
   },
   changePhotoBtn: {
-    paddingVertical: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
     paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surface,
+    ...Shadow.sm,
   },
   changePhotoText: {
-    fontFamily: FontFamily.bodyMedium,
+    fontFamily: FontFamily.headingSemiBold,
     fontSize: FontSize.sm,
     color: Colors.primary,
   },
-  field: { marginBottom: Spacing.lg },
-  label: {
-    fontFamily: FontFamily.bodyMedium,
-    fontSize: FontSize.sm,
-    color: Colors.text,
-    marginBottom: Spacing.sm,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.inputBackground,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.lg,
-    height: 56,
-  },
-  input: {
-    flex: 1,
-    fontFamily: FontFamily.bodyRegular,
-    fontSize: FontSize.md,
-    color: Colors.text,
-    paddingVertical: 0,
-  },
-  saveButton: {
-    marginTop: Spacing.lg,
+  saveBtn: {
+    marginTop: Spacing.xl,
     backgroundColor: Colors.primary,
     borderRadius: BorderRadius.full,
-    height: 56,
+    height: 52,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  saveLabel: {
+  saveBtnText: {
     fontFamily: FontFamily.headingBold,
     fontSize: FontSize.md,
     color: Colors.surface,

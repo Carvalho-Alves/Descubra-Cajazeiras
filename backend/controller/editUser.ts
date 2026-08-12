@@ -8,6 +8,11 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
     const { id } = req.params;
     const updateData: Partial<IUser> = { ...validatedData };
 
+    const isAdmin = req.user?.role === 'Admin';
+    if (!isAdmin && updateData.role !== undefined) {
+        delete updateData.role;
+    }
+
     if (req.file) {
         updateData.foto = `/uploads/${(req as any).file.filename}`;
     }

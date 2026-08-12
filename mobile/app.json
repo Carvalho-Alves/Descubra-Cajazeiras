@@ -16,7 +16,12 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.descubracajazeiras.app"
+      "bundleIdentifier": "com.descubracajazeiras.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Precisamos da sua localização para exibir mapas, rotas e cadastrar serviços/eventos em Cajazeiras.",
+        "NSPhotoLibraryUsageDescription": "Precisamos acessar sua galeria para enviar fotos e vídeos de serviços e eventos.",
+        "NSCameraUsageDescription": "Precisamos acessar a câmera para capturar fotos de serviços e eventos."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +29,14 @@
         "backgroundColor": "#F0F8FF"
       },
       "package": "com.descubracajazeiras.app",
-      "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+      "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,7 +47,20 @@
       }
     },
     "plugins": [
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Precisamos da sua localização para exibir mapas, rotas e cadastrar serviços/eventos em Cajazeiras."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Precisamos acessar sua galeria para enviar fotos e vídeos.",
+          "cameraPermission": "Precisamos acessar a câmera para capturar fotos."
+        }
+      ]
     ]
   }
 }

@@ -11,9 +11,13 @@ export const registerController = async (req: Request, res: Response, next: Next
     const newUser = await createUserService(validatedBody);
     const payload = {
         sub: newUser._id.toString(),
-        email: newUser.email
+        email: newUser.email,
+        role: newUser.role,
     };
-    const secret = (env as any).JWT_ACCESS_SECRET || 'dev-secret';
+    const secret =
+      env.JWT_ACCESS_SECRET ||
+      env.JWT_SECRET ||
+      'dev-secret';
     const token = jwt.sign(payload, secret, {
         expiresIn: '1h'
     });
